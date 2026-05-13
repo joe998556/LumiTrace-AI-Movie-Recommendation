@@ -6,23 +6,40 @@
     <title>個人化推薦 - AI Movie Agent</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#cc785c',
+                        'primary-content': '#ffffff',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
+        :root {
+            --coral: #cc785c;
+            --surface-dark: #181715;
+        }
         body {
-            background-color: #0d0d0f;
+            background-color: var(--surface-dark);
             color: #e2e8f0;
-            font-family: sans-serif;
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
         .movie-card {
-            background: #161618;
-            border: 1px solid #222;
+            background: #24221f;
+            border: 1px solid #333;
             transition: 0.2s;
             cursor: pointer;
         }
 
         .movie-card:hover {
             transform: translateY(-4px);
-            border-color: #3b82f6;
+            border-color: var(--coral);
         }
 
         .favorite-btn {
@@ -63,7 +80,7 @@
 </head>
 
 <body class="min-h-screen">
-    <nav class="bg-[#141416] border-b border-white/5 p-4">
+    <nav class="bg-[#24221f] border-b border-white/5 p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <a href="index.html" class="btn btn-ghost btn-sm">← 返回首頁</a>
