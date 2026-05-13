@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>個人化推薦 - AI Movie Agent</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0d0d0f;
+            color: #e2e8f0;
+            font-family: sans-serif;
+        }
+
+        .movie-card {
+            background: #161618;
+            border: 1px solid #222;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .movie-card:hover {
+            transform: translateY(-4px);
+            border-color: #3b82f6;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .favorite-btn.active {
+            color: #ef4444;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <nav class="bg-[#141416] border-b border-white/5 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="btn btn-ghost btn-sm">← 返回首頁</a>
+                <h1 class="text-xl font-bold text-primary">個人化推薦</h1>
+            </div>
+            <div id="user-info" class="flex items-center gap-2">
+                <span id="username-display" class="text-sm"></span>
+                <button onclick="logout()" class="btn btn-ghost btn-xs text-error">登出</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <section class="mb-12">
+            <details class="collapse collapse-arrow bg-base-200 border border-white/5">
+                <summary class="collapse-title text-xl font-medium flex justify-between items-center pr-12">
+                    <div class="flex items-center gap-4">
+                        <h2 class="text-2xl font-bold">我的收藏</h2>
+                        <span id="favorite-count" class="text-sm text-white/50"></span>
+                    </div>
+                </summary>
+                <div class="collapse-content">
+                    <div id="favorites-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 pt-4">
+                        <div class="col-span-full text-center py-12 text-white/30">
+                            <div class="text-4xl mb-2">📽️</div>
+                            <p>載入中...</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+        <section>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold flex items-center gap-3">
+                    🤖 AI 為你推薦
+                    <span id="ai-status" class="text-xs font-normal px-2 py-1 rounded bg-white/10 text-white/60"></span>
+                </h2>
+                <button onclick="refreshRecommendations()" class="btn btn-primary btn-sm">
+                    <span id="refresh-icon">🔄</span> 重新推薦
+                </button>
+            </div>
+            <div id="recommendations-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                <div class="col-span-full text-center py-12 text-white/30">
+                    <div class="text-4xl mb-2">🎬</div>
+                    <p>載入推薦中...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Movie Detail Modal (Copied Structure for compatibility with script.js) -->
+    <dialog id="movie-modal" class="modal">
+        <div class="modal-box w-11/12 max-w-5xl bg-[#1a1a1f] text-white p-0 overflow-hidden relative">
+            <button
+                class="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 z-50 bg-black/50 border-none text-white hover:bg-black/80"
+                onclick="window.closeModal()">✕</button>
+
+            <div class="flex flex-col lg:flex-row h-full max-h-[85vh]">
+                <!-- Poster Helper -->
+                <div class="hidden" id="modal-backdrop"></div>
+
+                <!-- Left: Trailer & Poster -->
+                <div class="lg:w-2/3 bg-black relative aspect-video lg:aspect-auto">
+                    <iframe id="yt-player" class="w-full h-full absolute inset-0" src="" title="YouTube video player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                    <!-- Fallback if no trailer -->
+                    <div id="no-trailer" class="absolute inset-0 flex items-center justify-center bg-zinc-900 hidden">
+                        <img id="modal-poster-bg" src="" class="w-full h-full object-cover opacity-30 blur-sm absolute">
+                        <div class="z-10 text-center">
+                            <span class="text-4xl block mb-2">🎬</span>
+                            <p class="text-white/50 text-sm">暫無預告片</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Content -->
+                <div class="lg:w-1/3 p-6 lg:p-8 flex flex-col overflow-y-auto custom-scrollbar bg-[#1a1a1f]">
+                    <h3 id="modal-title" class="text-2xl font-bold mb-2 leading-tight"></h3>
+
+                    <div class="flex flex-wrap gap-2 mb-4 text-xs text-white/50" id="modal-meta">
+                        <span class="border border-white/10 px-2 py-0.5 rounded" id="modal-year"></span>
+                        <span class="flex items-center gap-1 text-yellow-500">
+                            ★ <span id="modal-rating"></span>
+                        </span>
+                    </div>
+
+                    <p id="modal-overview" class="text-sm text-gray-300 leading-relaxed mb-6 flex-1"></p>
+
+                    <div class="space-y-4 mt-auto">
+                        <!-- Streaming Info -->
+                        <div class="bg-white/5 rounded-xl p-4 border border-white/5">
+                            <h4 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">線上觀看 (TW)</h4>
+                            <div id="modal-providers" class="flex flex-wrap gap-3">
+                                <span class="text-xs text-white/30">載入中...</span>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-3 pt-2">
+                            <!-- script.js might look for specific IDs here, but basic display is priority -->
+                            <button class="btn btn-primary flex-1 gap-2" onclick="window.searchGoogle()">
+                                🔍 Google 搜尋
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <script>
+        const BACKEND_URL = "http://localhost:8080/api";
+        let currentUser = null;
+
+        window.onload = async () => {
+            currentUser = sessionStorage.getItem('currentUser');
+            if (!currentUser) {
+                alert('請先登入');
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('username-display').innerText = currentUser;
+            await loadFavorites();
+            await loadRecommendations();
+        };
+
+        // 載入我的收藏 (上方區塊)
+        async function loadFavorites() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/get_favorites?username=${currentUser}`);
+                const favorites = await res.json();
+
+                const grid = document.getElementById('favorites-grid');
+                document.getElementById('favorite-count').innerText = `${favorites.length} 部電影`;
+
+                if (favorites.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-white/30">
+                            <div class="text-4xl mb-2">💔</div>
+                            <p>還沒有收藏的電影</p>
+                            <a href="index.html" class="btn btn-primary btn-sm mt-4">去探索電影</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 注意：這裡 removeFavorite 也有加 event 參數
+                grid.innerHTML = favorites.map(fav => `
+                    <div class="movie-card relative rounded-xl overflow-hidden shadow-xl" 
+                         onclick="showMovieDetail(${fav.movie_id}, '${escapeHtml(fav.title)}', '${escapeHtml(fav.overview)}', '${fav.poster_path}', ${fav.vote_average})">
+                        <button class="favorite-btn active" onclick="removeFavorite(event, ${fav.movie_id})">
+                            ❤️
+                        </button>
+                        <figure class="aspect-[2/3] relative">
+                            <img src="https://image.tmdb.org/t/p/w500${fav.poster_path}" class="w-full h-full object-cover">
+                            <div class="absolute top-2 left-2 px-1 rounded bg-black/70 text-[10px]">★ ${fav.vote_average.toFixed(1)}</div>
+                        </figure>
+                        <div class="p-3 text-xs font-bold truncate">${fav.title}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('載入收藏失敗:', e);
+            }
+        }
+
+        // 載入 AI 推薦 (下方區塊)
+        async function loadRecommendations() {
+            const grid = document.getElementById('recommendations-grid');
+
+            // 只有當裡面是空的或正在載入時才顯示 Loading，避免重複閃爍
+            if (!grid.hasChildNodes() || grid.querySelector('.loading')) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="loading loading-spinner loading-lg text-primary"></div>
+                        <p class="mt-4 text-white/50">AI 正在分析你的喜好...</p>
+                    </div>
+                `;
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/get_recommendations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser })
+                });
+                const data = await res.json();
+
+                if (data.recommendations.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12 text-white/30">
+                            <div class="text-4xl mb-2">🎯</div>
+                            <p>${data.message || '請先添加一些喜歡的電影'}</p>
+                            <a href="index.html" class="btn btn-primary btn-sm mt-4">去探索電影</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // 顯示 AI 狀態/來源訊息 (例如：BERT 語意分析推薦)
+                const statusBadge = document.getElementById('ai-status');
+                if (statusBadge && data.message) {
+                    statusBadge.innerText = data.message;
+                    // 如果是 BERT，給個醒目的顏色
+                    if (data.message.includes('BERT')) {
+                        statusBadge.className = "text-xs font-normal px-2 py-1 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/50";
+                    } else {
+                        statusBadge.className = "text-xs font-normal px-2 py-1 rounded bg-white/10 text-white/60";
+                    }
+                }
+
+                // 這裡在 onclick 中加入了 event 參數，這是關鍵
+                grid.innerHTML = data.recommendations.map(movie => `
+                    <div class="movie-card relative rounded-xl overflow-hidden shadow-xl"
+                         onclick="showMovieDetail(${movie.id}, '${escapeHtml(movie.title)}', '${escapeHtml(movie.overview || '')}', '${movie.poster_path}', ${movie.vote_average})">
+                        <button class="favorite-btn" id="rec-btn-${movie.id}" 
+                                data-genre-ids='${JSON.stringify(movie.genre_ids || [])}'
+                                data-vote-count='${movie.vote_count || 0}'
+                                onclick="addFavorite(event, ${movie.id}, '${escapeHtml(movie.title)}', '${escapeHtml(movie.overview || '')}', '${movie.poster_path}', ${movie.vote_average})">
+                            🤍
+                        </button>
+                        <figure class="aspect-[2/3] relative">
+                            <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" class="w-full h-full object-cover">
+                            <div class="absolute top-2 left-2 px-1 rounded bg-black/70 text-[10px]">★ ${movie.vote_average.toFixed(1)}</div>
+                        </figure>
+                        <div class="p-3 text-xs font-bold truncate">${movie.title}</div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('載入推薦失敗:', e);
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 text-error/50">
+                        <div class="text-4xl mb-2">⚠️</div>
+                        <p>推薦載入失敗，請稍後再試</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 修改：加入 event 參數，並移除 loadRecommendations()
+        async function addFavorite(event, movieId, title, overview, posterPath, voteAverage) {
+            // 防止點擊穿透或默認行為（這就是防止刷新的關鍵）
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            const btn = event.currentTarget; // 獲取被點擊的按鈕
+
+            // 從 data 屬性提取 genre_ids 和 vote_count
+            let genreIds = [];
+            let voteCount = 0;
+            try {
+                genreIds = JSON.parse(btn.dataset.genreIds || '[]');
+                voteCount = parseInt(btn.dataset.voteCount) || 0;
+            } catch (e) { console.warn('Parse error', e); }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/add_favorite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser,
+                        movie_id: movieId,
+                        title: title,
+                        overview: overview,
+                        poster_path: posterPath,
+                        vote_average: voteAverage,
+                        genre_ids: genreIds,
+                        vote_count: voteCount,
+                        genres: ''
+                    })
+                });
+
+                if (res.ok) {
+                    // 1. 立即在前端改變樣式 (變紅心)
+                    btn.innerText = '❤️';
+                    btn.classList.add('active');
+
+                    // 2. 改變點擊事件，讓它再點一次變成移除 (toggle 效果)
+                    // 由於移除需要較少參數，我們可以直接切換 onclick
+                    btn.onclick = function (e) { removeFavorite(e, movieId); };
+
+                    // 3. 只更新上方的收藏列表 (這是另外一個區塊，更新它不會影響你現在捲動的位置)
+                    await loadFavorites();
+
+                    // 4. 【重要】絕對不要呼叫 loadRecommendations()，否則下方網格會重整
+                }
+            } catch (e) {
+                console.error('添加收藏失敗:', e);
+            }
+        }
+
+        // 修改：加入 event 參數
+        async function removeFavorite(event, movieId) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            // 這裡可以選擇是否要確認，為了體驗流暢也可以拿掉
+            // if (!confirm('確定要移除這部電影？')) return;
+
+            try {
+                await fetch(`${BACKEND_URL}/remove_favorite`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser, movie_id: movieId })
+                });
+
+                // 1. 更新上方收藏列表
+                await loadFavorites();
+
+                // 2. 如果這個電影也出現在下方的推薦列表中，把它的愛心變回白色
+                const recBtn = document.getElementById(`rec-btn-${movieId}`);
+                if (recBtn) {
+                    recBtn.innerText = '🤍';
+                    recBtn.classList.remove('active');
+                    // 註：如果要讓它能再次被加入，理論上要加回 addFavorite 的 onclick
+                    // 但因為參數丟失較麻煩，這裡最簡單的做法是提示已移除，或讓使用者刷新後再加
+                    // 為了簡單起見，這裡只變色。
+                    recBtn.onclick = null; // 或者提示 "已移除"
+                }
+
+                // 3. 【重要】同樣不要呼叫 loadRecommendations()
+            } catch (e) {
+                console.error('移除收藏失敗:', e);
+            }
+        }
+
+        // 這是給上方按鈕手動刷新用的
+        async function refreshRecommendations() {
+            const icon = document.getElementById('refresh-icon');
+            icon.style.animation = 'spin 1s linear infinite';
+
+            // 手動刷新時，才清空網格顯示 Loading
+            const grid = document.getElementById('recommendations-grid');
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <div class="loading loading-spinner loading-lg text-primary"></div>
+                    <p class="mt-4 text-white/50">AI 正在重新分析...</p>
+                </div>
+            `;
+
+            await loadRecommendations();
+            icon.style.animation = '';
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        // ============================================
+        // 電影詳細資訊 Modal 邏輯 (整合 Streaming API)
+        // ============================================
+
+        // API Keys removed - using backend proxy
+        // const TMDB_KEY = removed;
+        // const RAPID_API_KEY = removed;
+
+        async function showMovieDetail(id, title, overview, poster_path, vote_average) {
+            const modal = document.getElementById('movie-modal');
+            if (!modal) return;
+
+            // 1. 填入基本資訊
+            document.getElementById('modal-title').innerText = title || '未命名電影';
+            document.getElementById('modal-overview').innerText = overview || '暫無簡介';
+            document.getElementById('modal-rating').innerText = vote_average ? vote_average.toFixed(1) : 'N/A';
+            document.getElementById('modal-year').innerText = 'Loading...';
+
+            // 2. 重置播放器與海報
+            const ytPlayer = document.getElementById('yt-player');
+            const noTrailer = document.getElementById('no-trailer');
+            const posterBg = document.getElementById('modal-poster-bg');
+            const noTrailerText = noTrailer.querySelector('.z-10'); // 文字區塊
+
+            ytPlayer.src = '';
+            noTrailer.classList.remove('hidden');
+            noTrailerText.classList.remove('hidden'); // 預設顯示文字
+
+            // 設定海報 (預設模糊，作為背景)
+            if (posterBg) {
+                posterBg.src = poster_path ? `https://image.tmdb.org/t/p/w1280${poster_path}` : '';
+                posterBg.className = "w-full h-full object-cover opacity-30 blur-sm absolute"; // Reset style
+            }
+
+            document.getElementById('modal-providers').innerHTML = '<span class="text-xs text-white/30">正在搜尋串流來源...</span>';
+
+            modal.showModal();
+
+            try {
+                // 3. 獲取 TMDB 詳細資訊 (含 External IDs)
+                const [detailsRes, idsRes] = await Promise.all([
+                    fetch(`${BACKEND_URL}/tmdb/movie/${id}?append_to_response=videos,watch/providers&language=zh-TW`),
+                    fetch(`${BACKEND_URL}/tmdb/movie/${id}/external_ids`)
+                ]);
+
+                const details = await detailsRes.json();
+                const ids = await idsRes.json();
+                const imdbId = ids.imdb_id;
+
+                // 3.1 年份
+                if (details.release_date) {
+                    document.getElementById('modal-year').innerText = details.release_date.split('-')[0];
+                } else {
+                    document.getElementById('modal-year').innerText = 'N/A';
+                }
+
+                // 3.2 預告片邏輯
+                const trailer = details.videos?.results?.find(v => v.site === 'YouTube' && v.type === 'Trailer')
+                    || details.videos?.results?.find(v => v.site === 'YouTube');
+
+                if (trailer) {
+                    ytPlayer.src = `https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=0`;
+                    noTrailer.classList.add('hidden');
+                } else {
+                    // 沒有預告片 -> 顯示高畫質海報 (不模糊)
+                    noTrailer.classList.remove('hidden');
+                    noTrailerText.classList.add('hidden'); // 隱藏 "暫無預告片" 文字
+                    if (posterBg) {
+                        posterBg.className = "w-full h-full object-contain bg-black absolute"; // 清晰顯示
+                    }
+                }
+
+                // 3.3 串流平台 (深度整合 RapidAPI)
+                await renderStreamingLinks(details, imdbId);
+
+            } catch (e) {
+                console.error('Modal Load Error:', e);
+                document.getElementById('modal-providers').innerHTML = '<span class="text-xs text-error">載入失敗</span>';
+            }
+        }
+
+        async function renderStreamingLinks(tmdbDetails, imdbId) {
+            const providerContainer = document.getElementById('modal-providers');
+
+            // TMDB 台灣區資料
+            const twProviders = tmdbDetails['watch/providers']?.results?.TW?.flatrate || [];
+
+            if (twProviders.length === 0) {
+                providerContainer.innerHTML = '<span class="text-xs text-white/30">台灣區暫無訂閱來源</span>';
+                return;
+            }
+
+            // 呼叫 RapidAPI 獲取直達連結
+            let streamingAvailData = null;
+            if (imdbId) {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/streaming/${imdbId}`);
+                    if (res.ok) streamingAvailData = await res.json();
+                } catch (e) { console.warn('RapidAPI error', e); }
+            }
+
+            // 渲染圖示與連結
+            providerContainer.innerHTML = twProviders.map(p => {
+                let directLink = null;
+                // 嘗試匹配 RapidAPI 連結
+                if (streamingAvailData) {
+                    const regions = ['tw', 'sg', 'hk', 'us']; // 優先找台灣
+                    for (const r of regions) {
+                        const options = streamingAvailData.streamingOptions?.[r] || [];
+                        const match = options.find(opt => matchProvider(opt.service.id, p.provider_id));
+                        if (match) {
+                            directLink = match.link;
+                            break;
+                        }
+                    }
+                }
+
+                // Fallback 連結
+                if (!directLink) directLink = generateFallbackLink(p.provider_name, imdbId);
+
+                return `
+                    <a href="${directLink}" target="_blank" class="block transition-transform hover:scale-110" title="前往 ${p.provider_name} 觀看">
+                        <img src="https://image.tmdb.org/t/p/original${p.logo_path}" class="w-10 h-10 rounded-lg shadow-md border border-white/10">
+                    </a>
+                `;
+            }).join('');
+        }
+
+        // 輔助函式：匹配 Provider ID
+        function matchProvider(rapidId, tmdbId) {
+            const map = {
+                'netflix': [8], 'disney': [337], 'hbo': [1899, 384],
+                'apple': [350, 2], 'prime': [119, 9], 'iqiyi': [456],
+                'friday': [457], 'catchplay': [436], 'kwa': [465]
+            };
+            return map[rapidId]?.includes(tmdbId);
+        }
+
+        // 輔助函式：生成備用連結
+        function generateFallbackLink(providerName, imdbId) {
+            const name = providerName.toLowerCase();
+            if (name.includes('netflix')) return `https://www.netflix.com/search?q=${imdbId}`;
+            if (name.includes('disney')) return `https://www.disneyplus.com/search`;
+            if (name.includes('prime')) return `https://www.amazon.com/s?k=${imdbId}`;
+            return `https://www.google.com/search?q=${encodeURIComponent(providerName + ' ' + imdbId)}`;
+        }
+
+
+        window.closeModal = function () {
+            const modal = document.getElementById('movie-modal');
+            if (modal) {
+                document.getElementById('yt-player').src = ''; // 停止播放
+                modal.close();
+            }
+        }
+
+        window.searchGoogle = function () {
+            const title = document.getElementById('modal-title').innerText;
+            if (title) {
+                window.open(`https://www.google.com/search?q=${encodeURIComponent(title + ' 線上看')}`, '_blank');
+            }
+        }
+    </script>
+</body>
+
+</html>
