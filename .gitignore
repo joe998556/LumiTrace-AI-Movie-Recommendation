@@ -2,6 +2,7 @@
 .env.*
 !.env.example
 .vscode/
+.claude/
 *.db
 *.sqlite
 *.sqlite3

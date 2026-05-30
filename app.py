@@ -1,5 +1,5 @@
 """
-AI Movie Agent - Backend Server
+LumiTrace - Backend Server
 All API keys loaded from .env file
 """
 import os
@@ -457,7 +457,7 @@ def serve_static(path):
 # Entry Point
 # ==========================================
 if __name__ == '__main__':
-    logger.info("Starting AI Movie Agent Backend...")
+    logger.info("Starting LumiTrace Backend...")
     logger.info(f"TMDB Key: {'***' + TMDB_API_KEY[-4:] if TMDB_API_KEY else 'NOT SET'}")
     logger.info(f"BERT Service: {REMOTE_SEARCH_URL}")
     logger.info(f"SSL Verify: {SSL_VERIFY}")

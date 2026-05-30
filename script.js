@@ -1,5 +1,5 @@
 /**
- * AI Movie Agent - Unified Frontend Logic
+ * LumiTrace - Unified Frontend Logic
  * All API calls go through our own backend (no exposed API keys)
  */
 const BACKEND_URL = "http://localhost:8080/api"; // Default for local dev (supports new Proxy APIs)
@@ -178,44 +178,72 @@ async function openStreamingDrawer(tmdbId, title) {
         const imdbId = idData.imdb_id;
         const region = localStorage.getItem('user_region') || 'TW';
         const regData = provData.results?.[region];
-        const providers = regData?.flatrate || [];
+        let providers = regData?.flatrate || [];
 
+        // If no providers in user's region, try nearby regions
         if (providers.length === 0) {
-            // No providers - search Google
+            const fallbackRegions = ['HK', 'SG', 'US', 'JP'];
+            for (const r of fallbackRegions) {
+                const fallbackData = provData.results?.[r]?.flatrate || [];
+                if (fallbackData.length > 0) {
+                    providers = fallbackData;
+                    break;
+                }
+            }
+        }
+
+        // Still no providers — try direct platform link, then Google as last resort
+        if (providers.length === 0) {
+            if (imdbId) {
+                // Try to get streaming options from any region
+                try {
+                    const streamRes = await fetch(`${BACKEND_URL}/streaming/${imdbId}`);
+                    if (streamRes.ok) {
+                        const streamData = await streamRes.json();
+                        const allRegions = ['tw', 'hk', 'sg', 'us', 'jp'];
+                        for (const r of allRegions) {
+                            const options = streamData.streamingOptions?.[r] || [];
+                            if (options.length > 0) {
+                                window.open(options[0].link, '_blank');
+                                return;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Streaming API fallback for no-provider case');
+                }
+            }
+            // Absolute last resort
             window.open(`https://www.google.com/search?q=${encodeURIComponent(title + ' 線上看')}`, '_blank');
             return;
         }
 
-        // Try to get streaming links
-        let streamingData = null;
+        // Try to get direct streaming links from Streaming Availability API
+        let directLink = null;
         if (imdbId) {
             try {
                 const streamRes = await fetch(`${BACKEND_URL}/streaming/${imdbId}`);
                 if (streamRes.ok) {
-                    streamingData = await streamRes.json();
+                    const streamingData = await streamRes.json();
+                    const tryRegions = ['tw', 'hk', 'sg', 'us', 'jp'];
+                    for (const r of tryRegions) {
+                        const options = streamingData.streamingOptions?.[r] || [];
+                        for (const p of providers) {
+                            const match = options.find(opt => matchProvider(opt.service.id, p.provider_id));
+                            if (match) {
+                                directLink = match.link;
+                                break;
+                            }
+                        }
+                        if (directLink) break;
+                    }
                 }
             } catch (e) {
                 console.warn('Streaming API fallback');
             }
         }
 
-        // Find a direct link for the first provider
-        let directLink = null;
-        if (streamingData) {
-            const tryRegions = ['tw', 'hk', 'sg', 'us', 'jp'];
-            for (const r of tryRegions) {
-                const options = streamingData.streamingOptions?.[r] || [];
-                for (const p of providers) {
-                    const match = options.find(opt => matchProvider(opt.service.id, p.provider_id));
-                    if (match) {
-                        directLink = match.link;
-                        break;
-                    }
-                }
-                if (directLink) break;
-            }
-        }
-
+        // Fallback: generate direct platform link from provider info
         if (!directLink) {
             directLink = generateFallbackLink(providers[0].provider_id, providers[0].provider_name, imdbId);
         }
