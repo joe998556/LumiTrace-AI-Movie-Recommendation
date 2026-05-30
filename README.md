@@ -1,8 +1,20 @@
 # LumiTrace - AI Movie Recommendation
 
-LumiTrace is an AI movie recommendation web app. It combines TMDB movie metadata, streaming provider information, user favorites, and a BERT-based semantic recommendation engine to suggest movies that are close to a user's taste.
+LumiTrace is an AI-powered movie recommendation system that uses BERT semantic embeddings to recommend movies from a user's favorites. It combines TMDB movie metadata, streaming provider information, a Flask API backend, and a standalone BERT recommendation service.
 
-The project is designed as a demo of an AI recommendation workflow rather than a production authentication system.
+This project is designed as a working prototype of an AI recommendation workflow: collect movie metadata, turn plots into vectors, compare semantic similarity, and explain recommendations through a web interface.
+
+Repository:
+
+```text
+https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation
+```
+
+## Core Idea
+
+Most simple movie recommenders rely on genres, ratings, or popularity. LumiTrace focuses on semantic similarity. If a user saves several movies they like, the system extracts the plot overviews, converts them into BERT embeddings, and searches for movies with similar story, theme, and style signals.
+
+The goal is not only to recommend "popular action movies" or "high-rated dramas", but to recommend movies whose narrative meaning is close to what the user already enjoys.
 
 ## What This Project Does
 
@@ -18,6 +30,23 @@ In short: users collect movies they like, and the system recommends other movies
 - Use a backend proxy so TMDB and RapidAPI keys are not exposed in frontend code.
 - Support a remote BERT recommendation service for semantic movie matching.
 - Optional hybrid recommendation engine with BERT, SVD, and MovieLens genome features.
+
+## AI Architecture
+
+```text
+Browser UI
+  -> Flask backend (app.py)
+      -> TMDB / streaming API proxy
+      -> user favorites stored in SQLite
+      -> recommendation request
+          -> BERT service (ai_engine/bert_service.py)
+              -> load movie_vectors.json or final_boss_vectors.json
+              -> embed user's favorite movie overviews
+              -> compare vectors with cosine similarity
+              -> return ranked movie recommendations
+```
+
+The backend and the BERT service are separated on purpose. The Flask app handles user-facing APIs and hides external API keys. The BERT service focuses on model loading, vector search, and recommendation scoring, so it can run on another machine if needed.
 
 ## How The AI Recommendation Works
 
@@ -48,6 +77,38 @@ Genome 50% + SVD 30% + BERT 20%
 ```
 
 This makes the recommendation less dependent on one signal. BERT helps understand plot meaning, SVD captures audience taste patterns, and genome features add genre/style structure.
+
+## BERT Model And Data Pipeline
+
+The project has two main AI steps.
+
+Step 1: build movie vectors
+
+```bash
+python ai_engine/generate_vectors.py
+```
+
+This script fetches movie metadata from TMDB, combines movie title, overview, rating, and genre metadata into text, then uses the BERT model to generate one semantic vector per movie. The generated output is:
+
+```text
+movie_vectors.json
+```
+
+Step 2: serve recommendations
+
+```bash
+python ai_engine/bert_service.py
+```
+
+The service loads `movie_vectors.json` or `final_boss_vectors.json`, receives favorite movie overviews from the Flask backend, embeds the query text, compares it against all stored movie vectors, excludes movies already saved by the user, and returns the highest scoring candidates.
+
+For the hybrid version, `ai_engine/final_boss_engine.py` can merge:
+
+- BERT semantic vectors from TMDB movie descriptions.
+- SVD collaborative filtering vectors from MovieLens ratings.
+- MovieLens Genome style and tag features.
+
+Generated vector files are intentionally ignored by Git because they can be large and are environment-specific.
 
 ## Project Structure
 
@@ -114,6 +175,20 @@ To run the BERT recommendation service separately:
 python ai_engine/bert_service.py
 ```
 
+Then set the Flask app to call the local recommendation service:
+
+```text
+REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+```
+
+The BERT recommendation service requires a generated vector file in the project root:
+
+```text
+movie_vectors.json
+```
+
+If that file does not exist, run `ai_engine/generate_vectors.py` first.
+
 ## Public Repository Notes
 
 This repo intentionally ignores local secrets, databases, generated vectors, model weights, and virtual environments.
@@ -126,6 +201,13 @@ Ignored examples:
 - `movie_vectors.json`
 - `final_boss_vectors.json`
 - `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
+
+Security-related cleanup already applied:
+
+- API keys are read from `.env` instead of being hardcoded in frontend code.
+- `.env.example` is provided as a safe template.
+- Local database files and generated vector files are ignored.
+- Local IDE and agent settings are ignored.
 
 ## Attribution
 
