@@ -1,174 +1,175 @@
-# LumiTrace - AI Movie Recommendation
+<div align="center">
 
-LumiTrace is an AI-powered movie recommendation engine that uses BERT semantic embeddings to infer a user's movie taste from saved favorites. The web interface is only the demo surface; the main focus is the recommendation algorithm, vector generation pipeline, and hybrid ranking service.
+# LumiTrace
 
-This project is designed as a working prototype of an AI recommendation workflow: collect movie metadata, turn plots into vectors, build a user taste profile, compare semantic similarity, and return ranked recommendations with explainable scoring signals.
+### AI Movie Recommendation Engine
+
+**A BERT-powered recommender that traces a user's movie taste from saved favorites and turns plot semantics into ranked recommendations.**
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask_API-Backend-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![BERT](https://img.shields.io/badge/BERT-Semantic%20Embeddings-FF6B6B?style=for-the-badge)](ALGORITHM.md)
+[![TMDB](https://img.shields.io/badge/TMDB-Movie%20Metadata-01B4E4?style=for-the-badge)](https://www.themoviedb.org/)
+[![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
+
+[Algorithm](ALGORITHM.md) | [Roadmap](ROADMAP.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
+
+</div>
+
+---
+
+## Why LumiTrace?
+
+Most movie recommenders lean on broad labels like genre, rating, or popularity. LumiTrace is built around a different question:
+
+> If a user likes these stories, what other movies feel semantically close?
+
+The web app is only the demo surface. The core of the project is the recommendation pipeline:
+
+```text
+favorite movies -> plot text -> BERT embeddings -> similarity search -> hybrid ranking -> recommendations
+```
+
+LumiTrace uses saved favorites as preference signals, embeds movie plots with BERT, compares candidate movies in vector space, and can optionally blend semantic similarity with collaborative filtering and MovieLens Genome-style features.
+
+## Project Snapshot
+
+| Area | What LumiTrace Does |
+| --- | --- |
+| Recommendation core | BERT semantic similarity over movie plots |
+| User signal | Saved favorite movies, genres, vote counts, movie IDs |
+| Retrieval | Precomputed movie vector index from TMDB metadata |
+| Ranking | BERT similarity, optional SVD, optional Genome features |
+| Backend | Flask API for user data, API proxying, and recommendation calls |
+| Demo surface | Web UI for collecting favorites and showing recommendations |
+| Safety | `.env`-based secrets, ignored local DB/vector/model files |
 
 ## Current Status
 
-LumiTrace is under active maintenance as an open-source AI recommendation prototype. The current focus is making the recommendation algorithm easier to understand, safer to run locally, and clearer for future contributors.
+LumiTrace is under active maintenance as an open-source AI recommendation prototype.
 
 Recent maintenance work:
 
-- Renamed and documented the project as LumiTrace.
+- Reframed the project around the recommendation algorithm instead of the web UI.
+- Added [ALGORITHM.md](ALGORITHM.md) with a focused explanation of the scoring pipeline.
 - Added public-safe environment configuration with `.env.example`.
 - Removed hardcoded API keys from vector generation scripts.
-- Added a clearer BERT architecture and data pipeline overview.
-- Added a dedicated algorithm explanation for the recommendation flow.
 - Ignored local secrets, SQLite databases, generated vectors, model files, IDE settings, and local agent settings.
-- Added project roadmap and changelog files for ongoing development.
+- Added [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md) for ongoing development.
 
-Repository:
+## How The Recommendation Works
 
-```text
-https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation
-```
+### 1. Build Movie Vectors
 
-## Core Algorithm Idea
-
-Most simple movie recommenders rely on genres, ratings, or popularity. LumiTrace focuses on semantic similarity. If a user saves several movies they like, the system extracts the plot overviews, converts them into BERT embeddings, and searches for movies with similar story, theme, and style signals.
-
-The goal is not only to recommend "popular action movies" or "high-rated dramas", but to recommend movies whose narrative meaning is close to what the user already enjoys.
-
-Read the full algorithm breakdown in `ALGORITHM.md`.
-
-## What The Recommendation System Does
-
-The system lets users save favorite movies and then builds recommendations from those favorites. The recommendation engine does not only compare genres or popularity. It converts movie plots into BERT semantic vectors, compares the meaning of the user's favorite movies against a movie vector database, and returns movies with similar story/theme signals.
-
-In short: the UI collects preference signals, while the AI service turns those signals into an embedding-based recommendation query.
-
-## Highlights
-
-- BERT-based semantic matching between user favorites and candidate movies.
-- Vector generation pipeline for building a movie embedding database from TMDB metadata.
-- Hybrid ranking design that can combine BERT, SVD collaborative filtering, and MovieLens Genome features.
-- Flask API layer that sends user preference signals to the recommendation service.
-- Backend proxy so TMDB and RapidAPI keys are not exposed in frontend code.
-- Web UI for collecting favorites and demonstrating the recommender.
-
-## AI Architecture
+The vector generation script fetches movie metadata from TMDB and builds a text representation for each movie:
 
 ```text
-Browser UI
-  -> Flask backend (app.py)
-      -> TMDB / streaming API proxy
-      -> user favorites stored in SQLite
-      -> recommendation request
-          -> BERT service (ai_engine/bert_service.py)
-              -> load movie_vectors.json or final_boss_vectors.json
-              -> embed user's favorite movie overviews
-              -> compare vectors with cosine similarity
-              -> return ranked movie recommendations
+title + overview + vote_average + genre_ids
 ```
 
-The backend and the BERT service are separated on purpose. The Flask app handles user-facing APIs and hides external API keys. The BERT service focuses on model loading, vector search, and recommendation scoring, so it can run on another machine if needed.
-
-## How The AI Recommendation Works
-
-The BERT model used in this project is:
+That text is embedded with:
 
 ```text
 AventIQ-AI/bert-movie-recommendation-system
 ```
 
-It is loaded with Hugging Face Transformers in `ai_engine/bert_service.py` and the vector generation scripts.
-
-The core recommendation flow starts from the movies a user has already liked. For each favorite movie, the system collects text signals such as title, overview, genres, vote count, and TMDB metadata.
-
-The BERT pipeline turns movie overviews into dense semantic vectors. Instead of only matching exact keywords, the model compares the meaning of plots. For example, two films can be considered similar even when they do not share the same title words, as long as their story structure, genre signals, or themes are close in embedding space.
-
-At recommendation time, the backend sends the user's recent favorite movie overviews to the semantic search service. The service embeds the input text, compares it against the movie vector database with cosine similarity, excludes movies the user already saved, and returns the closest candidates.
-
-The advanced `Final Boss Engine` can combine three signals:
-
-- Genome features: style and theme profile from MovieLens genome data.
-- SVD taste vectors: collaborative filtering signal from user-rating patterns.
-- BERT vectors: semantic similarity from movie descriptions.
-
-The current default weighting in the BERT service is:
-
-```text
-Genome 50% + SVD 30% + BERT 20%
-```
-
-This makes the recommendation less dependent on one signal. BERT helps understand plot meaning, SVD captures audience taste patterns, and genome features add genre/style structure.
-
-## BERT Model And Data Pipeline
-
-The project has two main AI steps.
-
-Step 1: build movie vectors
-
-```bash
-python ai_engine/generate_vectors.py
-```
-
-This script fetches movie metadata from TMDB, combines movie title, overview, rating, and genre metadata into text, then uses the BERT model to generate one semantic vector per movie. The generated output is:
+The generated semantic index is saved as:
 
 ```text
 movie_vectors.json
 ```
 
-Step 2: serve recommendations
+Generated vector files are intentionally ignored by Git because they can be large and can be regenerated.
 
-```bash
-python ai_engine/bert_service.py
+### 2. Build A User Taste Query
+
+When a user saves favorite movies, the backend collects recent favorites and sends the BERT service:
+
+- favorite movie overviews
+- favorite movie IDs to exclude from results
+- genre IDs as taste constraints
+- vote counts as a popularity signal
+
+The BERT service embeds the favorite overviews and uses them as the user's taste query.
+
+### 3. Score Candidate Movies
+
+The service compares the user's taste query with every precomputed movie vector.
+
+```text
+bert_score = cosine_similarity(user_embedding, movie_embedding)
 ```
 
-The service loads `movie_vectors.json` or `final_boss_vectors.json`, receives favorite movie overviews from the Flask backend, embeds the query text, compares it against all stored movie vectors, excludes movies already saved by the user, and returns the highest scoring candidates.
+For multiple favorites, LumiTrace keeps the strongest semantic match signal so a candidate can match one clear part of the user's taste.
 
-For the hybrid version, `ai_engine/final_boss_engine.py` can merge:
+### 4. Hybrid Ranking
 
-- BERT semantic vectors from TMDB movie descriptions.
-- SVD collaborative filtering vectors from MovieLens ratings.
-- MovieLens Genome style and tag features.
+The advanced engine can blend three signals:
 
-Generated vector files are intentionally ignored by Git because they can be large and are environment-specific.
+```text
+final_score =
+  genome_similarity * 0.50 +
+  svd_similarity    * 0.30 +
+  bert_similarity   * 0.20
+```
 
-## Project Structure
+| Signal | Meaning |
+| --- | --- |
+| BERT | Plot meaning, theme, atmosphere, story similarity |
+| SVD | Collaborative filtering signal from rating patterns |
+| Genome | MovieLens-style tag and style profile |
+
+If SVD or Genome vectors are missing, the service falls back to the available signals and normalizes the weights.
+
+For the full breakdown, see [ALGORITHM.md](ALGORITHM.md).
+
+## Architecture
+
+```text
+Browser UI
+  |
+  v
+Flask Backend (app.py)
+  |-- TMDB / streaming API proxy
+  |-- SQLite favorites
+  |-- recommendation request
+  |
+  v
+BERT Service (ai_engine/bert_service.py)
+  |-- loads movie_vectors.json or final_boss_vectors.json
+  |-- embeds favorite movie overviews
+  |-- compares vectors with cosine similarity
+  |-- ranks and filters candidates
+  |
+  v
+Recommended Movies
+```
+
+The backend and recommendation service are separated so the BERT service can run on another machine, such as a GPU workstation, while the Flask backend serves the web app.
+
+## Repository Structure
 
 ```text
 .
 |-- app.py                         # Flask backend, API proxy, auth, favorites, recommendations
-|-- index.html                     # Main movie browsing UI
-|-- recommendations.html           # Recommendation result UI
+|-- index.html                     # Demo UI
+|-- recommendations.html           # Recommendation UI
 |-- script.js                      # Frontend logic
 |-- ai_engine/
 |   |-- bert_service.py            # Semantic recommendation API
 |   |-- generate_vectors.py        # Build BERT movie vectors from TMDB data
 |   |-- generate_vectors_massive.py
 |   |-- generate_vectors_infinity.py
-|   |-- final_boss_engine.py       # Merge BERT, SVD, and genome vectors
+|   |-- final_boss_engine.py       # Merge BERT, SVD, and Genome vectors
 |   `-- train_collaborative_vectors.py
-|-- .env.example                   # Safe environment template
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
-|-- CHANGELOG.md                   # Maintenance history
 |-- ROADMAP.md                     # Planned AI and product improvements
+|-- CHANGELOG.md                   # Maintenance history
+|-- .env.example                   # Safe environment template
 `-- .gitignore
 ```
 
-## Environment Variables
-
-Create a local `.env` file from `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Then fill in your local values:
-
-```text
-TMDB_API_KEY=your_tmdb_key
-RAPID_API_KEY=your_rapidapi_key
-REMOTE_SEARCH_URL=your_bert_search_service_url
-OLLAMA_URL=your_ollama_chat_service_url
-SSL_VERIFY=false
-```
-
-Do not commit `.env`. The repository includes `.env.example` only.
-
-## Running Locally
+## Quick Start
 
 Install dependencies:
 
@@ -176,7 +177,23 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Start the Flask app:
+Create a local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Fill in your local values:
+
+```text
+TMDB_API_KEY=your_tmdb_key
+RAPID_API_KEY=your_rapidapi_key
+REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+OLLAMA_URL=
+SSL_VERIFY=false
+```
+
+Start the Flask backend:
 
 ```bash
 python app.py
@@ -188,57 +205,56 @@ Open:
 http://localhost:8080
 ```
 
-To run the BERT recommendation service separately:
+## Running The BERT Service
+
+Generate movie vectors first:
+
+```bash
+python ai_engine/generate_vectors.py
+```
+
+Then start the recommendation service:
 
 ```bash
 python ai_engine/bert_service.py
 ```
 
-Then set the Flask app to call the local recommendation service:
-
-```text
-REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
-```
-
-The BERT recommendation service requires a generated vector file in the project root:
+The BERT service expects one of these files in the project root:
 
 ```text
 movie_vectors.json
+final_boss_vectors.json
 ```
 
-If that file does not exist, run `ai_engine/generate_vectors.py` first.
+## Security Notes
 
-## Public Repository Notes
+This repository is prepared for public GitHub release.
 
-This repo intentionally ignores local secrets, databases, generated vectors, model weights, and virtual environments.
-
-Ignored examples:
+Ignored local files include:
 
 - `.env`
 - `dev_v4.db`
 - `.venv/`
+- `.vscode/`
+- `.claude/`
+- `scratch/`
 - `movie_vectors.json`
 - `final_boss_vectors.json`
-- `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
+- model weights and array files such as `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
 
-Security-related cleanup already applied:
-
-- API keys are read from `.env` instead of being hardcoded in frontend code.
-- `.env.example` is provided as a safe template.
-- Local database files and generated vector files are ignored.
-- Local IDE and agent settings are ignored.
+API keys are loaded from `.env` and are not committed to the repository.
 
 ## Roadmap
 
-See `ROADMAP.md` for planned improvements, including conversational recommendations, richer recommendation explanations, vector search optimization, and a cleaner public demo setup.
+Next planned improvements:
 
-## Algorithm Notes
+- conversational recommendation mode
+- recommendation explanations
+- small sample vector index for smoke tests
+- vector search optimization
+- cleaner deployment notes for running backend and BERT service on separate machines
 
-See `ALGORITHM.md` for a focused explanation of how LumiTrace builds movie vectors, creates a user taste profile, scores candidates, and ranks recommendations.
-
-## Changelog
-
-See `CHANGELOG.md` for recent maintenance notes.
+See [ROADMAP.md](ROADMAP.md) for the full plan.
 
 ## Attribution
 
