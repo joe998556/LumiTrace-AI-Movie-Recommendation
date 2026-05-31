@@ -4,6 +4,19 @@ LumiTrace is an AI-powered movie recommendation system that uses BERT semantic e
 
 This project is designed as a working prototype of an AI recommendation workflow: collect movie metadata, turn plots into vectors, compare semantic similarity, and explain recommendations through a web interface.
 
+## Current Status
+
+LumiTrace is under active maintenance as an open-source AI recommendation prototype. The current focus is making the BERT recommendation pipeline easier to understand, safer to run locally, and clearer for future contributors.
+
+Recent maintenance work:
+
+- Renamed and documented the project as LumiTrace.
+- Added public-safe environment configuration with `.env.example`.
+- Removed hardcoded API keys from vector generation scripts.
+- Added a clearer BERT architecture and data pipeline overview.
+- Ignored local secrets, SQLite databases, generated vectors, model files, IDE settings, and local agent settings.
+- Added project roadmap and changelog files for ongoing development.
+
 Repository:
 
 ```text
@@ -126,6 +139,8 @@ Generated vector files are intentionally ignored by Git because they can be larg
 |   |-- final_boss_engine.py       # Merge BERT, SVD, and genome vectors
 |   `-- train_collaborative_vectors.py
 |-- .env.example                   # Safe environment template
+|-- CHANGELOG.md                   # Maintenance history
+|-- ROADMAP.md                     # Planned AI and product improvements
 `-- .gitignore
 ```
 
@@ -208,6 +223,14 @@ Security-related cleanup already applied:
 - `.env.example` is provided as a safe template.
 - Local database files and generated vector files are ignored.
 - Local IDE and agent settings are ignored.
+
+## Roadmap
+
+See `ROADMAP.md` for planned improvements, including conversational recommendations, richer recommendation explanations, vector search optimization, and a cleaner public demo setup.
+
+## Changelog
+
+See `CHANGELOG.md` for recent maintenance notes.
 
 ## Attribution
 
