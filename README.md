@@ -1,12 +1,12 @@
 # LumiTrace - AI Movie Recommendation
 
-LumiTrace is an AI-powered movie recommendation system that uses BERT semantic embeddings to recommend movies from a user's favorites. It combines TMDB movie metadata, streaming provider information, a Flask API backend, and a standalone BERT recommendation service.
+LumiTrace is an AI-powered movie recommendation engine that uses BERT semantic embeddings to infer a user's movie taste from saved favorites. The web interface is only the demo surface; the main focus is the recommendation algorithm, vector generation pipeline, and hybrid ranking service.
 
-This project is designed as a working prototype of an AI recommendation workflow: collect movie metadata, turn plots into vectors, compare semantic similarity, and explain recommendations through a web interface.
+This project is designed as a working prototype of an AI recommendation workflow: collect movie metadata, turn plots into vectors, build a user taste profile, compare semantic similarity, and return ranked recommendations with explainable scoring signals.
 
 ## Current Status
 
-LumiTrace is under active maintenance as an open-source AI recommendation prototype. The current focus is making the BERT recommendation pipeline easier to understand, safer to run locally, and clearer for future contributors.
+LumiTrace is under active maintenance as an open-source AI recommendation prototype. The current focus is making the recommendation algorithm easier to understand, safer to run locally, and clearer for future contributors.
 
 Recent maintenance work:
 
@@ -14,6 +14,7 @@ Recent maintenance work:
 - Added public-safe environment configuration with `.env.example`.
 - Removed hardcoded API keys from vector generation scripts.
 - Added a clearer BERT architecture and data pipeline overview.
+- Added a dedicated algorithm explanation for the recommendation flow.
 - Ignored local secrets, SQLite databases, generated vectors, model files, IDE settings, and local agent settings.
 - Added project roadmap and changelog files for ongoing development.
 
@@ -23,26 +24,28 @@ Repository:
 https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation
 ```
 
-## Core Idea
+## Core Algorithm Idea
 
 Most simple movie recommenders rely on genres, ratings, or popularity. LumiTrace focuses on semantic similarity. If a user saves several movies they like, the system extracts the plot overviews, converts them into BERT embeddings, and searches for movies with similar story, theme, and style signals.
 
 The goal is not only to recommend "popular action movies" or "high-rated dramas", but to recommend movies whose narrative meaning is close to what the user already enjoys.
 
-## What This Project Does
+Read the full algorithm breakdown in `ALGORITHM.md`.
 
-This project lets users browse movies, save favorites, and receive AI-powered recommendations. The recommendation engine does not only compare genres or popularity. It converts movie plots into BERT semantic vectors, compares the meaning of the user's favorite movies against a movie vector database, and returns movies with similar story/theme signals.
+## What The Recommendation System Does
 
-In short: users collect movies they like, and the system recommends other movies whose plots and style are semantically close.
+The system lets users save favorite movies and then builds recommendations from those favorites. The recommendation engine does not only compare genres or popularity. It converts movie plots into BERT semantic vectors, compares the meaning of the user's favorite movies against a movie vector database, and returns movies with similar story/theme signals.
+
+In short: the UI collects preference signals, while the AI service turns those signals into an embedding-based recommendation query.
 
 ## Highlights
 
-- Browse trending movies and search TMDB movie data.
-- Save favorite movies by user.
-- Generate recommendations from a user's favorite movie plots.
-- Use a backend proxy so TMDB and RapidAPI keys are not exposed in frontend code.
-- Support a remote BERT recommendation service for semantic movie matching.
-- Optional hybrid recommendation engine with BERT, SVD, and MovieLens genome features.
+- BERT-based semantic matching between user favorites and candidate movies.
+- Vector generation pipeline for building a movie embedding database from TMDB metadata.
+- Hybrid ranking design that can combine BERT, SVD collaborative filtering, and MovieLens Genome features.
+- Flask API layer that sends user preference signals to the recommendation service.
+- Backend proxy so TMDB and RapidAPI keys are not exposed in frontend code.
+- Web UI for collecting favorites and demonstrating the recommender.
 
 ## AI Architecture
 
@@ -139,6 +142,7 @@ Generated vector files are intentionally ignored by Git because they can be larg
 |   |-- final_boss_engine.py       # Merge BERT, SVD, and genome vectors
 |   `-- train_collaborative_vectors.py
 |-- .env.example                   # Safe environment template
+|-- ALGORITHM.md                   # Recommendation algorithm explanation
 |-- CHANGELOG.md                   # Maintenance history
 |-- ROADMAP.md                     # Planned AI and product improvements
 `-- .gitignore
@@ -227,6 +231,10 @@ Security-related cleanup already applied:
 ## Roadmap
 
 See `ROADMAP.md` for planned improvements, including conversational recommendations, richer recommendation explanations, vector search optimization, and a cleaner public demo setup.
+
+## Algorithm Notes
+
+See `ALGORITHM.md` for a focused explanation of how LumiTrace builds movie vectors, creates a user taste profile, scores candidates, and ranks recommendations.
 
 ## Changelog
 

@@ -4,6 +4,8 @@ All notable project maintenance updates are tracked here.
 
 ## 2026-06-01
 
+- Reframed the README around the recommendation algorithm rather than the web UI.
+- Added `ALGORITHM.md` with a focused explanation of movie vectors, user taste profiles, semantic similarity, hybrid ranking, and filtering rules.
 - Strengthened the public README with a clearer AI architecture overview.
 - Documented the BERT model and movie vector generation pipeline.
 - Added local setup notes for running the Flask backend and BERT recommendation service.
