@@ -2,6 +2,12 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-02
+
+- Added a public-safe `/api/health` endpoint for backend readiness checks.
+- Documented the health endpoint in the README.
+- Kept health output limited to status values and integration booleans so secrets are not exposed.
+
 ## 2026-06-01
 
 - Reframed the README around the recommendation algorithm rather than the web UI.

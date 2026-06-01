@@ -7,7 +7,6 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 - Add screenshots or a short demo GIF to the README.
 - Add a small sample vector dataset for local smoke testing without requiring a full TMDB vector build.
 - Improve startup checks so the backend clearly reports whether TMDB, RapidAPI, BERT search, and chat services are configured.
-- Add a `/api/health` endpoint for backend status checks.
 - Add clearer error messages when `movie_vectors.json` is missing.
 
 ## AI Recommendation Improvements
@@ -31,3 +30,7 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 - Add stricter CORS configuration for deployed environments.
 - Replace the demo username-based auth flow with token-based auth if the project becomes more than a prototype.
 - Add deployment notes for running the Flask backend and BERT service on separate machines.
+
+## Completed
+
+- Add a public-safe `/api/health` endpoint for backend status checks.

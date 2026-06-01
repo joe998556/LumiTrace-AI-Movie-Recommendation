@@ -441,6 +441,30 @@ def chat_proxy():
 # ==========================================
 # Static Files & Frontend
 # ==========================================
+@app.route('/api/health')
+def health_check():
+    """Return public-safe backend readiness information."""
+    db_ready = False
+    try:
+        db = get_db()
+        db.execute("SELECT 1").fetchone()
+        db_ready = True
+    except Exception as e:
+        logger.warning(f"Health check database probe failed: {e}")
+
+    return jsonify({
+        "status": "ok" if db_ready else "degraded",
+        "service": "LumiTrace backend",
+        "database": "ready" if db_ready else "unavailable",
+        "integrations": {
+            "tmdb": bool(TMDB_API_KEY),
+            "rapidapi_streaming": bool(RAPID_API_KEY),
+            "bert_search": bool(REMOTE_SEARCH_URL),
+            "ollama_chat": bool(OLLAMA_URL)
+        }
+    }), 200 if db_ready else 503
+
+
 @app.route('/')
 def index():
     """Serve the main index.html file."""

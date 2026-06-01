@@ -50,6 +50,7 @@ LumiTrace is under active maintenance as an open-source AI recommendation protot
 
 Recent maintenance work:
 
+- Added a public-safe `/api/health` endpoint for backend readiness checks.
 - Reframed the project around the recommendation algorithm instead of the web UI.
 - Added [ALGORITHM.md](ALGORITHM.md) with a focused explanation of the scoring pipeline.
 - Added public-safe environment configuration with `.env.example`.
@@ -204,6 +205,14 @@ Open:
 ```text
 http://localhost:8080
 ```
+
+Check backend readiness:
+
+```text
+http://localhost:8080/api/health
+```
+
+The health endpoint reports whether the local database is reachable and which integrations are configured. It only returns booleans/status values, never API keys or private service URLs.
 
 ## Running The BERT Service
 
