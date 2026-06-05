@@ -2,6 +2,12 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-05
+
+- Added GitHub issue templates for bug reports and feature requests.
+- Added a pull request template with security and documentation checks.
+- Improved repository maintenance workflow for future open-source collaboration.
+
 ## 2026-06-02
 
 - Added a public-safe `/api/health` endpoint for backend readiness checks.
