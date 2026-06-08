@@ -33,4 +33,5 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 
 ## Completed
 
+- Add contribution and security policy documents.
 - Add a public-safe `/api/health` endpoint for backend status checks.

@@ -2,6 +2,12 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-09
+
+- Added `CONTRIBUTING.md` with setup, testing, and recommendation-pipeline contribution guidance.
+- Added `SECURITY.md` with secret handling rules and current hardening notes.
+- Linked contribution and security documents from the README.
+
 ## 2026-06-05
 
 - Added GitHub issue templates for bug reports and feature requests.

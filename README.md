@@ -12,7 +12,7 @@
 [![TMDB](https://img.shields.io/badge/TMDB-Movie%20Metadata-01B4E4?style=for-the-badge)](https://www.themoviedb.org/)
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
 
-[Algorithm](ALGORITHM.md) | [Roadmap](ROADMAP.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
+[Algorithm](ALGORITHM.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
 
 </div>
 
@@ -56,6 +56,7 @@ Recent maintenance work:
 - Added public-safe environment configuration with `.env.example`.
 - Removed hardcoded API keys from vector generation scripts.
 - Ignored local secrets, SQLite databases, generated vectors, model files, IDE settings, and local agent settings.
+- Added contribution and security policy documents for future maintainers.
 - Added [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md) for ongoing development.
 
 ## How The Recommendation Works
@@ -164,6 +165,8 @@ The backend and recommendation service are separated so the BERT service can run
 |   |-- final_boss_engine.py       # Merge BERT, SVD, and Genome vectors
 |   `-- train_collaborative_vectors.py
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
+|-- CONTRIBUTING.md                # Contribution guide
+|-- SECURITY.md                    # Public security policy
 |-- ROADMAP.md                     # Planned AI and product improvements
 |-- CHANGELOG.md                   # Maintenance history
 |-- .env.example                   # Safe environment template
@@ -252,6 +255,8 @@ Ignored local files include:
 - model weights and array files such as `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
 
 API keys are loaded from `.env` and are not committed to the repository.
+
+For contribution and security guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
