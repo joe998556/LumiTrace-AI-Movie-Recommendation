@@ -2,496 +2,149 @@
 <html lang="zh-TW">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LumiTrace - 探索你的下一部最愛電影</title>
-    <meta name="description" content="AI 驅動的電影推薦與串流聚合平台，結合 BERT 語意分析、SVD 品味模型與 Genome 風格基因的混合推薦引擎。">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#cc785c',
-                        'primary-content': '#ffffff',
-                    }
-                }
-            }
-        }
-    </script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
-    <script src="script.js?v=5" defer></script>
-    <style>
-        :root {
-            --coral: #cc785c;
-            --coral-active: #a9583e;
-            --ink: #141413;
-            --canvas: #faf9f5;
-            --surface-dark: #181715;
-            --surface-dark-elevated: #252320;
-            --surface-dark-soft: #1f1e1b;
-            --on-dark: #faf9f5;
-            --on-dark-soft: #a09d96;
-            --accent-teal: #5db8a6;
-            --hairline: #e6dfd8;
-            --serif: "Tiempos Headline", "Cormorant Garamond", ui-serif, Georgia, serif;
-            --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --mono: "JetBrains Mono", ui-monospace, monospace;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumiTrace - AI Movie Recommendation</title>
+  <meta name="description" content="輸入自己的 TMDB API key，收藏喜歡的電影，LumiTrace 會根據你的收藏推薦更符合口味的影片。">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="script.js?v=public-demo" defer></script>
+  <style>
+    :root {
+      --coral: #cc785c;
+      --ink: #151413;
+      --panel: #211f1d;
+      --line: rgba(255, 255, 255, 0.10);
+    }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
-        body {
-            font-family: var(--sans);
-            background-color: var(--surface-dark);
-            color: var(--on-dark);
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-        }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(204, 120, 92, 0.20), transparent 32rem),
+        radial-gradient(circle at 80% 10%, rgba(93, 184, 166, 0.14), transparent 28rem),
+        var(--ink);
+      color: #faf9f5;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+    }
 
-        h1, h2, h3 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.3px; }
-        code, pre { font-family: var(--mono); }
+    .surface {
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+    }
 
-        .gradient-text {
-            background: linear-gradient(135deg, var(--coral) 0%, #e8a55a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    .poster-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
 
-        .neon-glow {
-            box-shadow: 0 0 20px rgba(204, 120, 92, 0.3), 0 0 40px rgba(204, 120, 92, 0.1);
-        }
+    .poster-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(204, 120, 92, 0.7);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+    }
 
-        .neon-glow-orange {
-            box-shadow: 0 0 20px rgba(204, 120, 92, 0.4), 0 0 40px rgba(204, 120, 92, 0.15);
-        }
-
-        .glassmorphic {
-            background: rgba(255, 255, 255, 0.04);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .glassmorphic-strong {
-            background: rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(32px);
-            -webkit-backdrop-filter: blur(32px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        /* Movie Cards */
-        .movie-card {
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .movie-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(204, 120, 92, 0.4);
-        }
-
-        .movie-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(24, 23, 21, 0.95), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 1rem;
-        }
-
-        .movie-card:hover .movie-overlay {
-            opacity: 1;
-        }
-
-        /* Chat Panel */
-        .chat-panel {
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .chat-panel.active {
-            transform: translateX(0);
-        }
-
-        /* Hero */
-        .hero-gradient {
-            background: linear-gradient(to bottom, transparent 0%, rgba(24, 23, 21, 0.3) 40%, rgba(24, 23, 21, 0.9) 80%, var(--surface-dark) 100%);
-        }
-
-        /* Navbar scroll effect */
-        .scroll-navbar {
-            background: rgba(24, 23, 21, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-
-        /* AI Input Glow */
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 16px rgba(204, 120, 92, 0.3); }
-            50%      { box-shadow: 0 0 32px rgba(204, 120, 92, 0.6); }
-        }
-
-        .ai-input:focus {
-            animation: pulse-glow 2s infinite;
-        }
-
-        /* Platform Tab */
-        .platform-tab { transition: all 0.3s ease; }
-        .platform-tab.active {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        /* Chat animations */
-        .chat-message {
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Floating button */
-        .floating-button {
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        .star-rating {
-            color: #fbbf24;
-        }
-
-        /* Auth Modal */
-        .auth-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .auth-overlay.active {
-            display: flex;
-        }
-
-        /* Scrollbar */
-        .scrollbar::-webkit-scrollbar { width: 8px; }
-        .scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.03); }
-        .scrollbar::-webkit-scrollbar-thumb { background: rgba(204, 120, 92, 0.35); border-radius: 4px; }
-        .scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(204, 120, 92, 0.6); }
-    </style>
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
 </head>
 
 <body>
+  <main class="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
+    <header class="flex flex-col gap-6 py-4 lg:flex-row lg:items-end lg:justify-between">
+      <div class="max-w-3xl">
+        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.28em] text-[#e6ad90]">LumiTrace</p>
+        <h1 class="text-4xl font-semibold tracking-tight sm:text-6xl">找到更符合你口味的下一部電影</h1>
+        <p class="mt-5 max-w-2xl text-base leading-7 text-white/68">
+          貼上你自己的 TMDB API key，LumiTrace 會載入趨勢電影。你只要收藏喜歡的片，
+          再按「你適合看以下這些」，系統會根據收藏的類型、人氣與劇情 metadata 推薦更多選項。
+        </p>
+      </div>
+      <a href="ALGORITHM.md" class="surface rounded-lg px-4 py-3 text-sm text-white/75 transition hover:text-white">
+        查看演算法說明
+      </a>
+    </header>
 
-    <!-- ============ Navbar ============ -->
-    <nav id="navbar" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-        <div class="glassmorphic border-b border-white/5">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center space-x-3">
-                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="var(--coral)" />
-                            <path d="M2 17L12 22L22 17" stroke="var(--coral)" stroke-width="2" />
-                            <path d="M2 12L12 17L22 12" stroke="var(--coral)" stroke-width="2" />
-                        </svg>
-                        <h1 class="text-xl font-bold gradient-text">LumiTrace</h1>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <a id="recLink" href="recommendations.html"
-                            class="hidden glassmorphic px-4 py-2 rounded-lg hover:bg-white/10 transition-all text-sm font-medium">
-                            ✨ 個人化推薦
-                        </a>
-                        <button id="navSearchBtn" class="glassmorphic p-2 rounded-lg hover:bg-white/10 transition-all">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
-                        <button id="navUserBtn" class="glassmorphic p-2 rounded-lg hover:bg-white/10 transition-all">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+    <section class="surface rounded-2xl p-4 sm:p-5">
+      <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+        <label class="block">
+          <span class="mb-2 block text-sm font-medium text-white/70">TMDB API Key</span>
+          <input id="apiKeyInput" type="password" autocomplete="off"
+            class="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-[#cc785c]"
+            placeholder="貼上你的 TMDB API key">
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <button id="saveKeyBtn" class="rounded-xl bg-[#cc785c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b8674e]">
+            儲存並載入趨勢
+          </button>
+          <button id="clearKeyBtn" class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10">
+            清除 key
+          </button>
         </div>
-    </nav>
-
-    <!-- ============ Hero Section ============ -->
-    <section class="relative h-[70vh] mt-16 overflow-hidden">
-        <img id="heroImage" src="https://image.tmdb.org/t/p/original/8I37NtDffNV7AZlDa7uDvvqhovU.jpg"
-            alt="Featured Movie" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-700">
-        <div class="hero-gradient absolute inset-0"></div>
-        <div class="relative z-10 h-full flex items-end pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-            <div class="max-w-2xl">
-                <h2 id="heroTitle" class="text-5xl sm:text-6xl font-bold mb-4">Trending Now</h2>
-                <div class="flex items-center space-x-4 text-gray-300 mb-6">
-                    <span class="flex items-center">
-                        <svg class="w-5 h-5 star-rating mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span id="heroRating">8.9</span>
-                    </span>
-                    <span id="heroYear">2024</span>
-                </div>
-                <p id="heroOverview" class="text-gray-300 mb-8 leading-relaxed line-clamp-3"></p>
-                <div class="flex space-x-4">
-                    <button id="heroPlayBtn"
-                        class="px-8 py-3 rounded-lg font-semibold hover:shadow-2xl hover:scale-105 transition-all neon-glow flex items-center space-x-2"
-                        style="background: var(--coral); color: white;">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                                d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                        </svg>
-                        <span>Play Now</span>
-                    </button>
-                    <button
-                        class="glassmorphic px-8 py-3 rounded-lg font-semibold hover:bg-white/15 transition-all border border-white/20">More
-                        Info</button>
-                </div>
-            </div>
-        </div>
+      </div>
+      <p id="keyStatus" class="mt-3 text-sm text-white/55"></p>
     </section>
 
-    <!-- ============ AI Command Center ============ -->
-    <section class="sticky top-20 z-40 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto -mt-8 mb-12">
-        <div class="glassmorphic-strong rounded-2xl p-1 neon-glow">
-            <div class="flex items-center space-x-4 rounded-xl p-4" style="background: rgba(24,23,21,0.5);">
-                <div class="p-3 rounded-lg" style="background: var(--coral);">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                </div>
-                <input type="text" id="aiCommandInput" placeholder="搜尋電影，或向 AI 提問推薦..."
-                    class="flex-1 bg-transparent outline-none text-white placeholder-gray-500 text-lg ai-input"
-                    autocomplete="off">
-                <button type="button" id="aiCommandSend"
-                    class="bg-gradient-to-r from-[#ea580c] to-[#dc2626] p-3 rounded-lg hover:scale-105 transition-all neon-glow-orange">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                </button>
-            </div>
-        </div>
+    <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div>
+        <h2 class="text-2xl font-semibold">趨勢電影</h2>
+        <p class="mt-1 text-sm text-white/55">點擊愛心收藏你喜歡的電影，收藏越多推薦越接近你的口味。</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <input id="searchInput" class="surface w-full rounded-xl px-4 py-3 text-sm outline-none placeholder:text-white/35 sm:w-72"
+          placeholder="搜尋電影，例如 Blade Runner">
+        <button id="searchBtn" class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/75 transition hover:bg-white/10">
+          搜尋
+        </button>
+      </div>
     </section>
 
-    <!-- ============ Platform Tabs ============ -->
-    <section class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mb-8">
-        <div class="flex space-x-3 overflow-x-auto pb-2" style="scrollbar-width: none;">
-            <button
-                class="platform-tab active glassmorphic px-6 py-3 rounded-lg whitespace-nowrap font-semibold border border-white/10 hover:bg-white/10"
-                data-platform="all">
-                🔥 所有趨勢
-            </button>
-            <button
-                class="platform-tab glassmorphic px-6 py-3 rounded-lg whitespace-nowrap font-semibold border border-white/10 hover:bg-white/10 flex items-center space-x-2"
-                data-platform="netflix">
-                <span style="color: #E50914;">●</span>
-                <span>Netflix</span>
-            </button>
-            <button
-                class="platform-tab glassmorphic px-6 py-3 rounded-lg whitespace-nowrap font-semibold border border-white/10 hover:bg-white/10 flex items-center space-x-2"
-                data-platform="disney">
-                <span style="color: #113CCF;">●</span>
-                <span>Disney+</span>
-            </button>
-            <button
-                class="platform-tab glassmorphic px-6 py-3 rounded-lg whitespace-nowrap font-semibold border border-white/10 hover:bg-white/10 flex items-center space-x-2"
-                data-platform="prime">
-                <span style="color: #00A8E1;">●</span>
-                <span>Prime Video</span>
-            </button>
-            <button
-                class="platform-tab glassmorphic px-6 py-3 rounded-lg whitespace-nowrap font-semibold border border-white/10 hover:bg-white/10 flex items-center space-x-2"
-                data-platform="hbo">
-                <span style="color: #9D34DA;">●</span>
-                <span>Max</span>
-            </button>
+    <section id="movieGrid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"></section>
+
+    <section class="surface rounded-2xl p-5">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold">你的收藏</h2>
+          <p id="favoriteSummary" class="mt-1 text-sm text-white/55">尚未收藏電影。</p>
         </div>
+        <div class="flex flex-wrap gap-3">
+          <button id="recommendBtn" class="rounded-xl bg-[#5db8a6] px-5 py-3 text-sm font-semibold text-[#101413] transition hover:bg-[#70cfbb]">
+            你適合看以下這些
+          </button>
+          <button id="clearFavoritesBtn" class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10">
+            清空收藏
+          </button>
+        </div>
+      </div>
+      <div id="favoriteList" class="mt-5 flex flex-wrap gap-2"></div>
     </section>
 
-    <!-- ============ Movie Grid ============ -->
-    <section class="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-8">
-        <div id="movieGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            <!-- Movies populated by script.js -->
+    <section id="recommendations">
+      <div class="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold">你適合看以下這些</h2>
+          <p id="recommendationReason" class="mt-1 text-sm text-white/55">收藏幾部喜歡的電影後按推薦按鈕。</p>
         </div>
+      </div>
+      <div id="recommendationGrid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"></div>
     </section>
 
-    <!-- ============ Footer ============ -->
-    <footer class="max-w-7xl mx-auto px-6 py-12 mt-12 border-t border-white/5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-white/40 text-xs">
-            <div class="space-y-4">
-                <h4 class="text-white/60 font-bold text-sm">數據來源與技術支援</h4>
-                <ul class="space-y-2">
-                    <li class="flex items-center gap-2">
-                        <span class="w-1 h-1 rounded-full" style="background: var(--coral);"></span>
-                        電影資料與海報由 <a href="https://www.themoviedb.org/" target="_blank"
-                            class="text-white/60 hover:underline ml-1">TMDB API</a> 提供
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <span class="w-1 h-1 rounded-full" style="background: var(--coral);"></span>
-                        串流平台狀態由 <a
-                            href="https://rapidapi.com/movie-of-the-night-movie-of-the-night-default/api/streaming-availability"
-                            target="_blank" class="text-white/60 hover:underline ml-1">Streaming Availability
-                            API</a> 介接
-                    </li>
-                </ul>
-            </div>
-            <div class="space-y-4">
-                <h4 class="text-white/60 font-bold text-sm">免責聲明 (Disclaimer)</h4>
-                <p class="leading-relaxed">本站僅供學術研究、程式開發教學及個人興趣展示使用，不具備任何商業營利目的。</p>
-                <p class="leading-relaxed">本網站所展示之電影海報、劇照及相關資訊，其版權均屬原電影製作公司、發行商及原版權持有人所有。本產品使用 TMDB API，但未獲得 TMDB
-                    的官方認可或認證。</p>
-            </div>
-        </div>
-        <div class="text-center mt-12 pt-8 border-t border-white/5 text-[10px] text-white/20">
-            © 2026 LumiTrace Project. Powered by BERT + SVD + Genome Hybrid Engine.
-        </div>
+    <footer class="border-t border-white/10 py-8 text-xs leading-6 text-white/40">
+      <p>
+        Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed,
+        certified, or otherwise approved by TMDB. Your TMDB API key is stored only in this browser's localStorage.
+      </p>
     </footer>
-
-    <!-- ============ Chat Panel (Side Panel) ============ -->
-    <div id="chatPanel" class="chat-panel fixed top-0 right-0 h-full w-full sm:w-96 z-[60]">
-        <div class="glassmorphic-strong h-full flex flex-col border-l border-white/20"
-            style="background: rgba(13, 13, 15, 0.95);">
-            <!-- Chat Header -->
-            <div class="flex items-center justify-between p-4 border-b border-white/10">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2 rounded-lg" style="background: var(--coral);">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                    </div>
-                    <h3 class="font-semibold">AI Movie Assistant</h3>
-                </div>
-                <button id="closeChatBtn" class="hover:bg-white/10 p-2 rounded-lg transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <!-- Chat Messages -->
-            <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4">
-                <div class="chat-welcome chat-message flex items-start space-x-3">
-                    <div class="p-2 rounded-lg flex-shrink-0" style="background: var(--coral);">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                    </div>
-                    <div class="glassmorphic p-3 rounded-lg flex-1">
-                        <p class="text-sm text-gray-300">你好！我是你的 AI 電影助手 🎬<br>問我任何關於電影的問題，我會根據你的口味推薦最適合的電影！</p>
-                    </div>
-                </div>
-            </div>
-            <!-- Chat Input -->
-            <div class="p-4 border-t border-white/10">
-                <div class="flex space-x-2">
-                    <input id="chatInput" type="text" placeholder="輸入訊息..."
-                        class="flex-1 glassmorphic px-4 py-3 rounded-lg outline-none text-white placeholder-gray-500 border border-white/10 focus:border-white/30 transition-all"
-                        autocomplete="off">
-                    <button id="sendChatBtn"
-                        class="px-4 py-3 rounded-lg hover:scale-105 transition-all" style="background: var(--coral); color: white;">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ Floating Chat Button ============ -->
-    <button id="chatToggleBtn"
-        class="floating-button fixed bottom-8 right-8 p-4 rounded-full shadow-2xl hover:scale-110 transition-all z-40 neon-glow" style="background: var(--coral); color: white;">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-    </button>
-
-    <!-- ============ Auth Modal ============ -->
-    <div id="authModal" class="auth-overlay">
-        <div class="glassmorphic-strong rounded-2xl p-8 w-full max-w-sm mx-4" onclick="event.stopPropagation()">
-            <div class="text-center mb-6">
-                <div class="text-4xl mb-2">🔐</div>
-                <h3 class="text-xl font-bold gradient-text">登入 / 註冊</h3>
-                <p class="text-xs text-gray-500 mt-1">登入後即可使用 AI 推薦、收藏電影</p>
-            </div>
-            <div class="space-y-4">
-                <input type="text" id="authUser" placeholder="帳號"
-                    class="w-full glassmorphic px-4 py-3 rounded-lg outline-none text-white placeholder-gray-500 border border-white/10 focus:border-white/30 transition-all">
-                <input type="password" id="authPass" placeholder="密碼"
-                    class="w-full glassmorphic px-4 py-3 rounded-lg outline-none text-white placeholder-gray-500 border border-white/10 focus:border-white/30 transition-all">
-                <div class="flex space-x-3">
-                    <button onclick="handleLogin()"
-                        class="flex-1 py-3 rounded-lg font-semibold hover:scale-105 transition-all" style="background: var(--coral); color: white;">登入</button>
-                    <button onclick="handleRegister()"
-                        class="flex-1 glassmorphic py-3 rounded-lg font-semibold hover:bg-white/10 transition-all border border-white/20">註冊</button>
-                </div>
-                <button onclick="closeAuthModal()"
-                    class="w-full text-center text-sm text-gray-500 hover:text-white transition-all py-2">取消</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ============ Navbar Scroll Effect ============ -->
-    <script>
-        const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => {
-            if (window.pageYOffset > 100) {
-                navbar.classList.add('scroll-navbar');
-            } else {
-                navbar.classList.remove('scroll-navbar');
-            }
-        });
-
-        // Close auth modal when clicking overlay
-        document.getElementById('authModal').addEventListener('click', () => closeAuthModal());
-
-        // Enter key on auth inputs
-        document.getElementById('authPass').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleLogin();
-        });
-    </script>
+  </main>
 </body>
 
 </html>

@@ -33,6 +33,8 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 
 ## Completed
 
+- Rework the app into a no-registration public demo.
+- Add browser-local favorites and TMDB-key-based recommendations.
 - Add Dependabot configuration for Python dependency maintenance.
 - Add a local operations runbook.
 - Add a public-safe local setup checker.

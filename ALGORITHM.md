@@ -1,6 +1,42 @@
 # Recommendation Algorithm
 
-LumiTrace is organized around a recommendation engine rather than a traditional movie browsing website. The web UI exists to collect user preference signals, but the core work happens in the BERT vector pipeline and ranking service.
+LumiTrace is organized around a recommendation engine rather than a traditional movie browsing website. The public demo collects user preference signals in the browser and uses TMDB metadata for a lightweight recommendation flow. The advanced mode documents a BERT vector pipeline and ranking service for deeper semantic experiments.
+
+## 0. Public Demo Recommendation Flow
+
+The default clone-and-run experience does not require registration, a database, or precomputed vectors.
+
+Public demo flow:
+
+```text
+TMDB API key -> trending/search results -> browser-local favorites -> taste profile -> TMDB discover -> local ranking
+```
+
+When a user saves favorite movies, LumiTrace stores those movie records in browser `localStorage`. The recommendation button builds a taste profile from:
+
+- favorite movie genre IDs
+- favorite movie vote averages
+- favorite movie vote counts
+- favorite movie IDs to exclude from results
+
+The public demo then queries TMDB Discover with the strongest genre signals and scores candidates locally.
+
+Conceptually:
+
+```text
+genre_score = overlap(candidate_genres, favorite_genres)
+rating_score = candidate_vote_average
+vote_score = log(candidate_vote_count)
+taste_score = closeness(candidate_rating, user_average_rating)
+
+final_demo_score =
+  genre_score +
+  rating_score +
+  vote_score +
+  taste_score
+```
+
+This public mode is intentionally lightweight so anyone can clone the repo, run the backend, paste a TMDB API key, and get recommendations immediately.
 
 ## 1. Movie Representation
 

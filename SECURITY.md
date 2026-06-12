@@ -23,6 +23,8 @@ These files are ignored by `.gitignore`, but contributors should still review st
 
 Runtime secrets are loaded from `.env` through environment variables. Public configuration should use `.env.example` only.
 
+In the public demo flow, a user's TMDB API key can also be entered in the browser UI. That key is stored in browser `localStorage` and sent only to the local Flask proxy as a request header. Do not paste real keys into issues, screenshots, logs, or pull requests.
+
 The backend health endpoint intentionally returns only readiness booleans and status strings. It must not expose API keys, private URLs, database contents, user passwords, or local filesystem paths.
 
 ## Reporting Security Issues

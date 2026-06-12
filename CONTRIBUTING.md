@@ -19,13 +19,13 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Create a local `.env` from the example file:
+Optional: create a local `.env` from the example file:
 
 ```bash
 cp .env.example .env
 ```
 
-Do not commit `.env` or any private API keys.
+The public demo also lets you paste a TMDB API key directly into the web UI. Do not commit `.env` or any private API keys.
 
 Run the Flask backend:
 
@@ -33,7 +33,7 @@ Run the Flask backend:
 python app.py
 ```
 
-Run the BERT service separately when working on recommendations:
+Run the BERT service separately when working on advanced semantic recommendations:
 
 ```bash
 python ai_engine/bert_service.py

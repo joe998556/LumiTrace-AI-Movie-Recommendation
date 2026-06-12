@@ -4,14 +4,14 @@ This runbook explains how to operate LumiTrace locally and how to diagnose the m
 
 ## Services
 
-LumiTrace is split into two services:
+LumiTrace has a simple public demo path and an optional advanced BERT path:
 
 ```text
-Flask backend     -> app.py, port 8080
-BERT recommender  -> ai_engine/bert_service.py, port 5001
+Public demo backend   -> app.py, port 8080
+Optional BERT service -> ai_engine/bert_service.py, port 5001
 ```
 
-The Flask backend can run without the BERT service, but personalized recommendations need `REMOTE_SEARCH_URL` to point to a running BERT service.
+The public demo does not require registration, a database, or a generated vector file. Users paste their own TMDB API key into the web UI, save favorite movies in browser localStorage, and request recommendations from the main page.
 
 ## Local Startup
 
@@ -21,13 +21,13 @@ The Flask backend can run without the BERT service, but personalized recommendat
 pip install -r requirements.txt
 ```
 
-2. Create `.env`.
+2. Optional: create `.env`.
 
 ```bash
 cp .env.example .env
 ```
 
-3. Fill in local values.
+3. Optional: fill in local values. The public demo can also accept a TMDB key directly in the web UI.
 
 ```text
 TMDB_API_KEY=your_tmdb_key
@@ -55,6 +55,8 @@ python app.py
 http://localhost:8080
 ```
 
+7. Paste a TMDB API key into the page, load trending movies, save favorites, and click "你適合看以下這些".
+
 ## Health Check
 
 Use the backend health endpoint:
@@ -67,7 +69,7 @@ The response reports local readiness without exposing secrets. It should not inc
 
 ## BERT Recommendation Service
 
-The BERT service needs a generated vector index:
+The public demo does not need the BERT service. The BERT service is for advanced semantic recommendation experiments and needs a generated vector index:
 
 ```text
 movie_vectors.json
@@ -103,17 +105,17 @@ http://127.0.0.1:5001/status
 
 Check:
 
-- `REMOTE_SEARCH_URL` is set.
-- `ai_engine/bert_service.py` is running.
-- `movie_vectors.json` or `final_boss_vectors.json` exists in the project root.
-- User favorites contain movie overviews.
+- A TMDB API key was entered in the UI.
+- At least one movie has been saved as a favorite.
+- Favorite movies include genre IDs from TMDB.
+- Network access to TMDB is available.
 
 ### TMDB search does not work
 
 Check:
 
-- `TMDB_API_KEY` is present in `.env`.
-- The Flask backend was restarted after editing `.env`.
+- A TMDB API key was entered in the UI, or `TMDB_API_KEY` is present in `.env`.
+- The Flask backend is running on port 8080.
 - Network access to TMDB is available.
 
 ### Streaming links are incomplete

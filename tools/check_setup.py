@@ -36,8 +36,8 @@ def main() -> int:
         ("ai_engine/generate_vectors.py", exists("ai_engine/generate_vectors.py"), "vector builder"),
         ("TMDB_API_KEY", env_present("TMDB_API_KEY"), "env var presence only"),
         ("RAPID_API_KEY", env_present("RAPID_API_KEY"), "env var presence only"),
-        ("REMOTE_SEARCH_URL", env_present("REMOTE_SEARCH_URL"), "env var presence only"),
-        ("movie_vectors.json", exists("movie_vectors.json"), "optional generated index"),
+        ("REMOTE_SEARCH_URL", env_present("REMOTE_SEARCH_URL"), "optional advanced BERT service"),
+        ("movie_vectors.json", exists("movie_vectors.json"), "optional advanced BERT index"),
         ("final_boss_vectors.json", exists("final_boss_vectors.json"), "optional hybrid index"),
     ]
 
@@ -51,9 +51,10 @@ def main() -> int:
         print("\nRequired project files are missing.")
         return 1
 
-    print("\nRequired project files look ready.")
+    print("\nRequired project files look ready for the public demo.")
+    print("Open http://localhost:8080 and paste a TMDB API key into the UI.")
     if not exists("movie_vectors.json") and not exists("final_boss_vectors.json"):
-        print("Recommendation service will need a generated vector file before it can return candidates.")
+        print("Advanced BERT mode will need a generated vector file before it can return semantic candidates.")
     return 0
 
 

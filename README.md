@@ -4,7 +4,7 @@
 
 ### AI Movie Recommendation Engine
 
-**A BERT-powered recommender that traces a user's movie taste from saved favorites and turns plot semantics into ranked recommendations.**
+**A clone-and-run movie recommender: paste your TMDB API key, save movies you like, then get taste-based recommendations.**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask_API-Backend-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
@@ -27,21 +27,23 @@ Most movie recommenders lean on broad labels like genre, rating, or popularity. 
 The web app is only the demo surface. The core of the project is the recommendation pipeline:
 
 ```text
-favorite movies -> plot text -> BERT embeddings -> similarity search -> hybrid ranking -> recommendations
+TMDB API key -> trending movies -> local favorites -> taste profile -> ranked recommendations
 ```
 
-LumiTrace uses saved favorites as preference signals, embeds movie plots with BERT, compares candidate movies in vector space, and can optionally blend semantic similarity with collaborative filtering and MovieLens Genome-style features.
+The public demo works without account registration or a database. Favorites are stored in the browser, recommendations are generated from the user's saved movies, and the advanced BERT pipeline remains available for deeper semantic recommendation experiments.
 
 ## Project Snapshot
 
 | Area | What LumiTrace Does |
 | --- | --- |
-| Recommendation core | BERT semantic similarity over movie plots |
+| Public demo core | TMDB metadata, favorite genres, rating/vote signals |
+| Advanced engine | BERT semantic similarity over movie plots |
 | User signal | Saved favorite movies, genres, vote counts, movie IDs |
-| Retrieval | Precomputed movie vector index from TMDB metadata |
-| Ranking | BERT similarity, optional SVD, optional Genome features |
-| Backend | Flask API for user data, API proxying, and recommendation calls |
-| Demo surface | Web UI for collecting favorites and showing recommendations |
+| Retrieval | TMDB trending, search, and discover endpoints |
+| Advanced retrieval | Precomputed movie vector index from TMDB metadata |
+| Ranking | Metadata ranking in demo, optional BERT/SVD/Genome for advanced mode |
+| Backend | Flask API for TMDB proxying and static app serving |
+| Demo surface | Web UI for entering a TMDB key, collecting favorites, and showing recommendations |
 | Safety | `.env`-based secrets, ignored local DB/vector/model files |
 
 ## Current Status
@@ -50,6 +52,9 @@ LumiTrace is under active maintenance as an open-source AI recommendation protot
 
 Recent maintenance work:
 
+- Reworked the app into a public demo mode with no registration required.
+- Added browser-local favorites and recommendations from user-provided TMDB API keys.
+- Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added a public-safe `/api/health` endpoint for backend readiness checks.
 - Reframed the project around the recommendation algorithm instead of the web UI.
 - Added [ALGORITHM.md](ALGORITHM.md) with a focused explanation of the scoring pipeline.
@@ -61,7 +66,24 @@ Recent maintenance work:
 
 ## How The Recommendation Works
 
-### 1. Build Movie Vectors
+### 1. Public Demo: Build A Taste Profile
+
+In the public demo flow, users paste their own TMDB API key, browse trending movies, and save movies they like. LumiTrace stores those favorites in browser localStorage and builds a lightweight taste profile from:
+
+- favorite movie genres
+- vote averages
+- vote counts
+- movie IDs to exclude from recommendations
+
+### 2. Public Demo: Rank Candidates
+
+The recommendation button queries TMDB Discover with the user's strongest genre signals, excludes already-saved movies, and ranks candidates by genre overlap, rating, vote history, and similarity to the user's average rating.
+
+```text
+favorite movies -> genre profile -> TMDB discover -> local ranking -> recommendations
+```
+
+### 3. Advanced Mode: Build Movie Vectors
 
 The vector generation script fetches movie metadata from TMDB and builds a text representation for each movie:
 
@@ -83,7 +105,7 @@ movie_vectors.json
 
 Generated vector files are intentionally ignored by Git because they can be large and can be regenerated.
 
-### 2. Build A User Taste Query
+### 4. Advanced Mode: Build A User Taste Query
 
 When a user saves favorite movies, the backend collects recent favorites and sends the BERT service:
 
@@ -94,7 +116,7 @@ When a user saves favorite movies, the backend collects recent favorites and sen
 
 The BERT service embeds the favorite overviews and uses them as the user's taste query.
 
-### 3. Score Candidate Movies
+### 5. Advanced Mode: Score Candidate Movies
 
 The service compares the user's taste query with every precomputed movie vector.
 
@@ -104,7 +126,7 @@ bert_score = cosine_similarity(user_embedding, movie_embedding)
 
 For multiple favorites, LumiTrace keeps the strongest semantic match signal so a candidate can match one clear part of the user's taste.
 
-### 4. Hybrid Ranking
+### 6. Advanced Mode: Hybrid Ranking
 
 The advanced engine can blend three signals:
 
@@ -132,30 +154,29 @@ Browser UI
   |
   v
 Flask Backend (app.py)
-  |-- TMDB / streaming API proxy
-  |-- SQLite favorites
-  |-- recommendation request
+  |-- static app serving
+  |-- TMDB API proxy
+  |-- optional streaming API proxy
   |
   v
-BERT Service (ai_engine/bert_service.py)
-  |-- loads movie_vectors.json or final_boss_vectors.json
-  |-- embeds favorite movie overviews
-  |-- compares vectors with cosine similarity
-  |-- ranks and filters candidates
+Browser localStorage
+  |-- TMDB API key
+  |-- favorite movies
+  |-- recommendation profile
   |
   v
 Recommended Movies
 ```
 
-The backend and recommendation service are separated so the BERT service can run on another machine, such as a GPU workstation, while the Flask backend serves the web app.
+The default clone-and-run path uses only the Flask backend and browser-local favorites. The BERT service can still run separately for advanced semantic recommendation experiments.
 
 ## Repository Structure
 
 ```text
 .
-|-- app.py                         # Flask backend, API proxy, auth, favorites, recommendations
+|-- app.py                         # Flask backend, TMDB proxy, static app serving
 |-- index.html                     # Demo UI
-|-- recommendations.html           # Recommendation UI
+|-- recommendations.html           # Redirects to the main page recommendation section
 |-- script.js                      # Frontend logic
 |-- ai_engine/
 |   |-- bert_service.py            # Semantic recommendation API
@@ -191,7 +212,9 @@ Create a local environment file:
 cp .env.example .env
 ```
 
-Fill in your local values:
+This file is optional for the public demo. You can also paste your TMDB API key directly into the web UI after opening the app.
+
+Optional `.env` values:
 
 ```text
 TMDB_API_KEY=your_tmdb_key
@@ -213,6 +236,8 @@ Open:
 http://localhost:8080
 ```
 
+Paste your TMDB API key into the page, click "儲存並載入趨勢", save movies you like, then click "你適合看以下這些".
+
 Check backend readiness:
 
 ```text
@@ -229,9 +254,9 @@ python tools/check_setup.py
 
 The setup checker reports required files, environment variable presence, and whether generated vector indexes exist. It does not print secret values.
 
-## Running The BERT Service
+## Running The Advanced BERT Service
 
-Generate movie vectors first:
+The public demo does not require BERT vectors. To experiment with semantic recommendations, generate movie vectors first:
 
 ```bash
 python ai_engine/generate_vectors.py
@@ -267,6 +292,8 @@ Ignored local files include:
 - model weights and array files such as `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
 
 API keys are loaded from `.env` and are not committed to the repository.
+
+For the public demo, the TMDB API key entered in the UI is stored only in browser localStorage and sent to the local Flask proxy as a request header.
 
 For contribution and security guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 

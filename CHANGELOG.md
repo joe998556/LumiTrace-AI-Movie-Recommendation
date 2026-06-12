@@ -2,6 +2,14 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-13
+
+- Reworked the main app into a clone-and-run public demo with no login or registration flow.
+- Added browser-local TMDB API key entry, local favorites, and a "你適合看以下這些" recommendation button.
+- Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and public-safe health checks.
+- Redirected the old recommendation page back to the main page recommendation section.
+- Updated documentation for the public demo flow and optional advanced BERT mode.
+
 ## 2026-06-12
 
 - Added `.editorconfig` to keep formatting consistent across Python, JavaScript, HTML, JSON, YAML, and Markdown files.
