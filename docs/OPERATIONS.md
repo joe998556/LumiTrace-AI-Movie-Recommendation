@@ -13,6 +13,8 @@ Optional BERT service -> ai_engine/bert_service.py, port 5001
 
 The public demo does not require registration, a database, or a generated vector file. Users paste their own TMDB API key into the web UI, save favorite movies in browser localStorage, and request recommendations from the main page.
 
+When `REMOTE_SEARCH_URL` is configured, the web demo first asks the BERT semantic service for recommendations. If the service is not configured or unavailable, the UI falls back to TMDB metadata ranking.
+
 ## Local Startup
 
 1. Install dependencies.
@@ -33,6 +35,8 @@ cp .env.example .env
 TMDB_API_KEY=your_tmdb_key
 RAPID_API_KEY=your_rapidapi_key
 REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+LUMITRACE_VECTOR_FILE=movie_vectors.json
+LUMITRACE_DEVICE=auto
 OLLAMA_URL=
 SSL_VERIFY=false
 ```
@@ -65,7 +69,7 @@ Use the backend health endpoint:
 http://localhost:8080/api/health
 ```
 
-The response reports local readiness without exposing secrets. It should not include raw API keys, private service URLs, local database rows, or generated vector contents.
+The response reports local readiness without exposing secrets. It should not include raw API keys, private service URLs, local database rows, generated vector contents, or local filesystem paths.
 
 ## BERT Recommendation Service
 
@@ -81,10 +85,32 @@ or:
 final_boss_vectors.json
 ```
 
-Generate the basic BERT vector index:
+Generate the BERT vector index with the interactive bootstrapper:
 
 ```bash
-python ai_engine/generate_vectors.py
+python tools/bootstrap_recommender.py
+```
+
+Preset guide:
+
+| Preset | Approx. movies | Notes |
+| --- | ---: | --- |
+| `demo` | 200 | Fast smoke test |
+| `small` | 1,000 | Practical first local index |
+| `medium` | 5,000 | Better coverage, GPU recommended |
+| `large` | 15,000 | Long build |
+| `xlarge` | 30,000 | Overnight/GPU build |
+
+Non-interactive example:
+
+```bash
+python tools/bootstrap_recommender.py --preset small --tmdb-key YOUR_TMDB_KEY
+```
+
+Windows users can run:
+
+```text
+setup_recommender.bat
 ```
 
 Start the BERT service:
@@ -99,6 +125,35 @@ Check service status:
 http://127.0.0.1:5001/status
 ```
 
+Set the web backend to use the BERT service:
+
+```text
+REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+```
+
+Then restart:
+
+```bash
+python app.py
+```
+
+## Running BERT On A Separate GPU Machine
+
+On the GPU machine:
+
+```bash
+python tools/bootstrap_recommender.py --preset medium
+python ai_engine/bert_service.py --host 0.0.0.0 --port 5001
+```
+
+On the backend machine, point `.env` to the GPU machine's LAN IP:
+
+```text
+REMOTE_SEARCH_URL=http://GPU_PC_IP:5001/search
+```
+
+This keeps the lightweight public backend on a CPU machine while the heavier embedding/index service runs on the GPU machine.
+
 ## Common Issues
 
 ### Recommendations return empty results
@@ -107,8 +162,9 @@ Check:
 
 - A TMDB API key was entered in the UI.
 - At least one movie has been saved as a favorite.
-- Favorite movies include genre IDs from TMDB.
+- Favorite movies include genre IDs or overviews from TMDB.
 - Network access to TMDB is available.
+- If using BERT mode, `REMOTE_SEARCH_URL` points to a running BERT service.
 
 ### TMDB search does not work
 
@@ -117,6 +173,15 @@ Check:
 - A TMDB API key was entered in the UI, or `TMDB_API_KEY` is present in `.env`.
 - The Flask backend is running on port 8080.
 - Network access to TMDB is available.
+
+### BERT mode is slow
+
+Check:
+
+- Use `--preset demo` or `--preset small` for the first run.
+- Use `--device cuda` on a CUDA-capable GPU machine.
+- Keep `movie_vectors.json` on a fast local disk.
+- Use the CPU backend with a remote GPU BERT service if the machines are on the same LAN.
 
 ### Streaming links are incomplete
 
@@ -136,5 +201,5 @@ The following should remain ignored:
 - `dev_v4.db`
 - `.venv/`
 - `.claude/`
-- `movie_vectors.json`
-- `final_boss_vectors.json`
+- `movie_vectors*.json`
+- `final_boss_vectors*.json`

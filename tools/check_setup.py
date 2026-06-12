@@ -10,8 +10,15 @@ import os
 import sys
 from pathlib import Path
 
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - checker must still run before install
+    load_dotenv = None
+
 
 ROOT = Path(__file__).resolve().parents[1]
+if load_dotenv:
+    load_dotenv(ROOT / ".env")
 
 
 def mark(ok: bool) -> str:
@@ -34,9 +41,12 @@ def main() -> int:
         ("app.py", exists("app.py"), "Flask backend"),
         ("ai_engine/bert_service.py", exists("ai_engine/bert_service.py"), "BERT service"),
         ("ai_engine/generate_vectors.py", exists("ai_engine/generate_vectors.py"), "vector builder"),
-        ("TMDB_API_KEY", env_present("TMDB_API_KEY"), "env var presence only"),
-        ("RAPID_API_KEY", env_present("RAPID_API_KEY"), "env var presence only"),
+        ("tools/bootstrap_recommender.py", exists("tools/bootstrap_recommender.py"), "one-command vector bootstrapper"),
+        ("setup_recommender.bat", exists("setup_recommender.bat"), "Windows one-click setup"),
+        ("TMDB_API_KEY", env_present("TMDB_API_KEY"), "optional env var; UI key also works"),
+        ("RAPID_API_KEY", env_present("RAPID_API_KEY"), "optional streaming integration"),
         ("REMOTE_SEARCH_URL", env_present("REMOTE_SEARCH_URL"), "optional advanced BERT service"),
+        ("LUMITRACE_VECTOR_FILE", env_present("LUMITRACE_VECTOR_FILE"), "optional vector path override"),
         ("movie_vectors.json", exists("movie_vectors.json"), "optional advanced BERT index"),
         ("final_boss_vectors.json", exists("final_boss_vectors.json"), "optional hybrid index"),
     ]
@@ -46,7 +56,7 @@ def main() -> int:
     for label, ok, note in checks:
         print(f"{mark(ok):8} {label:28} {note}")
 
-    required_ok = all(ok for _, ok, _ in checks[:6])
+    required_ok = all(ok for _, ok, _ in checks[:8])
     if not required_ok:
         print("\nRequired project files are missing.")
         return 1
@@ -54,7 +64,8 @@ def main() -> int:
     print("\nRequired project files look ready for the public demo.")
     print("Open http://localhost:8080 and paste a TMDB API key into the UI.")
     if not exists("movie_vectors.json") and not exists("final_boss_vectors.json"):
-        print("Advanced BERT mode will need a generated vector file before it can return semantic candidates.")
+        print("Advanced BERT mode needs a generated vector file.")
+        print("Run: python tools/bootstrap_recommender.py --preset small")
     return 0
 
 

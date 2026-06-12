@@ -36,6 +36,7 @@ python app.py
 Run the BERT service separately when working on advanced semantic recommendations:
 
 ```bash
+python tools/bootstrap_recommender.py --preset demo
 python ai_engine/bert_service.py
 ```
 
@@ -44,6 +45,7 @@ python ai_engine/bert_service.py
 The recommendation flow is documented in `ALGORITHM.md`. Changes to ranking behavior should explain which stage is affected:
 
 - movie vector generation
+- dataset preset selection
 - user taste profile
 - semantic similarity search
 - hybrid ranking

@@ -12,8 +12,8 @@ scratch/
 *.pyc
 .pytest_cache/
 .mypy_cache/
-movie_vectors.json
-final_boss_vectors.json
+movie_vectors*.json
+final_boss_vectors*.json
 *.pt
 *.pth
 *.pkl

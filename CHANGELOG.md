@@ -7,6 +7,11 @@ All notable project maintenance updates are tracked here.
 - Reworked the main app into a clone-and-run public demo with no login or registration flow.
 - Added browser-local TMDB API key entry, local favorites, and a "你適合看以下這些" recommendation button.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and public-safe health checks.
+- Added an optional `/api/semantic-recommendations` proxy for BERT-powered recommendations.
+- Added `tools/bootstrap_recommender.py` with selectable dataset sizes for building `movie_vectors.json`.
+- Replaced the legacy vector generator entry point with a compatibility wrapper.
+- Reworked `ai_engine/bert_service.py` into a clean standalone semantic recommendation service.
+- Added `setup_recommender.bat` for Windows one-click recommender setup.
 - Redirected the old recommendation page back to the main page recommendation section.
 - Updated documentation for the public demo flow and optional advanced BERT mode.
 

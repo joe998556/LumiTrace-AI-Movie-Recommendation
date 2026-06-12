@@ -1,470 +1,361 @@
-"""
-🔥 FINAL BOSS RECOMMENDATION SERVICE 🔥
-The Ultimate Hybrid Recommendation API
+"""BERT semantic recommendation service for LumiTrace.
 
-Scoring Formula:
-- Genome DNA (50%): Movie's soul/style
-- SVD Taste (30%): Audience profile matching
-- BERT Semantic (20%): Plot keyword backup
+Run this service after generating `movie_vectors.json` with:
+
+    python tools/bootstrap_recommender.py --preset small
+    python ai_engine/bert_service.py
+
+The public Flask app can call this service through `REMOTE_SEARCH_URL`, for
+example:
+
+    REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
 """
-from flask import Flask, request, jsonify
-from transformers import AutoTokenizer, AutoModel
-import torch
-import torch.nn.functional as F
-import os
+
+from __future__ import annotations
+
+import argparse
 import json
 import math
-from collections import Counter
+import os
+import sys
+from pathlib import Path
+from typing import Any
 
-# ============================================
-# 初始化 Flask & Model
-# ============================================
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_MODEL = "AventIQ-AI/bert-movie-recommendation-system"
+DEFAULT_VECTOR_FILES = ("final_boss_vectors.json", "movie_vectors.json")
+
+
+def build_parser(default_vectors: str) -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Run the LumiTrace BERT semantic recommendation service.")
+    parser.add_argument("--vectors", default=default_vectors, help="Path to movie_vectors.json.")
+    parser.add_argument("--model", default=os.getenv("LUMITRACE_MODEL", DEFAULT_MODEL), help="Hugging Face model name.")
+    parser.add_argument("--host", default=os.getenv("BERT_HOST", "127.0.0.1"), help="Service host.")
+    parser.add_argument("--port", type=int, default=int(os.getenv("BERT_PORT", "5001")), help="Service port.")
+    parser.add_argument("--device", default=os.getenv("LUMITRACE_DEVICE", "auto"), help="auto, cpu, cuda, or cuda:0.")
+    return parser
+
+
+if any(arg in {"-h", "--help"} for arg in sys.argv[1:]):
+    build_parser(str(ROOT / "movie_vectors.json")).parse_args()
+    raise SystemExit(0)
+
+try:
+    from dotenv import load_dotenv
+    from flask import Flask, jsonify, request
+    from flask_cors import CORS
+except ImportError as exc:
+    raise SystemExit("Missing web dependencies. Run `pip install -r requirements.txt` first.") from exc
+
+
 app = Flask(__name__)
+CORS(app)
 
-MODEL_NAME = "AventIQ-AI/bert-movie-recommendation-system"
-FINAL_BOSS_FILE = "final_boss_vectors.json"
-LEGACY_BERT_FILE = "movie_vectors.json"
+TOKENIZER: Any = None
+MODEL: Any = None
+DEVICE: Any = None
+MODEL_NAME = DEFAULT_MODEL
+VECTOR_PATH: Path | None = None
+MOVIES: list[dict[str, Any]] = []
+VECTOR_TENSOR: torch.Tensor | None = None
 
-# Global Storage
-MOVIE_DATA = []
-BERT_TENSOR = None
-SVD_TENSOR = None
-GENOME_TENSOR = None
-MOVIE_IDS = []
-ID_TO_IDX = {}
 
-# 權重配置
-WEIGHTS = {
-    "genome": 0.50,  # 風格基因 (最重要)
-    "svd": 0.30,     # 品味受眾
-    "bert": 0.20     # 語意輔助
-}
+def first_existing_vector_file() -> Path:
+    configured = os.getenv("LUMITRACE_VECTOR_FILE")
+    candidates = [configured] if configured else []
+    candidates.extend(DEFAULT_VECTOR_FILES)
 
-# TMDB 類型映射
-GENRE_MAP = {
-    28: "Action", 12: "Adventure", 16: "Animation", 35: "Comedy",
-    80: "Crime", 99: "Documentary", 18: "Drama", 10751: "Family",
-    14: "Fantasy", 36: "History", 27: "Horror", 10402: "Music",
-    9648: "Mystery", 10749: "Romance", 878: "Science Fiction",
-    10770: "TV Movie", 53: "Thriller", 10752: "War", 37: "Western"
-}
+    for candidate in candidates:
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if not path.is_absolute():
+            path = ROOT / path
+        if path.exists():
+            return path
+    return ROOT / "movie_vectors.json"
 
-BLOCKBUSTER_GENRES = {"Action", "Science Fiction", "Adventure", "Fantasy"}
 
-print(f"正在載入模型 {MODEL_NAME} ...")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"使用裝置: {device}")
-
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-model = AutoModel.from_pretrained(MODEL_NAME).to(device)
-model.eval()
-
-# ============================================
-# 載入 Final Boss 向量資料庫
-# ============================================
-def load_final_boss_db():
-    global MOVIE_DATA, BERT_TENSOR, SVD_TENSOR, GENOME_TENSOR, MOVIE_IDS, ID_TO_IDX
-    
-    # 優先使用 Final Boss 格式
-    if os.path.exists(FINAL_BOSS_FILE):
-        data_file = FINAL_BOSS_FILE
-        is_final_boss = True
-    elif os.path.exists(LEGACY_BERT_FILE):
-        data_file = LEGACY_BERT_FILE
-        is_final_boss = False
-        print(f"⚠️ 使用舊版 BERT-only 格式 (建議執行 final_boss_engine.py 升級)")
-    else:
-        print("❌ 找不到向量資料庫!")
-        return False
-    
+def resolve_device(requested: str | None = None) -> torch.device:
     try:
-        with open(data_file, 'r', encoding='utf-8') as f:
-            raw_data = json.load(f)
-        
-        MOVIE_DATA = []
-        bert_vectors = []
-        svd_vectors = []
-        genome_vectors = []
-        MOVIE_IDS = []
-        
-        has_svd_count = 0
-        has_genome_count = 0
-        
-        for m in raw_data:
-            mid = m['id']
-            MOVIE_IDS.append(mid)
-            ID_TO_IDX[mid] = len(MOVIE_DATA)
-            
-            MOVIE_DATA.append({
-                "id": mid,
-                "title": m.get('title', ''),
-                "overview": m.get('overview', ''),
-                "poster_path": m.get('poster_path'),
-                "vote_average": m.get('vote_average', 0),
-                "vote_count": m.get('vote_count', 0),
-                "genre_ids": m.get('genre_ids', [])
-            })
-            
-            # BERT 向量
-            if is_final_boss:
-                bert_vec = m.get('bert_vector', [0] * 768)
-            else:
-                bert_vec = m.get('vector', [0] * 768)
-            bert_vectors.append(bert_vec)
-            
-            # SVD 向量 (可能為 None)
-            svd_vec = m.get('svd_vector')
-            if svd_vec:
-                svd_vectors.append(svd_vec)
-                has_svd_count += 1
-            else:
-                svd_vectors.append([0] * 64)  # 填充零向量
-            
-            # Genome 向量 (可能為 None)
-            genome_vec = m.get('genome_vector')
-            if genome_vec:
-                genome_vectors.append(genome_vec)
-                has_genome_count += 1
-            else:
-                genome_vectors.append([0] * 64)  # 填充零向量
-        
-        # 轉為 Tensor
-        BERT_TENSOR = torch.tensor(bert_vectors, dtype=torch.float32, device=device)
-        BERT_TENSOR = F.normalize(BERT_TENSOR, p=2, dim=1)
-        
-        SVD_TENSOR = torch.tensor(svd_vectors, dtype=torch.float32, device=device)
-        # 對於有值的才正規化
-        svd_norms = SVD_TENSOR.norm(dim=1, keepdim=True)
-        svd_norms = torch.where(svd_norms > 0, svd_norms, torch.ones_like(svd_norms))
-        SVD_TENSOR = SVD_TENSOR / svd_norms
-        
-        GENOME_TENSOR = torch.tensor(genome_vectors, dtype=torch.float32, device=device)
-        genome_norms = GENOME_TENSOR.norm(dim=1, keepdim=True)
-        genome_norms = torch.where(genome_norms > 0, genome_norms, torch.ones_like(genome_norms))
-        GENOME_TENSOR = GENOME_TENSOR / genome_norms
-        
-        print(f"✅ 資料庫已載入: {len(MOVIE_DATA)} 筆電影")
-        print(f"   - BERT 向量: 100%")
-        print(f"   - SVD 向量: {has_svd_count}/{len(MOVIE_DATA)} ({100*has_svd_count/len(MOVIE_DATA):.1f}%)")
-        print(f"   - Genome 向量: {has_genome_count}/{len(MOVIE_DATA)} ({100*has_genome_count/len(MOVIE_DATA):.1f}%)")
-        
-        if has_genome_count > 0:
-            print(f"🔥 FINAL BOSS MODE ACTIVATED!")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ 載入資料庫失敗: {e}")
-        import traceback
-        traceback.print_exc()
+        import torch
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
+
+    if requested and requested != "auto":
+        return torch.device(requested)
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def load_model(model_name: str, device: torch.device) -> None:
+    try:
+        from transformers import AutoModel, AutoTokenizer
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: transformers. Run `pip install -r requirements.txt` first.") from exc
+
+    global TOKENIZER, MODEL, MODEL_NAME, DEVICE
+    MODEL_NAME = model_name
+    DEVICE = device
+    print(f"Loading embedding model: {MODEL_NAME}")
+    print(f"Device: {DEVICE}")
+    TOKENIZER = AutoTokenizer.from_pretrained(MODEL_NAME)
+    MODEL = AutoModel.from_pretrained(MODEL_NAME).to(DEVICE)
+    MODEL.eval()
+
+
+def vector_from_movie(movie: dict[str, Any]) -> list[float] | None:
+    vector = movie.get("vector") or movie.get("bert_vector")
+    if not isinstance(vector, list) or not vector:
+        return None
+    try:
+        return [float(value) for value in vector]
+    except (TypeError, ValueError):
+        return None
+
+
+def clean_movie(movie: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": int(movie.get("id", 0)),
+        "title": movie.get("title") or movie.get("name") or "Untitled",
+        "overview": movie.get("overview") or "",
+        "poster_path": movie.get("poster_path"),
+        "release_date": movie.get("release_date") or "",
+        "vote_average": float(movie.get("vote_average") or 0),
+        "vote_count": int(movie.get("vote_count") or 0),
+        "genre_ids": movie.get("genre_ids") or [],
+    }
+
+
+def load_vector_index(path: Path) -> bool:
+    try:
+        import torch
+        import torch.nn.functional as F
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
+
+    global VECTOR_PATH, MOVIES, VECTOR_TENSOR
+
+    if not path.exists():
+        VECTOR_PATH = path
+        MOVIES = []
+        VECTOR_TENSOR = None
+        print(f"Vector file not found: {path}")
         return False
 
+    with path.open("r", encoding="utf-8") as file:
+        raw_data = json.load(file)
 
-load_final_boss_db()
+    if not isinstance(raw_data, list):
+        raise ValueError("Vector file must be a JSON list of movie records.")
 
-# ============================================
-# Helper Functions
-# ============================================
-def get_batch_embeddings(texts: list) -> torch.Tensor:
-    inputs = tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=512)
-    inputs = {k: v.to(device) for k, v in inputs.items()}
+    movies: list[dict[str, Any]] = []
+    vectors: list[list[float]] = []
+    for item in raw_data:
+        if not isinstance(item, dict):
+            continue
+        vector = vector_from_movie(item)
+        if not vector:
+            continue
+        movie = clean_movie(item)
+        if not movie["id"] or not movie["overview"]:
+            continue
+        movies.append(movie)
+        vectors.append(vector)
+
+    if not vectors:
+        VECTOR_PATH = path
+        MOVIES = []
+        VECTOR_TENSOR = None
+        print(f"No usable vectors found in {path}")
+        return False
+
+    tensor = torch.tensor(vectors, dtype=torch.float32, device=DEVICE)
+    VECTOR_TENSOR = F.normalize(tensor, p=2, dim=1)
+    VECTOR_PATH = path
+    MOVIES = movies
+    print(f"Loaded {len(MOVIES):,} movie vectors from {path}")
+    return True
+
+
+def embed_texts(texts: list[str]) -> torch.Tensor:
+    try:
+        import torch
+        import torch.nn.functional as F
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
+
+    if TOKENIZER is None or MODEL is None or DEVICE is None:
+        raise RuntimeError("Embedding model is not loaded.")
+
+    encoded = TOKENIZER(
+        texts,
+        return_tensors="pt",
+        padding=True,
+        truncation=True,
+        max_length=512,
+    )
+    encoded = {key: value.to(DEVICE) for key, value in encoded.items()}
+
     with torch.no_grad():
-        outputs = model(**inputs)
-    embeddings = outputs.last_hidden_state.mean(dim=1)
-    return F.normalize(embeddings, p=2, dim=1)
+        output = MODEL(**encoded)
 
-def get_genre_names(gids):
-    return {GENRE_MAP.get(g) for g in gids if GENRE_MAP.get(g)}
-
-def compute_user_profile(fav_ids: set):
-    """
-    計算用戶的 SVD 和 Genome Profile
-    = 收藏電影向量的平均
-    """
-    svd_vecs = []
-    genome_vecs = []
-    
-    for fav_id in fav_ids:
-        if fav_id in ID_TO_IDX:
-            idx = ID_TO_IDX[fav_id]
-            
-            # SVD
-            if SVD_TENSOR[idx].norm() > 0.1:  # 確保有有效向量
-                svd_vecs.append(SVD_TENSOR[idx])
-            
-            # Genome
-            if GENOME_TENSOR[idx].norm() > 0.1:
-                genome_vecs.append(GENOME_TENSOR[idx])
-    
-    user_svd = None
-    user_genome = None
-    
-    if svd_vecs:
-        user_svd = torch.stack(svd_vecs).mean(dim=0)
-        user_svd = F.normalize(user_svd.unsqueeze(0), p=2, dim=1)
-    
-    if genome_vecs:
-        user_genome = torch.stack(genome_vecs).mean(dim=0)
-        user_genome = F.normalize(user_genome.unsqueeze(0), p=2, dim=1)
-    
-    return user_svd, user_genome
+    hidden = output.last_hidden_state
+    mask = encoded["attention_mask"].unsqueeze(-1).expand(hidden.size()).float()
+    pooled = (hidden * mask).sum(dim=1) / mask.sum(dim=1).clamp(min=1e-9)
+    return F.normalize(pooled, p=2, dim=1)
 
 
-# ============================================
-# 核心搜尋邏輯 (Final Boss Scoring)
-# ============================================
-@app.route('/search', methods=['POST'])
-def search():
-    data = request.json
-    overviews = data.get('overviews', [])
-    top_k = data.get('top_k', 10)
-    exclude_ids = set(data.get('exclude_ids', []))
-    
-    user_genre_ids = data.get('user_genre_ids', [])
-    user_vote_counts = data.get('user_vote_counts', [])
-    
-    if not overviews and data.get('text'):
-        overviews = [data.get('text')]
-    
-    if not overviews or BERT_TENSOR is None:
-        return jsonify({"results": []})
-    
-    try:
-        # ==================================================
-        # 1. 分析用戶特徵 (Anti-Blockbuster Logic)
-        # ==================================================
-        user_seen_genres = set()
-        for gids in user_genre_ids:
-            user_seen_genres.update(get_genre_names(gids))
-        
-        valid_counts = [c for c in user_vote_counts if c > 0]
-        user_avg_vote = sum(valid_counts) / len(valid_counts) if valid_counts else 1000
-        is_indie_fan = user_avg_vote < 8000
-        has_watched_blockbuster = bool(user_seen_genres & BLOCKBUSTER_GENRES)
-        
-        # 如果無類型資料，嘗試從收藏電影的標題推斷用戶偏好
-        if len(user_seen_genres) == 0:
-            # 檢查用戶收藏的電影是否包含大片關鍵字
-            blockbuster_title_keywords = [
-                'avenger', 'marvel', 'iron man', 'thor', 'spider', 'batman', 'superman',
-                'fast', 'furious', 'star wars', 'transformers', 'x-men', 'deadpool',
-                '復仇者', '雷神', '蜘蛛', '鋼鐵人', '蝙蝠俠', '超人', '玩命關頭',
-                '死侍', '變形金剛', '驚奇', 'fantastic', 'captain america', '美國隊長'
-            ]
-            
-            # 獲取用戶收藏電影的標題
-            user_titles = []
-            for fav_id in exclude_ids:
-                if fav_id in ID_TO_IDX:
-                    idx = ID_TO_IDX[fav_id]
-                    if idx < len(MOVIE_DATA):
-                        user_titles.append(MOVIE_DATA[idx]['title'].lower())
-            
-            # 檢查是否有大片
-            user_likes_blockbusters = any(
-                any(kw in title for kw in blockbuster_title_keywords)
-                for title in user_titles
-            )
-            
-            if user_likes_blockbusters:
-                has_watched_blockbuster = True
-                is_indie_fan = False
-                print("🦸 用戶收藏包含大片，啟用「大片模式」")
-            else:
-                has_watched_blockbuster = False
-                is_indie_fan = True
-                print("🎬 用戶收藏偏文藝，啟用「保守模式」")
-        
-        # ==================================================
-        # 2. 計算用戶 Profile (SVD + Genome)
-        # ==================================================
-        user_svd, user_genome = compute_user_profile(exclude_ids)
-        
-        mode = []
-        if user_genome is not None:
-            mode.append("Genome")
-        if user_svd is not None:
-            mode.append("SVD")
-        mode.append("BERT")
-        print(f"📊 使用模式: {' + '.join(mode)}")
-        
-        # ==================================================
-        # 3. 計算各維度相似度
-        # ==================================================
-        # BERT 相似度
-        user_bert = get_batch_embeddings(overviews)
-        bert_sim = torch.mm(BERT_TENSOR, user_bert.T).max(dim=1)[0]
-        
-        # SVD 相似度
-        if user_svd is not None:
-            svd_sim = torch.mm(SVD_TENSOR, user_svd.T).squeeze()
+def flatten_genres(values: Any) -> set[int]:
+    genres: set[int] = set()
+    if not isinstance(values, list):
+        return genres
+    for item in values:
+        if isinstance(item, list):
+            source = item
         else:
-            svd_sim = torch.zeros(len(MOVIE_DATA), device=device)
-        
-        # Genome 相似度
-        if user_genome is not None:
-            genome_sim = torch.mm(GENOME_TENSOR, user_genome.T).squeeze()
-        else:
-            genome_sim = torch.zeros(len(MOVIE_DATA), device=device)
-        
-        # ==================================================
-        # 4. 計算最終分數 (Weighted Combination)
-        # ==================================================
-        # 動態調整權重 (如果某個向量不存在，重新分配權重)
-        w_genome = WEIGHTS["genome"] if user_genome is not None else 0
-        w_svd = WEIGHTS["svd"] if user_svd is not None else 0
-        w_bert = WEIGHTS["bert"]
-        
-        # 正規化權重使總和為 1
-        total_weight = w_genome + w_svd + w_bert
-        if total_weight > 0:
-            w_genome /= total_weight
-            w_svd /= total_weight
-            w_bert /= total_weight
-        else:
-            w_bert = 1.0
-        
-        # 計算加權分數
-        final_scores = (
-            genome_sim * w_genome +
-            svd_sim * w_svd +
-            bert_sim * w_bert
-        )
-        
-        scores = final_scores.cpu().tolist()
-        bert_scores_list = bert_sim.cpu().tolist()
-        svd_scores_list = svd_sim.cpu().tolist()
-        genome_scores_list = genome_sim.cpu().tolist()
-        
-        # ==================================================
-        # 5. 過濾與懲罰
-        # ==================================================
-        candidates = []
-        
-        # 標題黑名單
-        blockbuster_keywords = [
-            'thor', 'avengers', 'fast', 'furious', '玩命關頭', '雷神',
-            'spider-man', 'batman', 'superman', 'iron man', 'hulk',
-            'transformers', 'star wars', 'avatar', 'jurassic', '侏羅紀',
-            'marvel', 'dc', 'x-men', 'deadpool', 'flash', '閃電俠',
-            '復仇者', '蜘蛛人', '蝙蝠俠', '超人', '鋼鐵人', '變形金剛'
-        ]
-        
-        horror_keywords = [
-            'freddy', 'nightmare', 'horror', 'halloween', 'saw',
-            'conjuring', 'annabelle', 'insidious', 'scream', 'chucky',
-            '驚魂', '恐怖', '凶宅', '厲陰', 'zombie', '殭屍'
-        ]
-        
-        for idx, base_score in enumerate(scores):
-            movie = MOVIE_DATA[idx]
-            mid = movie['id']
-            m_vote_avg = movie['vote_average']
-            m_vote_count = movie['vote_count']
-            m_title = movie['title'].lower()
-            
-            # 基本過濾
-            if mid in exclude_ids: continue
-            if m_vote_avg <= 0.1: continue
-            if m_vote_count < 50: continue
-            
-            final_score = base_score
-            penalties = []
-            
-            # 標題黑名單懲罰
-            if is_indie_fan:
-                if any(kw in m_title for kw in blockbuster_keywords):
-                    final_score *= 0.2
-                    penalties.append("Blockbuster Blacklist")
-                
-                if any(kw in m_title for kw in horror_keywords):
-                    final_score *= 0.3
-                    penalties.append("Horror Blacklist")
-                
-                # 投票數懲罰
-                if m_vote_count > 50000:
-                    final_score *= 0.5
-                    penalties.append("Mega-Popular")
-                elif m_vote_count > 20000:
-                    final_score *= 0.7
-                    penalties.append("Popular")
-            
-            # 類型懲罰
-            m_genres = get_genre_names(movie['genre_ids'])
-            if not has_watched_blockbuster and bool(m_genres & BLOCKBUSTER_GENRES):
-                if base_score < 0.85:
-                    final_score *= 0.4
-                    penalties.append("Genre Mismatch")
-            
-            if final_score > 0.3:  # 最低門檻
-                candidates.append({
-                    "id": mid,
-                    "title": movie['title'],
-                    "overview": movie['overview'],
-                    "poster_path": movie.get('poster_path'),
-                    "vote_average": m_vote_avg,
-                    "vote_count": m_vote_count,
-                    "genre_ids": movie.get('genre_ids', []),
-                    "score": round(final_score, 4),
-                    "debug": {
-                        "bert": round(bert_scores_list[idx], 3),
-                        "svd": round(svd_scores_list[idx], 3),
-                        "genome": round(genome_scores_list[idx], 3),
-                        "penalties": penalties
-                    }
-                })
-        
-        # 排序
-        candidates.sort(key=lambda x: x['score'], reverse=True)
-        results = candidates[:top_k]
-        
-        # 清理 debug (生產環境可移除)
-        # for r in results: del r['debug']
-        
-        return jsonify({"results": results})
-    
-    except Exception as e:
-        print(f"Search Error: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
+            source = [item]
+        for value in source:
+            try:
+                genres.add(int(value))
+            except (TypeError, ValueError):
+                continue
+    return genres
 
 
-# ============================================
-# API Endpoints
-# ============================================
-@app.route('/embed', methods=['POST'])
-def embed():
-    try:
-        text = request.json.get('text', '')
-        vec = get_batch_embeddings([text])[0].cpu().tolist()
-        return jsonify({"vector": vec})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+def score_metadata(movie: dict[str, Any], user_genres: set[int], user_vote_counts: list[int]) -> float:
+    movie_genres = {int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()}
+    genre_overlap = len(movie_genres & user_genres)
+    genre_score = min(0.12, genre_overlap * 0.04)
+
+    rating_score = max(0.0, min(0.08, (float(movie.get("vote_average") or 0) - 5.0) * 0.02))
+    vote_count = max(1, int(movie.get("vote_count") or 1))
+    popularity_score = min(0.05, math.log10(vote_count) * 0.01)
+
+    if user_vote_counts:
+        avg_user_votes = sum(user_vote_counts) / len(user_vote_counts)
+        distance = abs(math.log1p(vote_count) - math.log1p(avg_user_votes))
+        popularity_fit = max(0.0, 0.04 - distance * 0.01)
+    else:
+        popularity_fit = 0.0
+
+    return genre_score + rating_score + popularity_score + popularity_fit
 
 
-@app.route('/reload_db', methods=['POST'])
-def reload_db():
-    if load_final_boss_db():
-        return jsonify({"status": "ok", "count": len(MOVIE_DATA)})
-    return jsonify({"error": "Failed"}), 500
-
-
-@app.route('/status', methods=['GET'])
+@app.route("/status", methods=["GET"])
 def status():
-    has_svd = SVD_TENSOR.norm(dim=1).gt(0.1).sum().item() if SVD_TENSOR is not None else 0
-    has_genome = GENOME_TENSOR.norm(dim=1).gt(0.1).sum().item() if GENOME_TENSOR is not None else 0
-    
-    return jsonify({
-        "status": "online",
-        "device": device,
-        "movie_count": len(MOVIE_DATA),
-        "svd_coverage": has_svd,
-        "genome_coverage": has_genome,
-        "weights": WEIGHTS,
-        "algorithm": "Final Boss Engine (Genome 50% + SVD 30% + BERT 20%)"
-    })
+    return jsonify(
+        {
+            "status": "online",
+            "model": MODEL_NAME,
+            "device": str(DEVICE),
+            "vector_file": str(VECTOR_PATH) if VECTOR_PATH else None,
+            "movie_count": len(MOVIES),
+            "index_loaded": VECTOR_TENSOR is not None,
+        }
+    )
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001)
+@app.route("/embed", methods=["POST"])
+def embed():
+    data = request.get_json(silent=True) or {}
+    text = str(data.get("text") or "").strip()
+    if not text:
+        return jsonify({"error": "text is required"}), 400
+    vector = embed_texts([text])[0].detach().cpu().tolist()
+    return jsonify({"vector": vector})
+
+
+@app.route("/reload_db", methods=["POST"])
+def reload_db():
+    data = request.get_json(silent=True) or {}
+    requested = data.get("path")
+    path = Path(requested) if requested else (VECTOR_PATH or first_existing_vector_file())
+    if not path.is_absolute():
+        path = ROOT / path
+    ok = load_vector_index(path)
+    return jsonify({"status": "ok" if ok else "missing", "movie_count": len(MOVIES)})
+
+
+@app.route("/search", methods=["POST"])
+def search():
+    try:
+        import torch
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
+
+    if VECTOR_TENSOR is None:
+        return jsonify({"error": "Vector index is not loaded", "results": []}), 503
+
+    data = request.get_json(silent=True) or {}
+    overviews = data.get("overviews")
+    if not overviews and data.get("text"):
+        overviews = [data.get("text")]
+    if not isinstance(overviews, list):
+        overviews = []
+    texts = [str(text).strip() for text in overviews if str(text).strip()]
+    if not texts:
+        return jsonify({"error": "overviews or text is required", "results": []}), 400
+
+    top_k = max(1, min(50, int(data.get("top_k") or 10)))
+    exclude_ids = {int(value) for value in data.get("exclude_ids", []) if str(value).isdigit()}
+    user_genres = flatten_genres(data.get("user_genre_ids", []))
+    user_vote_counts = [
+        int(value)
+        for value in data.get("user_vote_counts", [])
+        if str(value).isdigit() and int(value) >= 0
+    ]
+
+    user_embeddings = embed_texts(texts)
+    semantic_scores = torch.mm(VECTOR_TENSOR, user_embeddings.T).max(dim=1)[0].detach().cpu().tolist()
+
+    candidates: list[dict[str, Any]] = []
+    for movie, semantic_score in zip(MOVIES, semantic_scores):
+        if movie["id"] in exclude_ids:
+            continue
+        if not movie.get("poster_path"):
+            continue
+        if movie.get("vote_count", 0) < 20:
+            continue
+
+        metadata_score = score_metadata(movie, user_genres, user_vote_counts)
+        final_score = float(semantic_score) + metadata_score
+        candidates.append(
+            {
+                **movie,
+                "semantic_score": round(float(semantic_score), 4),
+                "score": round(final_score, 4),
+            }
+        )
+
+    candidates.sort(key=lambda movie: movie["score"], reverse=True)
+    return jsonify({"results": candidates[:top_k]})
+
+
+def parse_args() -> argparse.Namespace:
+    return build_parser(str(first_existing_vector_file())).parse_args()
+
+
+def main() -> int:
+    load_dotenv(ROOT / ".env")
+    args = parse_args()
+    try:
+        device = resolve_device(args.device)
+        load_model(args.model, device)
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    vector_path = Path(args.vectors)
+    if not vector_path.is_absolute():
+        vector_path = ROOT / vector_path
+    try:
+        load_vector_index(vector_path)
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
+
+    print(f"Starting service at http://{args.host}:{args.port}")
+    app.run(host=args.host, port=args.port, debug=False, use_reloader=False)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -13,7 +13,7 @@ Never commit:
 - `.env`
 - API keys or access tokens
 - local SQLite databases such as `dev_v4.db`
-- generated vector files such as `movie_vectors.json` or `final_boss_vectors.json`
+- generated vector files such as `movie_vectors*.json` or `final_boss_vectors*.json`
 - model weights or array files such as `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
 - local IDE, agent, or scratch files
 
@@ -42,6 +42,6 @@ If you discover a security issue, please avoid posting sensitive details in a pu
 LumiTrace is currently a prototype. Known areas for future hardening include:
 
 - stricter CORS configuration for deployed environments
-- token-based authentication instead of the current demo username flow
+- token-based authentication if the project becomes more than a local demo
 - rate limiting for API proxy endpoints
 - stronger validation for user-provided request payloads

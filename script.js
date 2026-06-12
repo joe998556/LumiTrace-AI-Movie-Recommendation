@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (getApiKey()) {
     loadTrending();
   } else {
-    setStatus("請先輸入 TMDB API key。");
+    setStatus("請輸入 TMDB API key，或在 .env 設定 TMDB_API_KEY。");
   }
 });
 
@@ -20,7 +20,7 @@ function bindUi() {
   document.getElementById("saveKeyBtn").addEventListener("click", () => {
     const key = document.getElementById("apiKeyInput").value.trim();
     if (!key) {
-      setStatus("請輸入 TMDB API key。");
+      setStatus("請先輸入 TMDB API key。");
       return;
     }
     localStorage.setItem(KEY_STORAGE, key);
@@ -110,12 +110,12 @@ async function runSearch() {
     loadTrending();
     return;
   }
-  setStatus(`正在搜尋「${query}」...`);
+  setStatus(`正在搜尋 ${query}...`);
   try {
     const data = await tmdb(`search/movie?query=${encodeURIComponent(query)}&language=zh-TW&page=1`);
     activeMovies = normalizeMovies(data.results || []);
     renderMovieGrid(activeMovies, "movieGrid");
-    setStatus(`找到 ${activeMovies.length} 部相關電影。`);
+    setStatus(`找到 ${activeMovies.length} 部電影。`);
   } catch (error) {
     setStatus(`搜尋失敗：${error.message}`);
   }
@@ -130,16 +130,29 @@ async function loadRecommendations() {
   }
 
   const profile = buildTasteProfile(favorites);
+  const favoriteIds = new Set(favorites.map((movie) => movie.id));
+
+  document.getElementById("recommendationReason").textContent = "正在根據你的收藏建立推薦...";
+
+  try {
+    const semanticResults = await loadSemanticRecommendations(favorites);
+    if (semanticResults.length > 0) {
+      renderMovieGrid(semanticResults, "recommendationGrid", true);
+      document.getElementById("recommendationReason").textContent =
+        `已使用 BERT 語意向量服務，根據 ${favorites.length} 部收藏建立推薦。`;
+      return;
+    }
+  } catch {
+    // The semantic service is optional. The public demo falls back to TMDB metadata ranking.
+  }
+
   if (profile.genreIds.length === 0) {
     document.getElementById("recommendationReason").textContent = "收藏的電影缺少類型資料，請再收藏幾部電影。";
     return;
   }
 
-  document.getElementById("recommendationReason").textContent = "正在根據你的收藏建立推薦...";
-  const genreQuery = profile.genreIds.slice(0, 3).join(",");
-  const favoriteIds = new Set(favorites.map((movie) => movie.id));
-
   try {
+    const genreQuery = profile.genreIds.slice(0, 3).join(",");
     const data = await tmdb(
       `discover/movie?language=zh-TW&sort_by=vote_average.desc&vote_count.gte=150&with_genres=${genreQuery}&page=1`
     );
@@ -154,10 +167,37 @@ async function loadRecommendations() {
 
     renderMovieGrid(candidates, "recommendationGrid", true);
     document.getElementById("recommendationReason").textContent =
-      `根據 ${favorites.length} 部收藏，優先推薦類型 ${profile.genreIds.slice(0, 3).join(" / ")} 的相近電影。`;
+      `已用 TMDB metadata，根據 ${favorites.length} 部收藏建立推薦。`;
   } catch (error) {
     document.getElementById("recommendationReason").textContent = `推薦失敗：${error.message}`;
   }
+}
+
+async function loadSemanticRecommendations(favorites) {
+  const payload = {
+    overviews: favorites.map((movie) => movie.overview).filter(Boolean),
+    exclude_ids: favorites.map((movie) => movie.id),
+    user_genre_ids: favorites.map((movie) => movie.genre_ids || []),
+    user_vote_counts: favorites.map((movie) => movie.vote_count || 0),
+    top_k: 18,
+  };
+
+  if (payload.overviews.length === 0) {
+    return [];
+  }
+
+  const response = await fetch(`${BACKEND_URL}/semantic-recommendations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  return normalizeSemanticMovies(data.results || []);
 }
 
 function normalizeMovies(movies) {
@@ -173,6 +213,26 @@ function normalizeMovies(movies) {
       vote_count: Number(movie.vote_count || 0),
       genre_ids: movie.genre_ids || [],
     }));
+}
+
+function normalizeSemanticMovies(movies) {
+  return movies
+    .filter((movie) => movie && movie.poster_path)
+    .map((movie) => {
+      const rawScore = Number(movie.score || movie.semantic_score || 0);
+      const score = rawScore <= 1 ? rawScore * 100 : rawScore;
+      return {
+        id: movie.id,
+        title: movie.title || "Untitled",
+        overview: movie.overview || "",
+        poster_path: movie.poster_path,
+        release_date: movie.release_date || "",
+        vote_average: Number(movie.vote_average || 0),
+        vote_count: Number(movie.vote_count || 0),
+        genre_ids: movie.genre_ids || [],
+        recommendationScore: Math.max(1, Math.min(100, score)),
+      };
+    });
 }
 
 function renderMovieGrid(movies, targetId, showScore = false) {
@@ -208,7 +268,7 @@ function renderMovieGrid(movies, targetId, showScore = false) {
         <div class="flex items-center justify-between gap-2">
           ${score}
           <button class="favorite-btn ml-auto rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold transition ${active ? "bg-[#cc785c] text-white" : "text-white/70 hover:bg-white/10"}">
-            ${active ? "已收藏" : "加入喜歡"}
+            ${active ? "已收藏" : "加入收藏"}
           </button>
         </div>
       </div>
@@ -240,7 +300,7 @@ function renderFavorites() {
   document.getElementById("favoriteSummary").textContent =
     favorites.length === 0
       ? "尚未收藏電影。"
-      : `已收藏 ${favorites.length} 部電影，會用它們建立你的 taste profile。`;
+      : `已收藏 ${favorites.length} 部電影，會用來建立 taste profile。`;
 
   const list = document.getElementById("favoriteList");
   list.innerHTML = "";

@@ -55,6 +55,8 @@ Recent maintenance work:
 - Reworked the app into a public demo mode with no registration required.
 - Added browser-local favorites and recommendations from user-provided TMDB API keys.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
+- Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
+- Added a one-command recommender bootstrapper with selectable data sizes.
 - Added a public-safe `/api/health` endpoint for backend readiness checks.
 - Reframed the project around the recommendation algorithm instead of the web UI.
 - Added [ALGORITHM.md](ALGORITHM.md) with a focused explanation of the scoring pipeline.
@@ -180,13 +182,15 @@ The default clone-and-run path uses only the Flask backend and browser-local fav
 |-- script.js                      # Frontend logic
 |-- ai_engine/
 |   |-- bert_service.py            # Semantic recommendation API
-|   |-- generate_vectors.py        # Build BERT movie vectors from TMDB data
+|   |-- generate_vectors.py        # Compatibility wrapper for the vector bootstrapper
 |   |-- generate_vectors_massive.py
 |   |-- generate_vectors_infinity.py
 |   |-- final_boss_engine.py       # Merge BERT, SVD, and Genome vectors
 |   `-- train_collaborative_vectors.py
 |-- tools/
+|   |-- bootstrap_recommender.py   # Download TMDB data and build BERT vectors
 |   `-- check_setup.py             # Local readiness checker
+|-- setup_recommender.bat          # Windows one-click recommender setup
 |-- docs/
 |   `-- OPERATIONS.md              # Local operations runbook
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
@@ -220,6 +224,8 @@ Optional `.env` values:
 TMDB_API_KEY=your_tmdb_key
 RAPID_API_KEY=your_rapidapi_key
 REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+LUMITRACE_VECTOR_FILE=movie_vectors.json
+LUMITRACE_DEVICE=auto
 OLLAMA_URL=
 SSL_VERIFY=false
 ```
@@ -244,7 +250,7 @@ Check backend readiness:
 http://localhost:8080/api/health
 ```
 
-The health endpoint reports whether the local database is reachable and which integrations are configured. It only returns booleans/status values, never API keys or private service URLs.
+The health endpoint reports whether the backend is running and which integrations are configured. It only returns booleans/status values, never API keys or private service URLs.
 
 Run a local setup check:
 
@@ -254,21 +260,73 @@ python tools/check_setup.py
 
 The setup checker reports required files, environment variable presence, and whether generated vector indexes exist. It does not print secret values.
 
-## Running The Advanced BERT Service
+## One-Command Recommendation Model Setup
 
-The public demo does not require BERT vectors. To experiment with semantic recommendations, generate movie vectors first:
+The public demo works without vectors. For deeper semantic recommendations, build a local BERT movie index. New users can choose how much TMDB data to download:
+
+| Preset | Approx. movies | Best for |
+| --- | ---: | --- |
+| `demo` | 200 | Fast smoke test |
+| `small` | 1,000 | First usable local model |
+| `medium` | 5,000 | Better coverage, GPU recommended |
+| `large` | 15,000 | Wide recommendation coverage |
+| `xlarge` | 30,000 | Long overnight/GPU build |
+
+More movies usually means better coverage, but the TMDB download and BERT embedding step take longer.
+
+Interactive setup:
 
 ```bash
-python ai_engine/generate_vectors.py
+python tools/bootstrap_recommender.py
 ```
 
-Then start the recommendation service:
+Non-interactive setup:
+
+```bash
+python tools/bootstrap_recommender.py --preset small --tmdb-key YOUR_TMDB_KEY
+```
+
+Windows users can also double-click:
+
+```text
+setup_recommender.bat
+```
+
+The script creates or updates:
+
+```text
+movie_vectors.json
+```
+
+The file is ignored by Git because it can be large and is reproducible.
+
+## Running The Advanced BERT Service
+
+After generating vectors, start the semantic recommendation service:
 
 ```bash
 python ai_engine/bert_service.py
 ```
 
-The BERT service expects one of these files in the project root:
+To let the web app use BERT recommendations, set this in `.env`:
+
+```text
+REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+```
+
+Then restart the Flask backend:
+
+```bash
+python app.py
+```
+
+The old vector command still works and forwards to the same bootstrapper:
+
+```bash
+python ai_engine/generate_vectors.py --preset small
+```
+
+The BERT service expects one of these files:
 
 ```text
 movie_vectors.json
@@ -305,7 +363,7 @@ Next planned improvements:
 - recommendation explanations
 - small sample vector index for smoke tests
 - vector search optimization
-- cleaner deployment notes for running backend and BERT service on separate machines
+- optional vector database integration for larger local indexes
 
 See [ROADMAP.md](ROADMAP.md) for the full plan.
 

@@ -42,7 +42,7 @@ This public mode is intentionally lightweight so anyone can clone the repo, run 
 
 Each movie is represented as structured metadata plus a semantic text embedding.
 
-The vector generation scripts fetch movie data from TMDB and combine useful fields into model input text:
+The one-command bootstrapper fetches movie data from TMDB and combines useful fields into model input text:
 
 ```text
 title + overview + vote_average + genre_ids
@@ -61,6 +61,14 @@ movie_vectors.json
 ```
 
 This file acts as the semantic movie index. It is ignored by Git because it can become large and can be regenerated from the scripts.
+
+The bootstrapper supports selectable data sizes:
+
+```text
+demo -> small -> medium -> large -> xlarge
+```
+
+Larger indexes usually improve recommendation coverage because the semantic service has more candidate movies to compare against. The tradeoff is longer TMDB download time, longer BERT embedding time, and a larger generated JSON file.
 
 ## 2. User Taste Profile
 
@@ -133,7 +141,16 @@ For example, two films might share few keywords but still feel similar because t
 
 LumiTrace is built to capture those semantic connections and use them as recommendation signals.
 
-## 7. Future Algorithm Work
+## 7. Current Model Tooling
+
+The advanced model path now has a reproducible local setup:
+
+- `tools/bootstrap_recommender.py` downloads TMDB movie metadata and creates `movie_vectors.json`.
+- `ai_engine/generate_vectors.py` remains as a compatibility wrapper for the same bootstrapper.
+- `ai_engine/bert_service.py` loads the generated vectors and exposes `/search`, `/embed`, `/reload_db`, and `/status`.
+- `app.py` can forward recommendation requests to the BERT service through `REMOTE_SEARCH_URL`.
+
+## 8. Future Algorithm Work
 
 Planned improvements:
 

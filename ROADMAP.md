@@ -7,7 +7,7 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 - Add screenshots or a short demo GIF to the README.
 - Add a small sample vector dataset for local smoke testing without requiring a full TMDB vector build.
 - Improve startup checks so the backend clearly reports whether TMDB, RapidAPI, BERT search, and chat services are configured.
-- Add clearer error messages when `movie_vectors.json` is missing.
+- Add clearer browser-side diagnostics when the optional BERT service is configured but unreachable.
 
 ## AI Recommendation Improvements
 
@@ -19,8 +19,7 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 
 ## Data Pipeline Improvements
 
-- Add a documented small-data mode for `generate_vectors.py`.
-- Add resume and progress metadata for long vector generation runs.
+- Add richer resume metadata for long vector generation runs.
 - Keep generated vector files outside Git while documenting how to reproduce them.
 - Add optional MovieLens setup instructions for the hybrid SVD + Genome + BERT engine.
 
@@ -28,13 +27,16 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 
 - Keep `.env`, API keys, local databases, generated vectors, and model weights out of Git.
 - Add stricter CORS configuration for deployed environments.
-- Replace the demo username-based auth flow with token-based auth if the project becomes more than a prototype.
-- Add deployment notes for running the Flask backend and BERT service on separate machines.
+- Add token-based access control if the project grows beyond a local demo.
+- Add production deployment notes for running the Flask backend and BERT service on separate machines.
 
 ## Completed
 
 - Rework the app into a no-registration public demo.
 - Add browser-local favorites and TMDB-key-based recommendations.
+- Add selectable dataset sizes for BERT vector generation.
+- Add one-command recommender bootstrapper.
+- Add optional BERT semantic service integration to the public demo.
 - Add Dependabot configuration for Python dependency maintenance.
 - Add a local operations runbook.
 - Add a public-safe local setup checker.
