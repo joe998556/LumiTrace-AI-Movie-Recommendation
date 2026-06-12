@@ -8,6 +8,7 @@ All notable project maintenance updates are tracked here.
 - Added `tools/check_setup.py` for public-safe local setup checks.
 - Documented the setup checker in the README.
 - Added `docs/OPERATIONS.md` with local runbook, health check, BERT service, and troubleshooting notes.
+- Added Dependabot configuration for weekly Python dependency maintenance.
 
 ## 2026-06-09
 

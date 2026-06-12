@@ -33,6 +33,7 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 
 ## Completed
 
+- Add Dependabot configuration for Python dependency maintenance.
 - Add a local operations runbook.
 - Add a public-safe local setup checker.
 - Add contribution and security policy documents.
