@@ -2,6 +2,10 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-12
+
+- Added `.editorconfig` to keep formatting consistent across Python, JavaScript, HTML, JSON, YAML, and Markdown files.
+
 ## 2026-06-09
 
 - Added `CONTRIBUTING.md` with setup, testing, and recommendation-pipeline contribution guidance.
