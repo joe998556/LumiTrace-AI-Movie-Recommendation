@@ -12,7 +12,7 @@
 [![TMDB](https://img.shields.io/badge/TMDB-Movie%20Metadata-01B4E4?style=for-the-badge)](https://www.themoviedb.org/)
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
 
-[Algorithm](ALGORITHM.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
+[Algorithm](ALGORITHM.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
 
 </div>
 
@@ -166,6 +166,8 @@ The backend and recommendation service are separated so the BERT service can run
 |   `-- train_collaborative_vectors.py
 |-- tools/
 |   `-- check_setup.py             # Local readiness checker
+|-- docs/
+|   `-- OPERATIONS.md              # Local operations runbook
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
 |-- CONTRIBUTING.md                # Contribution guide
 |-- SECURITY.md                    # Public security policy
@@ -279,6 +281,8 @@ Next planned improvements:
 - cleaner deployment notes for running backend and BERT service on separate machines
 
 See [ROADMAP.md](ROADMAP.md) for the full plan.
+
+For local service operation and troubleshooting, see [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 ## Attribution
 

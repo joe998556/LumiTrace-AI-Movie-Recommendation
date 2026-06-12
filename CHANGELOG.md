@@ -7,6 +7,7 @@ All notable project maintenance updates are tracked here.
 - Added `.editorconfig` to keep formatting consistent across Python, JavaScript, HTML, JSON, YAML, and Markdown files.
 - Added `tools/check_setup.py` for public-safe local setup checks.
 - Documented the setup checker in the README.
+- Added `docs/OPERATIONS.md` with local runbook, health check, BERT service, and troubleshooting notes.
 
 ## 2026-06-09
 
