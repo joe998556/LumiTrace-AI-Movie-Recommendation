@@ -5,6 +5,8 @@ All notable project maintenance updates are tracked here.
 ## 2026-06-12
 
 - Added `.editorconfig` to keep formatting consistent across Python, JavaScript, HTML, JSON, YAML, and Markdown files.
+- Added `tools/check_setup.py` for public-safe local setup checks.
+- Documented the setup checker in the README.
 
 ## 2026-06-09
 

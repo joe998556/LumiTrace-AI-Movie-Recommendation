@@ -164,6 +164,8 @@ The backend and recommendation service are separated so the BERT service can run
 |   |-- generate_vectors_infinity.py
 |   |-- final_boss_engine.py       # Merge BERT, SVD, and Genome vectors
 |   `-- train_collaborative_vectors.py
+|-- tools/
+|   `-- check_setup.py             # Local readiness checker
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
 |-- CONTRIBUTING.md                # Contribution guide
 |-- SECURITY.md                    # Public security policy
@@ -216,6 +218,14 @@ http://localhost:8080/api/health
 ```
 
 The health endpoint reports whether the local database is reachable and which integrations are configured. It only returns booleans/status values, never API keys or private service URLs.
+
+Run a local setup check:
+
+```bash
+python tools/check_setup.py
+```
+
+The setup checker reports required files, environment variable presence, and whether generated vector indexes exist. It does not print secret values.
 
 ## Running The BERT Service
 
