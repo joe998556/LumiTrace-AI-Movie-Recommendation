@@ -11,6 +11,7 @@
 [![BERT](https://img.shields.io/badge/BERT-Semantic%20Embeddings-FF6B6B?style=for-the-badge)](ALGORITHM.md)
 [![TMDB](https://img.shields.io/badge/TMDB-Movie%20Metadata-01B4E4?style=for-the-badge)](https://www.themoviedb.org/)
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
+[![CI](https://img.shields.io/github/actions/workflow/status/joe998556/LumiTrace-AI-Movie-Recommendation/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
 
 [Algorithm](ALGORITHM.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
 
@@ -57,6 +58,7 @@ Recent maintenance work:
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
 - Added a one-command recommender bootstrapper with selectable data sizes.
+- Added GitHub Actions smoke checks for Python syntax, JavaScript syntax, setup validation, and backend health.
 - Added a public-safe `/api/health` endpoint for backend readiness checks.
 - Reframed the project around the recommendation algorithm instead of the web UI.
 - Added [ALGORITHM.md](ALGORITHM.md) with a focused explanation of the scoring pipeline.

@@ -2,6 +2,11 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-15
+
+- Added GitHub Actions smoke CI for Python syntax, JavaScript syntax, setup validation, and Flask health checks.
+- Added a README CI status badge for easier public maintenance visibility.
+
 ## 2026-06-13
 
 - Reworked the main app into a clone-and-run public demo with no login or registration flow.

@@ -37,6 +37,7 @@ This roadmap tracks planned improvements for LumiTrace. The project is currently
 - Add selectable dataset sizes for BERT vector generation.
 - Add one-command recommender bootstrapper.
 - Add optional BERT semantic service integration to the public demo.
+- Add GitHub Actions smoke CI for public maintenance checks.
 - Add Dependabot configuration for Python dependency maintenance.
 - Add a local operations runbook.
 - Add a public-safe local setup checker.
