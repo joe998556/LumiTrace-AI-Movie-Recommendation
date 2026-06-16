@@ -228,7 +228,6 @@ RAPID_API_KEY=your_rapidapi_key
 REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
 LUMITRACE_VECTOR_FILE=movie_vectors.json
 LUMITRACE_DEVICE=auto
-OLLAMA_URL=
 SSL_VERIFY=false
 ```
 
