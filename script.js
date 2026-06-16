@@ -4,12 +4,14 @@ const KEY_STORAGE = "lumitrace_tmdb_key";
 const FAVORITES_STORAGE = "lumitrace_favorites";
 
 let activeMovies = [];
+let backendHasTmdbKey = false;
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   bindUi();
   restoreKey();
   renderFavorites();
-  if (getApiKey()) {
+  await loadBackendStatus();
+  if (hasTmdbAccess()) {
     loadTrending();
   } else {
     setStatus("請輸入 TMDB API key，或在 .env 設定 TMDB_API_KEY。");
@@ -31,9 +33,14 @@ function bindUi() {
   document.getElementById("clearKeyBtn").addEventListener("click", () => {
     localStorage.removeItem(KEY_STORAGE);
     document.getElementById("apiKeyInput").value = "";
-    activeMovies = [];
-    document.getElementById("movieGrid").innerHTML = "";
-    setStatus("已清除 API key。");
+    if (backendHasTmdbKey) {
+      setStatus("已清除瀏覽器 API key，改用後端 .env 的 TMDB key。");
+      loadTrending();
+    } else {
+      activeMovies = [];
+      document.getElementById("movieGrid").innerHTML = "";
+      setStatus("已清除 API key。");
+    }
   });
 
   document.getElementById("searchBtn").addEventListener("click", runSearch);
@@ -60,6 +67,20 @@ function restoreKey() {
 
 function getApiKey() {
   return localStorage.getItem(KEY_STORAGE) || "";
+}
+
+function hasTmdbAccess() {
+  return Boolean(getApiKey() || backendHasTmdbKey);
+}
+
+async function loadBackendStatus() {
+  try {
+    const response = await fetch(`${BACKEND_URL}/health`);
+    const data = await response.json();
+    backendHasTmdbKey = Boolean(data.integrations && data.integrations.tmdb_env_key);
+  } catch {
+    backendHasTmdbKey = false;
+  }
 }
 
 function getFavorites() {
@@ -345,7 +366,7 @@ function scoreMovie(movie, profile) {
 }
 
 function requireKey() {
-  if (getApiKey()) return true;
+  if (hasTmdbAccess()) return true;
   setStatus("請先輸入並儲存 TMDB API key。");
   return false;
 }

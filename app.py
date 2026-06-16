@@ -140,7 +140,7 @@ def tmdb_proxy(endpoint):
 def semantic_recommendations():
     """Forward a sanitized recommendation request to the optional BERT service."""
     if not REMOTE_SEARCH_URL:
-        return jsonify({"error": "Semantic recommendation service is not configured"}), 503
+        return jsonify({"results": [], "fallback": "semantic service is not configured"})
 
     data = request.get_json(silent=True) or {}
     payload = {
@@ -161,10 +161,13 @@ def semantic_recommendations():
             timeout=30,
             verify=SSL_VERIFY,
         )
+        if not response.ok:
+            logger.info("Semantic recommendation service returned %s; using metadata fallback.", response.status_code)
+            return jsonify({"results": [], "fallback": "semantic service returned an error"})
         return jsonify(response.json()), response.status_code
     except requests.RequestException as exc:
-        logger.warning("Semantic recommendation request failed: %s", exc)
-        return jsonify({"error": "Semantic recommendation service request failed"}), 502
+        logger.info("Semantic recommendation service unavailable; using metadata fallback: %s", exc)
+        return jsonify({"results": [], "fallback": "semantic service unavailable"})
 
 
 @app.route("/api/streaming/<path:show_id>", methods=["GET"])
