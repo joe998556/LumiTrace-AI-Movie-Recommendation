@@ -58,7 +58,22 @@ jobs:
           health = client.get("/api/health").get_json()
           assert health["status"] == "ok"
           assert "tmdb_env_key" in health["integrations"]
-          html = client.get("/").data.decode("utf-8")
-          assert "TMDB API Key" in html
-          assert "Show My Recommendations" in html
+
+          index = client.get("/")
+          assert index.status_code == 200
+          html = index.data.decode("utf-8")
+          for token in (
+              "TMDB API Key",
+              "movieGrid",
+              "recommendFab",
+              "recommendPanel",
+              "recommendationGrid",
+          ):
+              assert token in html, token
+
+          favorites = client.get("/favorites.html")
+          assert favorites.status_code == 200
+          favorites_html = favorites.data.decode("utf-8")
+          assert "Favorites" in favorites_html
+          assert "ratingModal" in favorites_html
           PY
