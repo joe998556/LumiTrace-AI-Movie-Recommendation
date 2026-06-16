@@ -6,11 +6,12 @@ All notable project maintenance updates are tracked here.
 
 - Added GitHub Actions smoke CI for Python syntax, JavaScript syntax, setup validation, and Flask health checks.
 - Added a README CI status badge for easier public maintenance visibility.
+- Converted the public demo UI, model setup notes, and TMDB metadata defaults to English.
 
 ## 2026-06-13
 
 - Reworked the main app into a clone-and-run public demo with no login or registration flow.
-- Added browser-local TMDB API key entry, local favorites, and a "你適合看以下這些" recommendation button.
+- Added browser-local TMDB API key entry, local favorites, and a "Show My Recommendations" recommendation button.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and public-safe health checks.
 - Added an optional `/api/semantic-recommendations` proxy for BERT-powered recommendations.
 - Added `tools/bootstrap_recommender.py` with selectable dataset sizes for building `movie_vectors.json`.

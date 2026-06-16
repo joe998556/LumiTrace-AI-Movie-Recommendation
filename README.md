@@ -244,7 +244,9 @@ Open:
 http://localhost:8080
 ```
 
-Paste your TMDB API key into the page, click "儲存並載入趨勢", save movies you like, then click "你適合看以下這些".
+Paste your TMDB API key into the page, click "Save and Load Trending", save movies you like, then click "Show My Recommendations".
+
+The public demo UI is English-only. TMDB requests default to `en-US` so movie titles and overviews are also pulled in English when available.
 
 Check backend readiness:
 
@@ -288,6 +290,20 @@ Non-interactive setup:
 python tools/bootstrap_recommender.py --preset small --tmdb-key YOUR_TMDB_KEY
 ```
 
+For a GPU machine on the same LAN, clone this repository on that machine and run:
+
+```bash
+pip install -r requirements.txt
+python tools/bootstrap_recommender.py --preset medium --tmdb-key YOUR_TMDB_KEY --device cuda
+python ai_engine/bert_service.py --host 0.0.0.0 --port 5001
+```
+
+Then set the CPU/backend machine's `.env` to:
+
+```text
+REMOTE_SEARCH_URL=http://GPU_PC_IP:5001/search
+```
+
 Windows users can also double-click:
 
 ```text
@@ -322,7 +338,7 @@ Then restart the Flask backend:
 python app.py
 ```
 
-The old vector command still works and forwards to the same bootstrapper:
+The old vector command still works and forwards to the same English bootstrapper:
 
 ```bash
 python ai_engine/generate_vectors.py --preset small

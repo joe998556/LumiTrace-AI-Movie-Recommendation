@@ -37,7 +37,11 @@ jobs:
             tools/check_setup.py \
             tools/bootstrap_recommender.py \
             ai_engine/bert_service.py \
-            ai_engine/generate_vectors.py
+            ai_engine/generate_vectors.py \
+            ai_engine/generate_vectors_massive.py \
+            ai_engine/generate_vectors_infinity.py \
+            ai_engine/final_boss_engine.py \
+            ai_engine/train_collaborative_vectors.py
 
       - name: JavaScript syntax check
         run: node --check script.js
@@ -56,5 +60,5 @@ jobs:
           assert "tmdb_env_key" in health["integrations"]
           html = client.get("/").data.decode("utf-8")
           assert "TMDB API Key" in html
-          assert "你適合看以下這些" in html
+          assert "Show My Recommendations" in html
           PY

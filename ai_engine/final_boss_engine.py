@@ -1,382 +1,324 @@
+"""Build a hybrid LumiTrace recommendation index.
+
+This optional advanced script merges three signal families into
+`final_boss_vectors.json`:
+
+- BERT semantic vectors from `movie_vectors.json`
+- MovieLens collaborative SVD vectors
+- MovieLens/Tag Genome style vectors
+
+The public demo does not require this file. Use it only when you want to
+experiment with a hybrid BERT + collaborative + tag-profile index.
 """
-🔥 FINAL BOSS ENGINE v2.0 🔥
-The Ultimate Hybrid Recommendation System
 
-Supports SEPARATE data sources:
-- MovieLens 32M (ratings.csv, links.csv) → SVD 品味向量
-- Tag Genome 2021 → Genome DNA 向量
-- BERT vectors (movie_vectors.json) → 語意向量
+from __future__ import annotations
 
-Usage:
-    python final_boss_engine.py --ratings_path ./ml-32m/ --genome_path ./genome-2021/ --bert_file movie_vectors.json
-"""
+import argparse
+import glob
+import json
+import os
+from pathlib import Path
+from typing import Any
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import svds
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import normalize
-import json
-import os
-import argparse
-import glob
 
-# ============================================
-# Configuration
-# ============================================
+
 LATENT_DIM = 64
 MIN_RATINGS_PER_MOVIE = 100
 OUTPUT_FILE = "final_boss_vectors.json"
 
 
-def find_file(directory: str, patterns: list) -> str:
-    """在目錄中搜尋符合 pattern 的檔案"""
+def find_file(directory: Path, patterns: list[str]) -> Path | None:
+    """Find the first file matching any pattern under a directory."""
     for pattern in patterns:
-        matches = glob.glob(os.path.join(directory, "**", pattern), recursive=True)
+        matches = glob.glob(str(directory / "**" / pattern), recursive=True)
         if matches:
-            return matches[0]
+            return Path(matches[0])
     return None
 
 
-def load_links(data_path: str) -> tuple:
-    """載入 MovieLens ID -> TMDB ID 映射"""
-    print("\n📂 [1/5] 載入 ID 映射 (links.csv)...")
-    
+def load_links(data_path: Path) -> tuple[dict[int, int], dict[int, int]]:
+    """Load MovieLens movie ID to TMDB ID mappings."""
+    print("[1/5] Loading ID mappings from links.csv...")
     links_file = find_file(data_path, ["links.csv"])
     if not links_file:
-        print(f"   ❌ 找不到 links.csv in {data_path}")
+        print(f"   links.csv was not found under {data_path}")
         return {}, {}
-    
-    print(f"   找到: {links_file}")
+
+    print(f"   file: {links_file}")
     links = pd.read_csv(links_file)
-    
-    ml_to_tmdb = {}
-    tmdb_to_ml = {}
-    
+    ml_to_tmdb: dict[int, int] = {}
+    tmdb_to_ml: dict[int, int] = {}
+
     for _, row in links.iterrows():
-        ml_id = int(row['movieId'])
-        tmdb_id = row.get('tmdbId')
-        if pd.notna(tmdb_id):
-            tmdb_id = int(tmdb_id)
-            ml_to_tmdb[ml_id] = tmdb_id
-            tmdb_to_ml[tmdb_id] = ml_id
-    
-    print(f"   ✅ 成功映射: {len(ml_to_tmdb):,} 部電影")
+        movie_id = row.get("movieId")
+        tmdb_id = row.get("tmdbId")
+        if pd.notna(movie_id) and pd.notna(tmdb_id):
+            ml_id = int(movie_id)
+            tmdb = int(tmdb_id)
+            ml_to_tmdb[ml_id] = tmdb
+            tmdb_to_ml[tmdb] = ml_id
+
+    print(f"   mapped movies: {len(ml_to_tmdb):,}")
     return ml_to_tmdb, tmdb_to_ml
 
 
-def train_svd_vectors(data_path: str, ml_to_tmdb: dict) -> dict:
-    """訓練 SVD 品味向量"""
-    print("\n🧮 [2/5] 訓練 SVD 品味向量 (ratings.csv)...")
-    
+def train_svd_vectors(data_path: Path, ml_to_tmdb: dict[int, int]) -> dict[int, list[float]]:
+    """Train collaborative SVD vectors and map them to TMDB IDs."""
+    print("[2/5] Training collaborative SVD vectors...")
     ratings_file = find_file(data_path, ["ratings.csv"])
     if not ratings_file:
-        print(f"   ❌ 找不到 ratings.csv in {data_path}")
+        print(f"   ratings.csv was not found under {data_path}")
         return {}
-    
-    print(f"   找到: {ratings_file}")
-    print("   載入中 (這可能需要幾分鐘)...")
+
+    print(f"   file: {ratings_file}")
     ratings = pd.read_csv(ratings_file)
-    print(f"   原始評分: {len(ratings):,} 筆")
-    
-    # 過濾
-    movie_counts = ratings.groupby('movieId').size()
+    print(f"   raw ratings: {len(ratings):,}")
+
+    movie_counts = ratings.groupby("movieId").size()
     valid_movies = movie_counts[movie_counts >= MIN_RATINGS_PER_MOVIE].index
-    ratings_filtered = ratings[ratings['movieId'].isin(valid_movies)]
-    print(f"   過濾後: {len(ratings_filtered):,} 筆 ({len(valid_movies):,} 部電影)")
-    
-    # ID 映射
-    user_ids = ratings_filtered['userId'].unique()
-    movie_ids = ratings_filtered['movieId'].unique()
-    
+    filtered = ratings[ratings["movieId"].isin(valid_movies)]
+    print(f"   filtered ratings: {len(filtered):,}")
+    print(f"   valid movies: {len(valid_movies):,}")
+
+    user_ids = filtered["userId"].unique()
+    movie_ids = filtered["movieId"].unique()
+    if len(user_ids) == 0 or len(movie_ids) == 0:
+        print("   no ratings remain after filtering")
+        return {}
+
     user_to_idx = {uid: idx for idx, uid in enumerate(user_ids)}
     movie_to_idx = {mid: idx for idx, mid in enumerate(movie_ids)}
     idx_to_movie = {idx: mid for mid, idx in movie_to_idx.items()}
-    
-    # 稀疏矩陣
-    print("   建立 User-Item 矩陣...")
-    row = ratings_filtered['userId'].map(user_to_idx)
-    col = ratings_filtered['movieId'].map(movie_to_idx)
-    
-    user_means = ratings_filtered.groupby('userId')['rating'].mean()
-    data = ratings_filtered['rating'].values - ratings_filtered['userId'].map(user_means).values
-    
-    matrix = csr_matrix(
-        (data, (row, col)),
-        shape=(len(user_ids), len(movie_ids))
-    )
-    print(f"   矩陣大小: {matrix.shape[0]:,} users x {matrix.shape[1]:,} movies")
-    
-    # SVD
-    print(f"   執行 SVD (k={LATENT_DIM})...")
-    U, sigma, Vt = svds(matrix.astype(float), k=LATENT_DIM)
-    movie_vectors = normalize(Vt.T * sigma, norm='l2', axis=1)
-    
-    # 映射到 TMDB
-    svd_vectors = {}
+
+    row = filtered["userId"].map(user_to_idx)
+    col = filtered["movieId"].map(movie_to_idx)
+    user_means = filtered.groupby("userId")["rating"].mean()
+    centered = filtered["rating"].values - filtered["userId"].map(user_means).values
+
+    matrix = csr_matrix((centered, (row, col)), shape=(len(user_ids), len(movie_ids)))
+    dimensions = min(LATENT_DIM, max(1, min(matrix.shape) - 1))
+    print(f"   matrix: {matrix.shape[0]:,} users x {matrix.shape[1]:,} movies")
+    print(f"   SVD dimensions: {dimensions}")
+
+    _, sigma, vt = svds(matrix.astype(float), k=dimensions)
+    movie_vectors = normalize(vt.T * sigma, norm="l2", axis=1)
+
+    svd_vectors: dict[int, list[float]] = {}
     for idx, ml_id in idx_to_movie.items():
-        if ml_id in ml_to_tmdb:
-            tmdb_id = ml_to_tmdb[ml_id]
+        tmdb_id = ml_to_tmdb.get(int(ml_id))
+        if tmdb_id:
             svd_vectors[tmdb_id] = movie_vectors[idx].tolist()
-    
-    print(f"   ✅ SVD 向量完成: {len(svd_vectors):,} 部電影")
+
+    print(f"   SVD vectors: {len(svd_vectors):,}")
     return svd_vectors
 
 
-def train_genome_vectors(genome_path: str, ml_to_tmdb: dict) -> dict:
-    """訓練 Genome DNA 向量 - 支援 Tag Genome 2021 格式"""
-    print("\n🧬 [3/5] 訓練 Genome DNA 向量...")
-    
-    if not genome_path or not os.path.exists(genome_path):
-        print(f"   ⚠️ Genome 路徑不存在: {genome_path}")
-        return {}
-    
-    # 嘗試多種可能的檔案格式
-    genome_files = [
-        os.path.join(genome_path, "scores", "glmer.csv"),
-        os.path.join(genome_path, "scores", "tagdl.csv"),
-        os.path.join(genome_path, "genome-scores.csv"),
+def find_genome_file(genome_path: Path) -> Path | None:
+    candidates = [
+        genome_path / "scores" / "glmer.csv",
+        genome_path / "scores" / "tagdl.csv",
+        genome_path / "genome-scores.csv",
     ]
-    
-    genome_file = None
-    for f in genome_files:
-        if os.path.exists(f):
-            genome_file = f
-            break
-    
-    if not genome_file:
-        # 最後嘗試遞迴搜尋
-        csv_files = glob.glob(os.path.join(genome_path, "**", "*.csv"), recursive=True)
-        for f in csv_files:
-            if 'glmer' in f.lower() or 'tagdl' in f.lower() or 'genome' in f.lower():
-                genome_file = f
-                break
-    
-    if not genome_file:
-        print(f"   ❌ 無法找到 Genome 資料")
-        return {}
-    
-    print(f"   找到: {genome_file}")
-    
-    try:
-        print("   載入中 (這可能需要幾分鐘)...")
-        genome = pd.read_csv(genome_file)
-        print(f"   欄位: {list(genome.columns)}")
-        print(f"   資料筆數: {len(genome):,}")
-        
-        # 檢測格式
-        cols = [c.lower() for c in genome.columns]
-        
-        if 'movieid' in cols and 'tagid' in cols and 'relevance' in cols:
-            # 標準 MovieLens 25M 格式 (movieId, tagId, relevance)
-            print("   格式: MovieLens 25M (movieId, tagId, relevance)")
-            genome_matrix = genome.pivot(index='movieId', columns='tagId', values='relevance')
-        
-        elif 'item_id' in cols and 'tag' in cols and 'score' in cols:
-            # Tag Genome 2021 格式 (tag, item_id, score)
-            print("   格式: Tag Genome 2021 (tag, item_id, score)")
-            print("   執行 Pivot 轉換...")
-            genome_matrix = genome.pivot(index='item_id', columns='tag', values='score')
-            print(f"   轉換完成: {genome_matrix.shape[0]:,} movies x {genome_matrix.shape[1]} tags")
-        
-        elif 'item' in cols and 'tag' in cols:
-            # 另一種可能的 Genome 格式
-            print("   格式: 變體格式 (item, tag, score)")
-            score_col = 'score' if 'score' in cols else genome.columns[2]
-            genome_matrix = genome.pivot(index='item', columns='tag', values=score_col)
-        
-        elif len(genome.columns) > 10:
-            # 寬格式 (已經是 movie x tags 矩陣)
-            print("   格式: 寬格式 (已經是矩陣)")
-            id_col = genome.columns[0]
-            genome_matrix = genome.set_index(id_col)
-            genome_matrix = genome_matrix.select_dtypes(include=[np.number])
-        
-        else:
-            print(f"   ❌ 無法識別的格式: {list(genome.columns)}")
-            return {}
-        
-        genome_matrix = genome_matrix.fillna(0)
-        print(f"   Genome 矩陣: {genome_matrix.shape[0]:,} movies x {genome_matrix.shape[1]} tags")
-        
-        if genome_matrix.shape[0] == 0:
-            print("   ❌ 矩陣為空")
-            return {}
-        
-        # PCA 降維
-        n_components = min(LATENT_DIM, genome_matrix.shape[1])
-        print(f"   執行 PCA (n_components={n_components})...")
-        pca = PCA(n_components=n_components)
-        genome_reduced = pca.fit_transform(genome_matrix.values)
-        print(f"   解釋變異量: {sum(pca.explained_variance_ratio_)*100:.1f}%")
-        
-        # 正規化
-        genome_reduced = normalize(genome_reduced, norm='l2', axis=1)
-        
-        # 映射到 TMDB ID
-        genome_vectors = {}
-        movie_ids = genome_matrix.index.tolist()
-        
-        mapped = 0
-        for i, ml_id in enumerate(movie_ids):
-            # 嘗試轉換為 int
-            try:
-                ml_id_int = int(ml_id)
-            except:
-                continue
-            
-            if ml_id_int in ml_to_tmdb:
-                tmdb_id = ml_to_tmdb[ml_id_int]
-                genome_vectors[tmdb_id] = genome_reduced[i].tolist()
-                mapped += 1
-        
-        print(f"   ✅ Genome 向量完成: {mapped:,} 部電影 (共 {len(movie_ids):,})")
-        return genome_vectors
-        
-    except Exception as e:
-        print(f"   ❌ 處理 Genome 資料時發生錯誤: {e}")
-        import traceback
-        traceback.print_exc()
-        return {}
+    for path in candidates:
+        if path.exists():
+            return path
+
+    for file_name in glob.glob(str(genome_path / "**" / "*.csv"), recursive=True):
+        lower = file_name.lower()
+        if "glmer" in lower or "tagdl" in lower or "genome" in lower:
+            return Path(file_name)
+    return None
 
 
-def load_bert_vectors(bert_file: str) -> dict:
-    """載入 BERT 向量"""
-    print("\n📖 [4/5] 載入 BERT 語意向量...")
-    
-    if not os.path.exists(bert_file):
-        print(f"   ❌ 找不到 {bert_file}")
+def train_genome_vectors(genome_path: Path, ml_to_tmdb: dict[int, int]) -> dict[int, list[float]]:
+    """Train compact tag-profile vectors from a MovieLens Genome dataset."""
+    print("[3/5] Training Genome tag-profile vectors...")
+    if not genome_path.exists():
+        print(f"   genome path does not exist: {genome_path}")
         return {}
-    
-    with open(bert_file, 'r', encoding='utf-8') as f:
-        raw_data = json.load(f)
-    
-    bert_vectors = {}
-    for m in raw_data:
-        tmdb_id = m['id']
+
+    genome_file = find_genome_file(genome_path)
+    if not genome_file:
+        print("   no Genome CSV file was found")
+        return {}
+
+    print(f"   file: {genome_file}")
+    genome = pd.read_csv(genome_file)
+    print(f"   rows: {len(genome):,}")
+    print(f"   columns: {list(genome.columns)}")
+
+    cols = {column.lower(): column for column in genome.columns}
+    if {"movieid", "tagid", "relevance"}.issubset(cols):
+        genome_matrix = genome.pivot(index=cols["movieid"], columns=cols["tagid"], values=cols["relevance"])
+    elif {"item_id", "tag", "score"}.issubset(cols):
+        genome_matrix = genome.pivot(index=cols["item_id"], columns=cols["tag"], values=cols["score"])
+    elif "item" in cols and "tag" in cols:
+        score_col = cols.get("score") or genome.columns[2]
+        genome_matrix = genome.pivot(index=cols["item"], columns=cols["tag"], values=score_col)
+    elif len(genome.columns) > 10:
+        id_col = genome.columns[0]
+        genome_matrix = genome.set_index(id_col).select_dtypes(include=[np.number])
+    else:
+        print("   unrecognized Genome format")
+        return {}
+
+    genome_matrix = genome_matrix.fillna(0)
+    if genome_matrix.empty:
+        print("   Genome matrix is empty")
+        return {}
+
+    dimensions = min(LATENT_DIM, genome_matrix.shape[1])
+    print(f"   matrix: {genome_matrix.shape[0]:,} movies x {genome_matrix.shape[1]:,} tags")
+    print(f"   PCA dimensions: {dimensions}")
+
+    pca = PCA(n_components=dimensions)
+    reduced = pca.fit_transform(genome_matrix.values)
+    reduced = normalize(reduced, norm="l2", axis=1)
+    explained = sum(pca.explained_variance_ratio_) * 100
+    print(f"   explained variance: {explained:.1f}%")
+
+    genome_vectors: dict[int, list[float]] = {}
+    for idx, ml_id in enumerate(genome_matrix.index.tolist()):
+        try:
+            ml_id_int = int(ml_id)
+        except (TypeError, ValueError):
+            continue
+        tmdb_id = ml_to_tmdb.get(ml_id_int)
+        if tmdb_id:
+            genome_vectors[tmdb_id] = reduced[idx].tolist()
+
+    print(f"   Genome vectors: {len(genome_vectors):,}")
+    return genome_vectors
+
+
+def load_bert_vectors(bert_file: Path) -> dict[int, dict[str, Any]]:
+    """Load BERT vectors generated by the LumiTrace bootstrapper."""
+    print("[4/5] Loading BERT semantic vectors...")
+    if not bert_file.exists():
+        print(f"   BERT vector file was not found: {bert_file}")
+        return {}
+
+    with bert_file.open("r", encoding="utf-8") as file:
+        raw_data = json.load(file)
+
+    bert_vectors: dict[int, dict[str, Any]] = {}
+    for movie in raw_data:
+        if not isinstance(movie, dict) or "id" not in movie:
+            continue
+        vector = movie.get("vector") or movie.get("bert_vector")
+        if not vector:
+            continue
+        tmdb_id = int(movie["id"])
         bert_vectors[tmdb_id] = {
-            "vector": m['vector'],
-            "title": m.get('title', ''),
-            "overview": m.get('overview', ''),
-            "poster_path": m.get('poster_path'),
-            "vote_average": m.get('vote_average', 0),
-            "vote_count": m.get('vote_count', 0),
-            "genre_ids": m.get('genre_ids', [])
+            "vector": vector,
+            "title": movie.get("title", ""),
+            "overview": movie.get("overview", ""),
+            "poster_path": movie.get("poster_path"),
+            "release_date": movie.get("release_date", ""),
+            "vote_average": movie.get("vote_average", 0),
+            "vote_count": movie.get("vote_count", 0),
+            "genre_ids": movie.get("genre_ids", []),
         }
-    
-    print(f"   ✅ BERT 向量載入: {len(bert_vectors):,} 部電影")
+
+    print(f"   BERT vectors: {len(bert_vectors):,}")
     return bert_vectors
 
 
-def merge_and_save(svd_vectors: dict, genome_vectors: dict, bert_vectors: dict, output_file: str):
-    """合併所有向量"""
-    print("\n🔗 [5/5] 合併向量並儲存...")
-    
+def merge_and_save(
+    svd_vectors: dict[int, list[float]],
+    genome_vectors: dict[int, list[float]],
+    bert_vectors: dict[int, dict[str, Any]],
+    output_file: Path,
+) -> list[dict[str, Any]]:
+    """Merge available vectors into the hybrid final index."""
+    print("[5/5] Merging vectors...")
     all_tmdb_ids = set(bert_vectors.keys())
-    
-    has_svd = sum(1 for tid in all_tmdb_ids if tid in svd_vectors)
-    has_genome = sum(1 for tid in all_tmdb_ids if tid in genome_vectors)
-    has_all = sum(1 for tid in all_tmdb_ids if tid in svd_vectors and tid in genome_vectors)
-    
-    print(f"\n   覆蓋率統計 (基於 {len(all_tmdb_ids)} 部 BERT 電影):")
-    print(f"   - 有 SVD 向量: {has_svd:,} ({100*has_svd/len(all_tmdb_ids):.1f}%)")
-    print(f"   - 有 Genome 向量: {has_genome:,} ({100*has_genome/len(all_tmdb_ids):.1f}%)")
-    print(f"   - 三合一完整: {has_all:,} ({100*has_all/len(all_tmdb_ids):.1f}%)")
-    
-    final_data = []
+    if not all_tmdb_ids:
+        return []
+
+    has_svd = sum(1 for tmdb_id in all_tmdb_ids if tmdb_id in svd_vectors)
+    has_genome = sum(1 for tmdb_id in all_tmdb_ids if tmdb_id in genome_vectors)
+    has_all = sum(1 for tmdb_id in all_tmdb_ids if tmdb_id in svd_vectors and tmdb_id in genome_vectors)
+
+    print("   coverage:")
+    print(f"   SVD: {has_svd:,}/{len(all_tmdb_ids):,}")
+    print(f"   Genome: {has_genome:,}/{len(all_tmdb_ids):,}")
+    print(f"   complete hybrid: {has_all:,}/{len(all_tmdb_ids):,}")
+
+    final_data: list[dict[str, Any]] = []
     for tmdb_id, bert_data in bert_vectors.items():
-        entry = {
-            "id": tmdb_id,
-            "title": bert_data.get('title', ''),
-            "overview": bert_data.get('overview', ''),
-            "poster_path": bert_data.get('poster_path'),
-            "vote_average": bert_data.get('vote_average', 0),
-            "vote_count": bert_data.get('vote_count', 0),
-            "genre_ids": bert_data.get('genre_ids', []),
-            "bert_vector": bert_data['vector'],
-            "svd_vector": svd_vectors.get(tmdb_id),
-            "genome_vector": genome_vectors.get(tmdb_id)
-        }
-        final_data.append(entry)
-    
-    print(f"\n   儲存到 {output_file}...")
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(final_data, f, ensure_ascii=False)
-    
+        final_data.append(
+            {
+                "id": tmdb_id,
+                "title": bert_data.get("title", ""),
+                "overview": bert_data.get("overview", ""),
+                "poster_path": bert_data.get("poster_path"),
+                "release_date": bert_data.get("release_date", ""),
+                "vote_average": bert_data.get("vote_average", 0),
+                "vote_count": bert_data.get("vote_count", 0),
+                "genre_ids": bert_data.get("genre_ids", []),
+                "bert_vector": bert_data["vector"],
+                "svd_vector": svd_vectors.get(tmdb_id),
+                "genome_vector": genome_vectors.get(tmdb_id),
+            }
+        )
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    with output_file.open("w", encoding="utf-8") as file:
+        json.dump(final_data, file, ensure_ascii=False)
+
     file_size = os.path.getsize(output_file) / (1024 * 1024)
-    print(f"   ✅ 檔案大小: {file_size:.2f} MB")
-    
+    print(f"   saved: {output_file}")
+    print(f"   file size: {file_size:.2f} MB")
     return final_data
 
 
-def main():
-    parser = argparse.ArgumentParser(description="🔥 FINAL BOSS ENGINE v2.0 🔥")
-    parser.add_argument(
-        '--ratings_path', 
-        type=str, 
-        default='./ml-32m/',
-        help='Path to MovieLens ratings dataset (contains ratings.csv, links.csv)'
-    )
-    parser.add_argument(
-        '--genome_path', 
-        type=str, 
-        default='./genome-2021/',
-        help='Path to Tag Genome dataset (contains genome-scores.csv or scores/)'
-    )
-    parser.add_argument(
-        '--bert_file', 
-        type=str, 
-        default='movie_vectors.json',
-        help='Path to BERT vectors'
-    )
-    parser.add_argument(
-        '--output', 
-        type=str, 
-        default=OUTPUT_FILE,
-        help='Output file path'
-    )
-    
-    args = parser.parse_args()
-    
-    print("=" * 60)
-    print("🔥 FINAL BOSS ENGINE v2.0 - 終極混合推薦系統 🔥")
-    print("=" * 60)
-    print(f"   評分資料: {args.ratings_path}")
-    print(f"   Genome資料: {args.genome_path}")
-    print(f"   BERT向量: {args.bert_file}")
-    print("=" * 60)
-    
-    # 1. 載入 ID 映射 (從 ratings 資料夾)
-    ml_to_tmdb, tmdb_to_ml = load_links(args.ratings_path)
-    
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Build a hybrid LumiTrace vector index.")
+    parser.add_argument("--ratings_path", default="./ml-32m/", help="Folder containing MovieLens ratings.csv and links.csv.")
+    parser.add_argument("--genome_path", default="./genome-2021/", help="Folder containing a Genome CSV dataset.")
+    parser.add_argument("--bert_file", default="movie_vectors.json", help="BERT vector file generated by the bootstrapper.")
+    parser.add_argument("--output", default=OUTPUT_FILE, help="Output hybrid vector file.")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    ratings_path = Path(args.ratings_path)
+    genome_path = Path(args.genome_path)
+    bert_file = Path(args.bert_file)
+    output_file = Path(args.output)
+
+    print("LumiTrace hybrid vector builder")
+    print("=" * 36)
+    print(f"ratings path: {ratings_path}")
+    print(f"genome path: {genome_path}")
+    print(f"BERT file: {bert_file}")
+    print(f"output: {output_file}")
+
+    ml_to_tmdb, _ = load_links(ratings_path)
     if not ml_to_tmdb:
-        print("❌ 無法載入 ID 映射，請確認 links.csv 路徑")
-        return
-    
-    # 2. 訓練 SVD
-    svd_vectors = train_svd_vectors(args.ratings_path, ml_to_tmdb)
-    
-    # 3. 訓練 Genome
-    genome_vectors = train_genome_vectors(args.genome_path, ml_to_tmdb)
-    
-    # 4. 載入 BERT
-    bert_vectors = load_bert_vectors(args.bert_file)
-    
+        print("Cannot continue without links.csv mappings.")
+        return 1
+
+    svd_vectors = train_svd_vectors(ratings_path, ml_to_tmdb)
+    genome_vectors = train_genome_vectors(genome_path, ml_to_tmdb)
+    bert_vectors = load_bert_vectors(bert_file)
     if not bert_vectors:
-        print("❌ 無法載入 BERT 向量，請先執行 generate_vectors.py")
-        return
-    
-    # 5. 合併並儲存
-    final_data = merge_and_save(svd_vectors, genome_vectors, bert_vectors, args.output)
-    
-    print("\n" + "=" * 60)
-    print("🏆 FINAL BOSS ENGINE 訓練完成！")
-    print("=" * 60)
-    print(f"   輸出: {args.output}")
-    print(f"   電影: {len(final_data):,}")
-    print("=" * 60)
+        print("Cannot continue without BERT vectors. Run tools/bootstrap_recommender.py first.")
+        return 1
+
+    final_data = merge_and_save(svd_vectors, genome_vectors, bert_vectors, output_file)
+    print("=" * 36)
+    print(f"Hybrid vector build complete: {len(final_data):,} movies")
+    return 0
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == "__main__":
+    raise SystemExit(main())

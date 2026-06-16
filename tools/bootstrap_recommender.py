@@ -78,7 +78,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tmdb-key", help="TMDB API key. If omitted, TMDB_API_KEY or interactive input is used.")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON file.")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="Hugging Face embedding model.")
-    parser.add_argument("--language", default="zh-TW", help="TMDB response language.")
+    parser.add_argument("--language", default="en-US", help="TMDB response language.")
     parser.add_argument("--batch-size", type=int, default=16, help="Embedding batch size.")
     parser.add_argument("--sleep", type=float, default=0.12, help="Delay between TMDB API requests.")
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, or cuda:0.")

@@ -2,6 +2,7 @@ const BACKEND_URL = "http://localhost:8080/api";
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 const KEY_STORAGE = "lumitrace_tmdb_key";
 const FAVORITES_STORAGE = "lumitrace_favorites";
+const TMDB_LANGUAGE = "en-US";
 
 let activeMovies = [];
 let backendHasTmdbKey = false;
@@ -14,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (hasTmdbAccess()) {
     loadTrending();
   } else {
-    setStatus("請輸入 TMDB API key，或在 .env 設定 TMDB_API_KEY。");
+    setStatus("Enter a TMDB API key, or set TMDB_API_KEY in your local .env file.");
   }
 });
 
@@ -22,11 +23,11 @@ function bindUi() {
   document.getElementById("saveKeyBtn").addEventListener("click", () => {
     const key = document.getElementById("apiKeyInput").value.trim();
     if (!key) {
-      setStatus("請先輸入 TMDB API key。");
+      setStatus("Enter a TMDB API key first.");
       return;
     }
     localStorage.setItem(KEY_STORAGE, key);
-    setStatus("已儲存 API key，正在載入趨勢電影...");
+    setStatus("API key saved. Loading trending movies...");
     loadTrending();
   });
 
@@ -34,12 +35,12 @@ function bindUi() {
     localStorage.removeItem(KEY_STORAGE);
     document.getElementById("apiKeyInput").value = "";
     if (backendHasTmdbKey) {
-      setStatus("已清除瀏覽器 API key，改用後端 .env 的 TMDB key。");
+      setStatus("Browser API key cleared. Using the backend .env TMDB key instead.");
       loadTrending();
     } else {
       activeMovies = [];
       document.getElementById("movieGrid").innerHTML = "";
-      setStatus("已清除 API key。");
+      setStatus("API key cleared.");
     }
   });
 
@@ -53,7 +54,7 @@ function bindUi() {
     localStorage.removeItem(FAVORITES_STORAGE);
     renderFavorites();
     document.getElementById("recommendationGrid").innerHTML = "";
-    document.getElementById("recommendationReason").textContent = "收藏幾部喜歡的電影後按推薦按鈕。";
+    document.getElementById("recommendationReason").textContent = "Save a few movies, then ask for recommendations.";
     renderMovieGrid(activeMovies, "movieGrid");
   });
 }
@@ -113,14 +114,14 @@ async function tmdb(path) {
 
 async function loadTrending() {
   if (!requireKey()) return;
-  setStatus("正在載入趨勢電影...");
+  setStatus("Loading trending movies...");
   try {
-    const data = await tmdb("trending/movie/week?language=zh-TW&page=1");
+    const data = await tmdb(`trending/movie/week?language=${TMDB_LANGUAGE}&page=1`);
     activeMovies = normalizeMovies(data.results || []);
     renderMovieGrid(activeMovies, "movieGrid");
-    setStatus(`已載入 ${activeMovies.length} 部趨勢電影。`);
+    setStatus(`Loaded ${activeMovies.length} trending movies.`);
   } catch (error) {
-    setStatus(`載入失敗：${error.message}`);
+    setStatus(`Failed to load trending movies: ${error.message}`);
   }
 }
 
@@ -131,14 +132,14 @@ async function runSearch() {
     loadTrending();
     return;
   }
-  setStatus(`正在搜尋 ${query}...`);
+  setStatus(`Searching for ${query}...`);
   try {
-    const data = await tmdb(`search/movie?query=${encodeURIComponent(query)}&language=zh-TW&page=1`);
+    const data = await tmdb(`search/movie?query=${encodeURIComponent(query)}&language=${TMDB_LANGUAGE}&page=1`);
     activeMovies = normalizeMovies(data.results || []);
     renderMovieGrid(activeMovies, "movieGrid");
-    setStatus(`找到 ${activeMovies.length} 部電影。`);
+    setStatus(`Found ${activeMovies.length} movies.`);
   } catch (error) {
-    setStatus(`搜尋失敗：${error.message}`);
+    setStatus(`Search failed: ${error.message}`);
   }
 }
 
@@ -146,21 +147,21 @@ async function loadRecommendations() {
   if (!requireKey()) return;
   const favorites = getFavorites();
   if (favorites.length === 0) {
-    document.getElementById("recommendationReason").textContent = "請先收藏幾部你喜歡的電影。";
+    document.getElementById("recommendationReason").textContent = "Save a few movies you like first.";
     return;
   }
 
   const profile = buildTasteProfile(favorites);
   const favoriteIds = new Set(favorites.map((movie) => movie.id));
 
-  document.getElementById("recommendationReason").textContent = "正在根據你的收藏建立推薦...";
+  document.getElementById("recommendationReason").textContent = "Building recommendations from your favorites...";
 
   try {
     const semanticResults = await loadSemanticRecommendations(favorites);
     if (semanticResults.length > 0) {
       renderMovieGrid(semanticResults, "recommendationGrid", true);
       document.getElementById("recommendationReason").textContent =
-        `已使用 BERT 語意向量服務，根據 ${favorites.length} 部收藏建立推薦。`;
+        `Used the BERT semantic service to rank recommendations from ${favorites.length} favorites.`;
       return;
     }
   } catch {
@@ -168,14 +169,15 @@ async function loadRecommendations() {
   }
 
   if (profile.genreIds.length === 0) {
-    document.getElementById("recommendationReason").textContent = "收藏的電影缺少類型資料，請再收藏幾部電影。";
+    document.getElementById("recommendationReason").textContent =
+      "Your saved movies do not include genre metadata yet. Save a few more movies and try again.";
     return;
   }
 
   try {
     const genreQuery = profile.genreIds.slice(0, 3).join(",");
     const data = await tmdb(
-      `discover/movie?language=zh-TW&sort_by=vote_average.desc&vote_count.gte=150&with_genres=${genreQuery}&page=1`
+      `discover/movie?language=${TMDB_LANGUAGE}&sort_by=vote_average.desc&vote_count.gte=150&with_genres=${genreQuery}&page=1`
     );
     const candidates = normalizeMovies(data.results || [])
       .filter((movie) => !favoriteIds.has(movie.id))
@@ -188,9 +190,9 @@ async function loadRecommendations() {
 
     renderMovieGrid(candidates, "recommendationGrid", true);
     document.getElementById("recommendationReason").textContent =
-      `已用 TMDB metadata，根據 ${favorites.length} 部收藏建立推薦。`;
+      `Used TMDB metadata to rank recommendations from ${favorites.length} favorites.`;
   } catch (error) {
-    document.getElementById("recommendationReason").textContent = `推薦失敗：${error.message}`;
+    document.getElementById("recommendationReason").textContent = `Recommendation failed: ${error.message}`;
   }
 }
 
@@ -262,7 +264,7 @@ function renderMovieGrid(movies, targetId, showScore = false) {
   grid.innerHTML = "";
 
   if (movies.length === 0) {
-    grid.innerHTML = `<div class="col-span-full rounded-xl border border-white/10 p-8 text-center text-white/45">沒有找到電影。</div>`;
+    grid.innerHTML = `<div class="col-span-full rounded-xl border border-white/10 p-8 text-center text-white/45">No movies found.</div>`;
     return;
   }
 
@@ -282,14 +284,14 @@ function renderMovieGrid(movies, targetId, showScore = false) {
           <h3 class="line-clamp-2 min-h-[2.5rem] text-sm font-semibold">${escapeHtml(movie.title)}</h3>
           <div class="mt-2 flex items-center justify-between text-xs text-white/50">
             <span>${year}</span>
-            <span>★ ${movie.vote_average.toFixed(1)}</span>
+            <span>star ${movie.vote_average.toFixed(1)}</span>
           </div>
         </div>
-        <p class="line-clamp-3 min-h-[3.75rem] text-xs leading-5 text-white/48">${escapeHtml(movie.overview || "暫無簡介")}</p>
+        <p class="line-clamp-3 min-h-[3.75rem] text-xs leading-5 text-white/48">${escapeHtml(movie.overview || "No overview available.")}</p>
         <div class="flex items-center justify-between gap-2">
           ${score}
           <button class="favorite-btn ml-auto rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold transition ${active ? "bg-[#cc785c] text-white" : "text-white/70 hover:bg-white/10"}">
-            ${active ? "已收藏" : "加入收藏"}
+            ${active ? "Saved" : "Save"}
           </button>
         </div>
       </div>
@@ -320,8 +322,8 @@ function renderFavorites() {
   const favorites = getFavorites();
   document.getElementById("favoriteSummary").textContent =
     favorites.length === 0
-      ? "尚未收藏電影。"
-      : `已收藏 ${favorites.length} 部電影，會用來建立 taste profile。`;
+      ? "No movies saved yet."
+      : `${favorites.length} saved movies will be used to build your taste profile.`;
 
   const list = document.getElementById("favoriteList");
   list.innerHTML = "";
@@ -367,7 +369,7 @@ function scoreMovie(movie, profile) {
 
 function requireKey() {
   if (hasTmdbAccess()) return true;
-  setStatus("請先輸入並儲存 TMDB API key。");
+  setStatus("Enter and save a TMDB API key first.");
   return false;
 }
 

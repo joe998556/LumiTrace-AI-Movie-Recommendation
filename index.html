@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8">
@@ -7,15 +7,14 @@
   <title>LumiTrace - AI Movie Recommendation</title>
   <link rel="icon" href="data:,">
   <meta name="description"
-    content="LumiTrace 是一個可本機執行的 AI 電影推薦原型，支援 TMDB metadata 推薦與可選的 BERT 語意向量推薦。">
+    content="LumiTrace is a local AI movie recommendation prototype with TMDB metadata ranking and optional BERT semantic recommendations.">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="script.js?v=semantic-bootstrap" defer></script>
+  <script src="script.js?v=english-public-demo" defer></script>
   <style>
     :root {
       --coral: #cc785c;
       --teal: #5db8a6;
       --ink: #151413;
-      --panel: #211f1d;
       --line: rgba(255, 255, 255, 0.10);
     }
 
@@ -86,8 +85,8 @@
         <p class="mb-3 text-sm font-semibold uppercase tracking-[0.28em] text-[#e6ad90]">LumiTrace</p>
         <h1 class="text-4xl font-semibold tracking-tight sm:text-6xl">AI Movie Recommendation</h1>
         <p class="mt-5 max-w-2xl text-base leading-7 text-white/68">
-          收藏你喜歡的電影，LumiTrace 會從類型、評分、熱度與可選的 BERT 語意向量中建立 taste profile，
-          把更接近你口味的片單排到前面。
+          Save movies you like, then let LumiTrace build a taste profile from genres, ratings, popularity, and optional
+          BERT semantic vectors. The result is a ranked watchlist tuned to your own preferences.
         </p>
       </div>
       <a href="ALGORITHM.md" class="surface rounded-lg px-4 py-3 text-sm text-white/75 transition hover:text-white">
@@ -101,16 +100,16 @@
           <span class="mb-2 block text-sm font-medium text-white/70">TMDB API Key</span>
           <input id="apiKeyInput" type="password" autocomplete="off"
             class="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-[#cc785c]"
-            placeholder="貼上你的 TMDB API key">
+            placeholder="Paste your TMDB API key">
         </label>
         <div class="flex flex-wrap gap-3">
           <button id="saveKeyBtn"
             class="rounded-xl bg-[#cc785c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b8674e]">
-            儲存並載入趨勢
+            Save and Load Trending
           </button>
           <button id="clearKeyBtn"
             class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10">
-            清除 key
+            Clear Key
           </button>
         </div>
       </div>
@@ -119,15 +118,15 @@
 
     <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
       <div>
-        <h2 class="text-2xl font-semibold">趨勢電影</h2>
-        <p class="mt-1 text-sm text-white/55">從近期熱門片開始建立你的個人口味樣本。</p>
+        <h2 class="text-2xl font-semibold">Trending Movies</h2>
+        <p class="mt-1 text-sm text-white/55">Start from current TMDB trends and collect a few favorites.</p>
       </div>
       <div class="flex flex-wrap gap-3">
         <input id="searchInput" class="surface w-full rounded-xl px-4 py-3 text-sm outline-none placeholder:text-white/35 sm:w-72"
-          placeholder="搜尋電影，例如 Blade Runner">
+          placeholder="Search movies, e.g. Blade Runner">
         <button id="searchBtn"
           class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/75 transition hover:bg-white/10">
-          搜尋
+          Search
         </button>
       </div>
     </section>
@@ -137,17 +136,17 @@
     <section class="surface rounded-2xl p-5">
       <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 class="text-2xl font-semibold">我的收藏</h2>
-          <p id="favoriteSummary" class="mt-1 text-sm text-white/55">尚未收藏電影。</p>
+          <h2 class="text-2xl font-semibold">My Favorites</h2>
+          <p id="favoriteSummary" class="mt-1 text-sm text-white/55">No movies saved yet.</p>
         </div>
         <div class="flex flex-wrap gap-3">
           <button id="recommendBtn"
             class="rounded-xl bg-[#5db8a6] px-5 py-3 text-sm font-semibold text-[#101413] transition hover:bg-[#70cfbb]">
-            你適合看以下這些
+            Show My Recommendations
           </button>
           <button id="clearFavoritesBtn"
             class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10">
-            清空收藏
+            Clear Favorites
           </button>
         </div>
       </div>
@@ -157,8 +156,8 @@
     <section id="recommendations">
       <div class="mb-4 flex items-end justify-between gap-4">
         <div>
-          <h2 class="text-2xl font-semibold">你適合看以下這些</h2>
-          <p id="recommendationReason" class="mt-1 text-sm text-white/55">收藏幾部喜歡的電影後按推薦按鈕。</p>
+          <h2 class="text-2xl font-semibold">Recommended For You</h2>
+          <p id="recommendationReason" class="mt-1 text-sm text-white/55">Save a few movies, then ask for recommendations.</p>
         </div>
       </div>
       <div id="recommendationGrid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"></div>

@@ -59,7 +59,7 @@ python app.py
 http://localhost:8080
 ```
 
-7. Paste a TMDB API key into the page, load trending movies, save favorites, and click "你適合看以下這些".
+7. Paste a TMDB API key into the page, load trending movies, save favorites, and click "Show My Recommendations".
 
 ## Health Check
 
@@ -85,7 +85,7 @@ or:
 final_boss_vectors.json
 ```
 
-Generate the BERT vector index with the interactive bootstrapper:
+Generate the BERT vector index with the interactive English bootstrapper:
 
 ```bash
 python tools/bootstrap_recommender.py
@@ -142,7 +142,8 @@ python app.py
 On the GPU machine:
 
 ```bash
-python tools/bootstrap_recommender.py --preset medium
+pip install -r requirements.txt
+python tools/bootstrap_recommender.py --preset medium --device cuda
 python ai_engine/bert_service.py --host 0.0.0.0 --port 5001
 ```
 
@@ -153,6 +154,8 @@ REMOTE_SEARCH_URL=http://GPU_PC_IP:5001/search
 ```
 
 This keeps the lightweight public backend on a CPU machine while the heavier embedding/index service runs on the GPU machine.
+
+The bootstrapper defaults to English TMDB metadata (`en-US`) so generated vectors use English titles and overviews when TMDB provides them.
 
 ## Common Issues
 
