@@ -1,175 +1,412 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LumiTrace - AI Movie Recommendation</title>
+  <title>LumiTrace</title>
   <link rel="icon" href="data:,">
-  <meta name="description"
-    content="LumiTrace is a local AI movie recommendation prototype with TMDB metadata ranking and optional BERT semantic recommendations.">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="script.js?v=english-public-demo" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="script.js?v=glass-v1" defer></script>
   <style>
     :root {
-      --coral: #cc785c;
-      --teal: #5db8a6;
-      --ink: #151413;
-      --line: rgba(255, 255, 255, 0.10);
+      --ground: #0a0a1a;
+      --glass-bg: rgba(255,255,255,0.05);
+      --glass-bg-hover: rgba(255,255,255,0.08);
+      --glass-border: rgba(255,255,255,0.1);
+      --glass-border-hover: rgba(255,255,255,0.2);
+      --glass-blur: 16px;
+      --primary: #14b8a6;
+      --primary-hover: #0d9488;
+      --secondary: #5eead4;
+      --gradient: linear-gradient(135deg, #14b8a6, #5eead4);
+      --text-primary: #f0f0ff;
+      --text-secondary: #a0a0c0;
+      --text-muted: #606080;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; margin: 0; }
     body {
-      margin: 0;
-      background: #151413;
-      color: #faf9f5;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #06060f 0%, #100820 35%, #1a0a30 55%, #0e0618 80%, #06060f 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      line-height: 1.55;
       min-height: 100vh;
+      overflow-x: hidden;
     }
+    ::selection { background: rgba(167,139,250,0.3); }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 
-    body::before {
-      background:
-        linear-gradient(135deg, rgba(204, 120, 92, 0.16), transparent 42%),
-        linear-gradient(315deg, rgba(93, 184, 166, 0.12), transparent 46%);
-      content: "";
-      inset: 0;
-      pointer-events: none;
-      position: fixed;
+    #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: transparent; }
+
+    .glass {
+      background: rgba(12,12,28,0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
     }
-
-    main {
-      position: relative;
-    }
-
-    .surface {
-      background: rgba(255, 255, 255, 0.055);
-      border: 1px solid var(--line);
-      backdrop-filter: blur(18px);
+    .glass:hover {
+      background: rgba(12,12,28,0.7);
+      border-color: var(--glass-border-hover);
     }
 
     .poster-card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+      background: rgba(12,12,28,0.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(24px);
     }
-
+    .poster-card.in-view {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 500ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1), border-color 150ms ease-out, box-shadow 150ms ease-out;
+    }
     .poster-card:hover {
-      border-color: rgba(204, 120, 92, 0.7);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+      border-color: rgba(20,184,166,0.4);
       transform: translateY(-4px);
+      box-shadow: 0 8px 32px rgba(20,184,166,0.12);
+      transition: transform 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out;
     }
 
-    .line-clamp-2 {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      overflow: hidden;
+    .line-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    .line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+
+    .tab {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+    .tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
+    .tab.active {
+      color: var(--text-primary);
+      background: rgba(20,184,166,0.15);
+      border-color: rgba(20,184,166,0.3);
     }
 
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-      overflow: hidden;
+    .chip {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 150ms ease-out;
     }
+    .chip:hover { color: var(--text-secondary); }
+    .chip.active { color: var(--primary); border-color: rgba(20,184,166,0.3); background: rgba(20,184,166,0.1); }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+    .btn-gradient {
+      background: var(--gradient);
+      color: #fff;
+    }
+    .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--glass-border);
+    }
+    .btn-ghost:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
+
+    .input {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 150ms ease-out;
+    }
+    .input:focus { border-color: var(--primary); }
+    .input::placeholder { color: var(--text-muted); }
+
+    .loader-dots { display: flex; gap: 5px; align-items: center; justify-content: center; }
+    .loader-dots span { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); animation: dotPulse 1.2s ease-in-out infinite; }
+    .loader-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .loader-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
   </style>
 </head>
-
 <body>
-  <main class="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-6 sm:px-6 lg:px-8">
-    <header class="flex flex-col gap-6 py-4 lg:flex-row lg:items-end lg:justify-between">
-      <div class="max-w-3xl">
-        <p class="mb-3 text-sm font-semibold uppercase tracking-[0.28em] text-[#e6ad90]">LumiTrace</p>
-        <h1 class="text-4xl font-semibold tracking-tight sm:text-6xl">AI Movie Recommendation</h1>
-        <p class="mt-5 max-w-2xl text-base leading-7 text-white/68">
-          Save movies you like, then let LumiTrace build a taste profile from genres, ratings, popularity, and optional
-          BERT semantic vectors. The result is a ranked watchlist tuned to your own preferences.
-        </p>
-      </div>
-      <a href="ALGORITHM.md" class="surface rounded-lg px-4 py-3 text-sm text-white/75 transition hover:text-white">
-        Algorithm notes
-      </a>
-    </header>
+  <canvas id="starfield"></canvas>
 
-    <section class="surface rounded-2xl p-4 sm:p-5">
-      <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
-        <label class="block">
-          <span class="mb-2 block text-sm font-medium text-white/70">TMDB API Key</span>
-          <input id="apiKeyInput" type="password" autocomplete="off"
-            class="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-white outline-none transition placeholder:text-white/30 focus:border-[#cc785c]"
-            placeholder="Paste your TMDB API key">
+  <div style="position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:24px 32px;">
+
+    <!-- Hero Banner -->
+    <section class="glass" style="padding:32px 36px; margin-bottom:32px; position:relative; overflow:hidden;">
+      <div style="position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(20,184,166,0.3), transparent);"></div>
+      <div style="display:flex; align-items:flex-end; justify-content:space-between;">
+        <div>
+          <div style="font-size:18px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:10px;">LumiTrace</div>
+          <h1 style="font-size:36px; font-weight:700; letter-spacing:-0.02em; line-height:1.15;">Movie Recommendations</h1>
+          <p style="font-size:13px; color:var(--text-muted); margin-top:10px; max-width:480px; line-height:1.6;">Save films you enjoy. LumiTrace builds a taste profile from genres, ratings, and BERT semantic vectors to find movies you'll love.</p>
+        </div>
+        <a href="ALGORITHM.md" style="font-size:12px; color:var(--text-muted); text-decoration:none; border:1px solid var(--glass-border); border-radius:8px; padding:8px 14px; transition:all 150ms; white-space:nowrap; flex-shrink:0; margin-left:24px;">Algorithm</a>
+      </div>
+      <div style="position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);"></div>
+    </section>
+
+    <!-- API Key -->
+    <section class="glass" style="padding:20px; margin-bottom:32px;">
+      <div style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:end;">
+        <label>
+          <div style="font-size:12px; font-weight:500; color:var(--text-muted); margin-bottom:6px;">TMDB API Key</div>
+          <input id="apiKeyInput" type="password" autocomplete="off" class="input" style="width:100%;" placeholder="Paste your TMDB API key">
         </label>
-        <div class="flex flex-wrap gap-3">
-          <button id="saveKeyBtn"
-            class="rounded-xl bg-[#cc785c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b8674e]">
-            Save and Load Trending
-          </button>
-          <button id="clearKeyBtn"
-            class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10">
-            Clear Key
-          </button>
+        <div style="display:flex; gap:8px;">
+          <button id="saveKeyBtn" class="btn btn-gradient">Save & Load</button>
+          <button id="clearKeyBtn" class="btn btn-ghost">Clear</button>
         </div>
       </div>
-      <p id="keyStatus" class="mt-3 text-sm text-white/55"></p>
+      <p id="keyStatus" style="font-size:12px; color:var(--text-muted); margin-top:10px;"></p>
     </section>
 
-    <section class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+    <!-- Title + Search -->
+    <section style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; margin-bottom:20px;">
       <div>
-        <h2 class="text-2xl font-semibold">Trending Movies</h2>
-        <p class="mt-1 text-sm text-white/55">Start from current TMDB trends and collect a few favorites.</p>
+        <h2 id="categoryTitle" style="font-size:18px; font-weight:600; letter-spacing:-0.01em;">Trending</h2>
+        <p id="categoryDesc" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Current TMDB trends.</p>
       </div>
-      <div class="flex flex-wrap gap-3">
-        <input id="searchInput" class="surface w-full rounded-xl px-4 py-3 text-sm outline-none placeholder:text-white/35 sm:w-72"
-          placeholder="Search movies, e.g. Blade Runner">
-        <button id="searchBtn"
-          class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/75 transition hover:bg-white/10">
-          Search
-        </button>
+      <div style="display:flex; gap:8px;">
+        <input id="searchInput" class="input" style="width:260px;" placeholder="Search movies...">
+        <button id="searchBtn" class="btn btn-ghost">Search</button>
       </div>
     </section>
 
-    <section id="movieGrid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"></section>
-
-    <section class="surface rounded-2xl p-5">
-      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 class="text-2xl font-semibold">My Favorites</h2>
-          <p id="favoriteSummary" class="mt-1 text-sm text-white/55">No movies saved yet.</p>
-        </div>
-        <div class="flex flex-wrap gap-3">
-          <button id="recommendBtn"
-            class="rounded-xl bg-[#5db8a6] px-5 py-3 text-sm font-semibold text-[#101413] transition hover:bg-[#70cfbb]">
-            Show My Recommendations
-          </button>
-          <button id="clearFavoritesBtn"
-            class="rounded-xl border border-white/10 px-5 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/10">
-            Clear Favorites
-          </button>
-        </div>
+    <!-- Category Tabs -->
+    <section style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
+      <div id="categoryTabs" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:2px;">
+        <button data-category="trending" class="tab active">Trending</button>
+        <button data-category="popular" class="tab">Popular</button>
+        <button data-category="top_rated" class="tab">Top Rated</button>
+        <button data-category="now_playing" class="tab">Now Playing</button>
+        <button data-category="upcoming" class="tab">Upcoming</button>
       </div>
-      <div id="favoriteList" class="mt-5 flex flex-wrap gap-2"></div>
+      <div id="genreChips" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:2px;">
+        <button data-genre="28" class="chip">Action</button>
+        <button data-genre="12" class="chip">Adventure</button>
+        <button data-genre="16" class="chip">Animation</button>
+        <button data-genre="35" class="chip">Comedy</button>
+        <button data-genre="80" class="chip">Crime</button>
+        <button data-genre="99" class="chip">Documentary</button>
+        <button data-genre="18" class="chip">Drama</button>
+        <button data-genre="10751" class="chip">Family</button>
+        <button data-genre="14" class="chip">Fantasy</button>
+        <button data-genre="27" class="chip">Horror</button>
+        <button data-genre="9648" class="chip">Mystery</button>
+        <button data-genre="10749" class="chip">Romance</button>
+        <button data-genre="878" class="chip">Sci-Fi</button>
+        <button data-genre="53" class="chip">Thriller</button>
+        <button data-genre="37" class="chip">Western</button>
+      </div>
     </section>
 
-    <section id="recommendations">
-      <div class="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <h2 class="text-2xl font-semibold">Recommended For You</h2>
-          <p id="recommendationReason" class="mt-1 text-sm text-white/55">Save a few movies, then ask for recommendations.</p>
-        </div>
-      </div>
-      <div id="recommendationGrid" class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6"></div>
-    </section>
+    <!-- Movie Grid -->
+    <section id="movieGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:16px;"></section>
 
-    <footer class="border-t border-white/10 py-8 text-xs leading-6 text-white/40">
-      <p>
-        Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed,
-        certified, or otherwise approved by TMDB. Your TMDB API key is stored only in this browser's localStorage.
-      </p>
+    <footer style="border-top:1px solid var(--glass-border); padding:32px 0; margin-top:48px;">
+      <p style="font-size:11px; color:var(--text-muted); line-height:1.6;">Movie metadata and posters provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.</p>
     </footer>
-  </main>
-</body>
+  </div>
 
+  <!-- Rating Modal -->
+  <div id="ratingModal" style="position:fixed; inset:0; z-index:70; display:none; opacity:0; transition:opacity 200ms; align-items:center; justify-content:center; padding:16px;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.6);" id="ratingBackdrop"></div>
+    <div style="position:relative; z-index:1; width:100%; max-width:380px; background:rgba(10,10,26,0.95); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; transform:scale(0.96); transition:transform 250ms cubic-bezier(0.22,1,0.36,1);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--glass-border);">
+        <span style="font-size:14px; font-weight:600;">Rate this movie</span>
+        <button id="closeRatingBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;">&times;</button>
+      </div>
+      <div id="ratingBody" style="padding:20px;">
+        <div style="display:flex; gap:14px; margin-bottom:20px;">
+          <img id="ratingPoster" style="width:64px; border-radius:8px; object-fit:cover; aspect-ratio:2/3;">
+          <div>
+            <div id="ratingTitle" style="font-size:14px; font-weight:500;"></div>
+            <div id="ratingMeta" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
+          </div>
+        </div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Score</div>
+          <div id="ratingScoreBtns" style="display:flex; gap:6px;"></div>
+        </div>
+        <div style="margin-bottom:20px;">
+          <div style="font-size:12px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">Comment (optional)</div>
+          <textarea id="ratingComment" class="input" style="width:100%; height:72px; resize:none; font-size:12px;" placeholder="What did you think?"></textarea>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="saveRatingBtn" class="btn btn-gradient" style="flex:1;">Save</button>
+          <button id="deleteRatingBtn" class="btn btn-ghost" style="display:none;">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button id="recommendFab" style="position:fixed; bottom:24px; right:24px; z-index:50; width:48px; height:48px; border-radius:12px; background:var(--gradient); color:#fff; border:none; font-size:18px; cursor:pointer; transition:all 150ms ease-out; box-shadow:0 4px 16px rgba(167,139,250,0.3); backdrop-filter:blur(8px);">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+    <span id="fabBadge" style="position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; border-radius:9px; background:rgba(20,184,166,0.3); border:1px solid rgba(20,184,166,0.5); font-size:10px; font-weight:600; display:none; align-items:center; justify-content:center; padding:0 4px; color:#fff;">0</span>
+  </button>
+
+  <!-- Explanation Modal -->
+  <div id="explanationModal" style="position:fixed; inset:0; z-index:60; display:none; opacity:0; transition:opacity 200ms; align-items:center; justify-content:center; padding:16px;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);" id="explanationBackdrop"></div>
+    <div class="explanation-content" style="position:relative; z-index:1; width:100%; max-width:420px; background:rgba(10,10,26,0.9); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); transform:scale(0.96); transition:transform 250ms cubic-bezier(0.22,1,0.36,1);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--glass-border);">
+        <span style="font-size:13px; font-weight:600;">Why this recommendation?</span>
+        <button id="closeExplanationBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; padding:4px;">&times;</button>
+      </div>
+      <div id="explanationBody" style="padding:20px; max-height:60vh; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- Overlay -->
+  <div id="recommendOverlay" style="position:fixed; inset:0; z-index:40; pointer-events:none; opacity:0; transition:opacity 300ms;">
+    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);" id="overlayBackdrop"></div>
+  </div>
+
+  <!-- Recommendation Panel -->
+  <div id="recommendPanel" style="position:fixed; bottom:0; right:0; z-index:50; width:min(720px, 96vw); max-height:88vh; transform:translateY(100%); transition:transform 350ms cubic-bezier(0.22,1,0.36,1);">
+    <div style="background:rgba(10,10,26,0.92); border:1px solid var(--glass-border); border-bottom:none; border-radius:16px 16px 0 0; overflow:hidden; display:flex; flex-direction:column; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--glass-border);">
+        <div>
+          <div style="font-size:14px; font-weight:600;">Recommendations</div>
+          <div id="recommendationReason" style="font-size:11px; color:var(--text-muted); margin-top:2px;">Scroll for more.</div>
+        </div>
+        <button id="closePanelBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px; padding:4px;">&times;</button>
+      </div>
+      <div style="padding:12px 20px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:12px;">
+        <a href="/favorites.html" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.2); border-radius:8px; padding:6px 12px; font-size:12px; font-weight:500; color:var(--primary); text-decoration:none; transition:all 150ms;">
+          Collection <span id="panelFavCount" style="font-size:11px; opacity:0.7;"></span>
+        </a>
+        <span id="panelFavSummary" style="font-size:11px; color:var(--text-muted);"></span>
+      </div>
+      <div id="recScrollArea" style="overflow-y:auto; padding:16px 20px; max-height:60vh;">
+        <div id="recommendationGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+          <div id="recSentinel" style="grid-column:1/-1; display:flex; justify-content:center; padding:24px;"><div class="loader-dots" id="recLoaderDots" style="opacity:0"><span></span><span></span><span></span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Starfield Script -->
+  <script>
+  (function() {
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let w, h, scrollY = 0, time = 0;
+    const stars = [];
+    const meteors = [];
+    let nextMeteor = 300;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('scroll', () => scrollY = window.scrollY);
+
+    // Create stars
+    for (let i = 0; i < 180; i++) {
+      stars.push({
+        x: Math.random() * 3000,
+        y: Math.random() * 10000,
+        r: 0.3 + Math.random() * 1.5,
+        twinkleSpeed: 0.005 + Math.random() * 0.02,
+        twinkleOffset: Math.random() * Math.PI * 2,
+        drift: (Math.random() - 0.5) * 0.1,
+      });
+    }
+
+    function spawnMeteor() {
+      meteors.push({
+        x: Math.random() * w * 0.8,
+        y: -10,
+        vx: 2 + Math.random() * 3,
+        vy: 3 + Math.random() * 4,
+        life: 1,
+        decay: 0.015 + Math.random() * 0.01,
+        len: 40 + Math.random() * 60,
+      });
+    }
+
+    function draw() {
+      time++;
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw stars
+      stars.forEach((s) => {
+        const drawX = (s.x + s.drift * time) % w;
+        const drawY = s.y - scrollY * 0.3;
+        const wrappedY = ((drawY % (h * 3)) + h * 3) % (h * 3) - h;
+        if (wrappedY < -10 || wrappedY > h + 10) return;
+
+        const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(time * s.twinkleSpeed + s.twinkleOffset));
+        ctx.beginPath();
+        ctx.arc(drawX, wrappedY, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200, 200, 255, ${twinkle * 0.6})`;
+        ctx.fill();
+
+        // Subtle glow on brighter stars
+        if (s.r > 1.2) {
+          ctx.beginPath();
+          ctx.arc(drawX, wrappedY, s.r * 3, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(20, 184, 166, ${twinkle * 0.1})`;
+          ctx.fill();
+        }
+      });
+
+      // Meteors
+      if (time > nextMeteor) {
+        spawnMeteor();
+        nextMeteor = time + 300 + Math.random() * 400;
+      }
+
+      for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.x += m.vx;
+        m.y += m.vy;
+        m.life -= m.decay;
+
+        if (m.life <= 0) { meteors.splice(i, 1); continue; }
+
+        const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * m.len / 5, m.y - m.vy * m.len / 5);
+        grad.addColorStop(0, `rgba(94, 234, 212, ${m.life * 0.9})`);
+        grad.addColorStop(1, `rgba(20, 184, 166, 0)`);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(m.x, m.y);
+        ctx.lineTo(m.x - m.vx * m.len / 5, m.y - m.vy * m.len / 5);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(draw);
+    }
+    draw();
+  })();
+  </script>
+</body>
 </html>

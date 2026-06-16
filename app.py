@@ -29,6 +29,7 @@ load_dotenv()
 
 ROOT = Path(__file__).resolve().parent
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
+OMDB_API_KEY = os.getenv("OMDB_API_KEY", "")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY", "")
 REMOTE_SEARCH_URL = os.getenv("REMOTE_SEARCH_URL", "")
 SSL_VERIFY = os.getenv("SSL_VERIFY", "false").lower() == "true"
@@ -105,6 +106,7 @@ def health_check():
             "integrations": {
                 "tmdb_env_key": bool(TMDB_API_KEY),
                 "tmdb_user_key_header": bool(request.headers.get("X-TMDB-API-Key")),
+                "omdb_key": bool(OMDB_API_KEY),
                 "semantic_search": bool(REMOTE_SEARCH_URL),
                 "rapidapi_streaming": bool(RAPID_API_KEY),
             },
@@ -134,6 +136,24 @@ def tmdb_proxy(endpoint):
     except requests.RequestException as exc:
         logger.warning("TMDB proxy request failed: %s", exc)
         return jsonify({"error": "TMDB request failed"}), 502
+
+
+@app.route("/api/omdb/<path:imdb_id>", methods=["GET"])
+def omdb_proxy(imdb_id):
+    """Proxy OMDB requests to fetch IMDB ratings."""
+    if not OMDB_API_KEY:
+        return jsonify({"error": "OMDB_API_KEY is not configured"}), 503
+
+    try:
+        response = requests.get(
+            "http://www.omdbapi.com/",
+            params={"i": imdb_id, "apikey": OMDB_API_KEY},
+            timeout=8,
+        )
+        return jsonify(response.json()), response.status_code
+    except requests.RequestException as exc:
+        logger.warning("OMDB proxy request failed: %s", exc)
+        return jsonify({"error": "OMDB request failed"}), 502
 
 
 @app.route("/api/semantic-recommendations", methods=["POST"])
