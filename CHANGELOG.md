@@ -2,6 +2,14 @@
 
 All notable project maintenance updates are tracked here.
 
+## 2026-06-17
+
+- Added a Windows AI quickstart BAT for APK users who want to run the BERT service on their own PC.
+- Added a step-by-step Windows AI quickstart guide covering TMDB API setup, data-size selection, LAN endpoint detection, and Android Settings setup.
+- Updated Android documentation for private LAN endpoints such as `http://192.168.x.x:5001/search` and public HTTPS gateways.
+- Updated the Android client to allow private LAN HTTP BERT endpoints while keeping public gateway guidance on HTTPS.
+- Added Android v1.0.1 release notes for the local AI setup flow.
+
 ## 2026-06-15
 
 - Added GitHub Actions smoke CI for Python syntax, JavaScript syntax, setup validation, and Flask health checks.

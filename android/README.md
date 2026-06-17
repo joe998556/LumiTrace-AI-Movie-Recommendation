@@ -17,18 +17,32 @@ For APK users, see the step-by-step [User Guide](USER_GUIDE.md).
 
 The open-source build does not include a TMDB API key, gateway token, lab server IP, or private BERT endpoint.
 
-This means users can browse and journal with only a TMDB key. AI recommendations require their own HTTPS BERT gateway.
+This means users can browse and journal with only a TMDB key. AI recommendations require either their own local LAN BERT server or their own HTTPS BERT gateway.
 
 Users configure these from the app:
 
 1. Open **Settings**.
 2. Paste a TMDB API key.
-3. Optionally paste a HTTPS BERT gateway URL.
+3. Optionally paste a local BERT endpoint such as `192.168.1.23:5001/search`, or a HTTPS gateway URL.
 4. Save setup.
 
 If the AI gateway is left blank, LumiTrace still works as a TMDB movie browser and personal taste journal.
 
 ## AI Gateway Contract
+
+For the easiest local setup, download the Source code zip from GitHub Releases and run:
+
+```text
+LumiTrace-Windows-AI-Setup.bat
+```
+
+The BAT asks for a TMDB API key, lets users choose the movie data size, builds vectors, detects the PC LAN IP, and prints an Android endpoint such as:
+
+```text
+http://192.168.1.23:5001/search
+```
+
+The phone and PC must be on the same Wi-Fi/LAN. Public internet deployments should use HTTPS behind a reverse proxy.
 
 The optional AI gateway should accept:
 

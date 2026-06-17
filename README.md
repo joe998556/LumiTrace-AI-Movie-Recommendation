@@ -14,7 +14,7 @@
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
 [![CI](https://img.shields.io/github/actions/workflow/status/joe998556/LumiTrace-AI-Movie-Recommendation/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
 
-[Algorithm](ALGORITHM.md) | [Android](android/README.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
+[Algorithm](ALGORITHM.md) | [Android](android/README.md) | [Windows AI Quickstart](docs/WINDOWS_AI_QUICKSTART.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
 
 </div>
 
@@ -74,6 +74,7 @@ Recent maintenance work:
 - Added watched movies, 1.0-10.0 personal ratings, and short journal notes in the mobile app.
 - Moved the Android AI endpoint into Settings so public builds do not embed a lab gateway.
 - Added rating-weighted BERT recommendations: high scores boost similar movies, low scores reduce similar movies.
+- Added a Windows AI quickstart BAT that asks for a TMDB key, lets users choose vector size, detects the LAN IP, and prints the Android endpoint.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
 - Added a one-command recommender bootstrapper with selectable data sizes.
@@ -221,7 +222,7 @@ The Android app lives in [android/](android/README.md). It is a public-safe mobi
 - rate watched movies from 1.0 to 10.0
 - write short private notes
 - open an independent recommendation page
-- optionally connect a HTTPS BERT gateway from Settings
+- optionally connect a local Windows BERT server such as `http://192.168.x.x:5001/search`, or a public HTTPS gateway, from Settings
 
 The open-source Android build does not include a private AI endpoint. This is intentional. APKs can be reverse engineered, so long-lived gateway tokens and private model hosts should stay behind a server-side reverse proxy.
 
@@ -231,7 +232,7 @@ Android app
   |-- local watched movies
   |-- local ratings and notes
   |
-  | optional HTTPS gateway
+  | optional LAN or HTTPS gateway
   v
 BERT recommendation service
 ```
@@ -258,8 +259,10 @@ BERT recommendation service
 |   |-- README.md                  # Android setup, AI gateway, and release notes
 |   |-- USER_GUIDE.md              # APK install and endpoint setup guide
 |   `-- app/                       # Android app module
+|-- LumiTrace-Windows-AI-Setup.bat # Windows guided BERT setup for APK users
 |-- setup_recommender.bat          # Windows one-click recommender setup
 |-- docs/
+|   |-- WINDOWS_AI_QUICKSTART.md   # Non-technical APK + local BERT setup guide
 |   `-- OPERATIONS.md              # Local operations runbook
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
 |-- CONTRIBUTING.md                # Contribution guide
@@ -279,6 +282,53 @@ Choose one surface:
 | Web demo | repository root | You want the fastest clone-and-run recommendation demo. |
 | Android app | [android/](android/README.md) | You want the mobile UI with watched movies, ratings, notes, and optional AI gateway. |
 | BERT service | [ai_engine/](ai_engine/) | You want semantic recommendation over generated movie vectors. |
+
+Before using LumiTrace, apply for your own TMDB API key:
+
+```text
+https://www.themoviedb.org/settings/api
+```
+
+TMDB provides the movie catalog, posters, genres, titles, and overviews. LumiTrace does not ship a shared key.
+
+## Fastest Android + Local AI Setup
+
+This is the easiest path for people who just want to install the APK and try BERT recommendations on their own Windows PC.
+
+1. Go to the latest GitHub Release.
+2. Download and install `LumiTrace-v1.0.1-release.apk`.
+3. Download the Source code zip and extract it on your Windows PC.
+4. Double-click:
+
+```text
+LumiTrace-Windows-AI-Setup.bat
+```
+
+The BAT will:
+
+- remind you to apply for or copy your TMDB API key
+- ask you to paste the TMDB API key
+- let you choose data size: `demo`, `small`, `medium`, `large`, or `xlarge`
+- install Python dependencies
+- download TMDB movie metadata
+- build the local BERT vector index
+- detect your PC LAN IP
+- print a phone endpoint such as:
+
+```text
+http://192.168.1.23:5001/search
+```
+
+On Android, open Settings and paste:
+
+- your TMDB API key
+- the endpoint printed by the BAT
+
+Then keep the Windows BAT/server window open, mark and rate watched movies, open **AI Recommend**, and run recommendations.
+
+Full step-by-step guide: [docs/WINDOWS_AI_QUICKSTART.md](docs/WINDOWS_AI_QUICKSTART.md).
+
+## Web Demo Quick Start
 
 Install dependencies:
 
@@ -377,13 +427,13 @@ Then set the CPU/backend machine's `.env` to:
 REMOTE_SEARCH_URL=http://GPU_PC_IP:5001/search
 ```
 
-Windows users can also double-click:
+Windows users can also run the guided APK/local-AI setup:
 
 ```text
-setup_recommender.bat
+LumiTrace-Windows-AI-Setup.bat
 ```
 
-The script creates or updates:
+For developer-only vector generation, `setup_recommender.bat` still works. Both scripts create or update:
 
 ```text
 movie_vectors.json

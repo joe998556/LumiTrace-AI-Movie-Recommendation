@@ -11,13 +11,14 @@ Required:
 
 Optional:
 
-- A HTTPS BERT recommendation gateway
+- A local Windows BERT server on the same Wi-Fi/LAN
+- Or a HTTPS BERT recommendation gateway
 
 LumiTrace does not include a shared TMDB key or a shared AI endpoint. This is intentional: API keys and private model servers should not be embedded in public APKs.
 
 ## Install The APK
 
-1. Download `LumiTrace-v1.0-release.apk` from GitHub Releases.
+1. Download `LumiTrace-v1.0.1-release.apk` from GitHub Releases.
 2. Open the APK on your Android device.
 3. If Android blocks the install, allow installs from this source.
 4. Install LumiTrace.
@@ -59,7 +60,13 @@ Open:
 Settings -> Connect BERT gateway
 ```
 
-Paste a HTTPS URL that accepts LumiTrace recommendation requests, for example:
+For local testing, paste the LAN endpoint printed by `LumiTrace-Windows-AI-Setup.bat`, for example:
+
+```text
+http://192.168.1.23:5001/search
+```
+
+For a public server, paste a HTTPS URL that accepts LumiTrace recommendation requests, for example:
 
 ```text
 https://your-domain.example/lumitrace/api/recommend
@@ -78,7 +85,26 @@ High ratings boost similar movies. Low ratings reduce similar movies.
 
 Use your own gateway if you are running the LumiTrace BERT service.
 
+Easiest local option:
+
+1. Apply for a TMDB API key at `https://www.themoviedb.org/settings/api`.
+2. Download the LumiTrace Source code zip from GitHub Releases.
+3. Extract it on your Windows PC.
+4. Double-click `LumiTrace-Windows-AI-Setup.bat`.
+5. Choose the data size.
+6. Wait for vectors to build.
+7. Paste the printed endpoint into Android Settings.
+
+Your phone and PC must be on the same Wi-Fi/LAN, and the Windows server window must stay open.
+
 The Android app expects a `/search`-compatible POST endpoint:
+
+```http
+POST http://192.168.1.23:5001/search
+Content-Type: application/json
+```
+
+Public HTTPS gateway example:
 
 ```http
 POST https://your-domain.example/lumitrace/api/recommend
@@ -126,7 +152,7 @@ Android app -> HTTPS reverse proxy -> private BERT service
 
 Recommended setup:
 
-1. Generate movie vectors with `tools/bootstrap_recommender.py`.
+1. Generate movie vectors with `LumiTrace-Windows-AI-Setup.bat` or `tools/bootstrap_recommender.py`.
 2. Start `ai_engine/bert_service.py` on a private machine.
 3. Put a HTTPS reverse proxy in front of it.
 4. Add authentication, rate limits, and abuse protection at the proxy.
@@ -153,7 +179,8 @@ Check:
 Check:
 
 - the AI endpoint is not blank
-- the endpoint starts with `https://`
+- local LAN endpoints can use `http://192.168.x.x:5001/search`
+- public internet endpoints should use `https://`
 - the endpoint accepts LumiTrace request JSON
 - the endpoint returns `results`
 - your reverse proxy can reach the private BERT service

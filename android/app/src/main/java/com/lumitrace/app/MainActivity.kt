@@ -491,7 +491,7 @@ private fun SettingsScreen(
                 Eyebrow("Connection")
                 Text("Bring your own gateway", color = LumiText, style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    "The public source does not contain the lab server IP, internal port, gateway token, or your TMDB key. Add a HTTPS BERT gateway only on devices you control.",
+                    "The public source does not contain the lab server IP, gateway token, or your TMDB key. Add a local PC endpoint or HTTPS gateway only on devices you control.",
                     color = LumiTextSoft,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -570,7 +570,7 @@ private fun RecommendationControlPanel(
                     if (aiEndpointReady) {
                         "Open Taste input to review watched movies, or run AI after marking a few titles."
                     } else {
-                        "Add your own HTTPS BERT gateway in Settings before running AI recommendations."
+                        "Add your PC LAN endpoint or HTTPS BERT gateway in Settings before running AI recommendations."
                     }
                 } else {
                     "Prompt: $searchQuery"
@@ -1039,7 +1039,7 @@ private fun AiEndpointPanel(
                 StatusDot(active = hasSavedEndpoint)
             }
             Text(
-                "Paste your own HTTPS /search-compatible gateway. Leave blank to keep the app as a TMDB browser without remote AI calls.",
+                "Paste the endpoint shown by the Windows AI setup script, such as 192.168.1.23:5001/search. HTTPS gateways also work.",
                 color = Muted,
                 fontSize = 12.sp,
                 lineHeight = 18.sp
@@ -1047,7 +1047,7 @@ private fun AiEndpointPanel(
             LumiTextField(
                 value = value,
                 onValueChange = onValueChange,
-                placeholder = "https://your-domain.example/lumitrace/api/recommend",
+                placeholder = "192.168.1.23:5001/search",
                 onSubmit = onSave,
                 trailing = {
                     RoundIconButton(label = "Save endpoint", onClick = onSave) {

@@ -13,6 +13,7 @@ import com.lumitrace.app.BuildConfig
 import com.lumitrace.app.data.Movie
 import com.lumitrace.app.data.RecommendationRequest
 import com.lumitrace.app.network.ApiClient
+import java.net.URI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -391,20 +392,37 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun currentRemoteSearchUrl(): String? {
-        val endpoint = _remoteSearchUrl.value.trim()
-        if (endpoint.isBlank()) {
-            _uiState.value = UiState.Error("AI endpoint is not configured. Add your HTTPS BERT gateway in Settings.")
+        val rawEndpoint = _remoteSearchUrl.value.trim()
+        if (rawEndpoint.isBlank()) {
+            _uiState.value = UiState.Error("AI endpoint is not configured. Add your PC LAN endpoint in Settings.")
             return null
         }
+        val endpoint = if (rawEndpoint.contains("://")) rawEndpoint else "http://$rawEndpoint"
 
-        val isHttps = endpoint.startsWith("https://", ignoreCase = true)
-        val isDebugHttp = BuildConfig.DEBUG && endpoint.startsWith("http://", ignoreCase = true)
-        if (!isHttps && !isDebugHttp) {
-            _uiState.value = UiState.Error("AI endpoint must be an HTTPS URL for public builds.")
+        val uri = runCatching { URI(endpoint) }.getOrNull()
+        val scheme = uri?.scheme.orEmpty().lowercase()
+        val host = uri?.host.orEmpty().lowercase()
+        val isHttps = scheme == "https"
+        val isPrivateHttp = scheme == "http" && isPrivateNetworkHost(host)
+        val isDebugHttp = BuildConfig.DEBUG && scheme == "http"
+        if (!isHttps && !isPrivateHttp && !isDebugHttp) {
+            _uiState.value = UiState.Error("Use HTTPS for public gateways, or a private LAN endpoint like http://192.168.x.x:5001/search.")
             return null
         }
 
         return endpoint
+    }
+
+    private fun isPrivateNetworkHost(host: String): Boolean {
+        if (host == "localhost" || host == "127.0.0.1") return true
+        if (host.startsWith("10.")) return true
+        if (host.startsWith("192.168.")) return true
+        val parts = host.split(".")
+        if (parts.size >= 2 && parts[0] == "172") {
+            val second = parts[1].toIntOrNull() ?: return false
+            return second in 16..31
+        }
+        return false
     }
 
     private fun saveJournalEntry(movieId: Int, entry: MovieJournalEntry) {
