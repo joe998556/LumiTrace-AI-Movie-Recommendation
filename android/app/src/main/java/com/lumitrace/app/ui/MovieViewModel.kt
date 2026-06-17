@@ -246,15 +246,32 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         if (semanticLoading) return
         val endpoint = currentRemoteSearchUrl() ?: return
         val query = _searchQuery.value.trim()
-        val tasteMovies = seedMovies.ifEmpty { _watchedMovies.value.toList() }
+        val tasteMovies = seedMovies.ifEmpty { _watchedMovies.value.toList() }.distinctBy { it.id }
+        val journalSnapshot = _journalEntries.value
         val currentResults = (_uiState.value as? UiState.Success)?.movies.orEmpty()
         val requestedTopK = if (expand) semanticTopK + SEMANTIC_PAGE_SIZE else SEMANTIC_PAGE_SIZE
 
         val overviewsToSend = mutableListOf<String>()
-        if (query.isNotBlank()) overviewsToSend.add(query)
+        val genreIdsToSend = mutableListOf<List<Int>>()
+        val ratingsToSend = mutableListOf<Double>()
 
-        if (overviewsToSend.isEmpty() && tasteMovies.isNotEmpty()) {
-            overviewsToSend.addAll(tasteMovies.map { it.overview })
+        if (query.isNotBlank()) {
+            overviewsToSend.add(query)
+            genreIdsToSend.add(emptyList())
+            ratingsToSend.add(EXPLICIT_QUERY_RATING.toDouble())
+        }
+
+        tasteMovies.forEach { movie ->
+            val journalEntry = journalSnapshot[movie.id]
+            val semanticText = buildSemanticTasteText(movie, journalEntry)
+            if (semanticText.isBlank()) return@forEach
+            overviewsToSend.add(semanticText)
+            genreIdsToSend.add(movie.genreIds)
+            ratingsToSend.add(
+                (journalEntry?.rating?.takeIf { it > 0f } ?: NEUTRAL_USER_RATING)
+                    .toDouble()
+                    .coerceIn(1.0, MAX_USER_RATING.toDouble())
+            )
         }
 
         viewModelScope.launch {
@@ -269,12 +286,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                 val request = RecommendationRequest(
                     overviews = overviewsToSend,
                     excludeIds = tasteMovies.map { it.id },
-                    userGenreIds = tasteMovies.map { it.genreIds },
-                    userVoteCounts = tasteMovies.map { movie ->
-                        (_journalEntries.value[movie.id]?.rating?.takeIf { it > 0f } ?: NEUTRAL_USER_RATING)
-                            .toDouble()
-                            .coerceIn(1.0, MAX_USER_RATING.toDouble())
-                    },
+                    userGenreIds = genreIdsToSend,
+                    userVoteCounts = ratingsToSend,
                     topK = requestedTopK
                 )
 
@@ -300,6 +313,21 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                 semanticLoading = false
             }
         }
+    }
+
+    private fun buildSemanticTasteText(movie: Movie, journalEntry: MovieJournalEntry?): String {
+        val parts = mutableListOf<String>()
+        if (movie.title.isNotBlank() && movie.title != "Untitled") {
+            parts.add(movie.title)
+        }
+        if (movie.overview.isNotBlank()) {
+            parts.add(movie.overview)
+        }
+        val note = journalEntry?.note?.trim().orEmpty()
+        if (note.isNotBlank()) {
+            parts.add("Viewer note: $note")
+        }
+        return parts.joinToString(". ")
     }
 
     private fun loadTmdbSearchPage(reset: Boolean) {
@@ -527,6 +555,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         private const val MAX_NOTE_LENGTH = 280
         private const val MAX_USER_RATING = 10f
         private const val NEUTRAL_USER_RATING = 5f
+        private const val EXPLICIT_QUERY_RATING = 8f
         private const val SEMANTIC_PAGE_SIZE = 20
         private const val SEMANTIC_LOAD_MORE_COOLDOWN_MS = 1800L
     }

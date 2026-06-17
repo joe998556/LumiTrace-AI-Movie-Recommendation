@@ -16,6 +16,8 @@ All notable project maintenance updates are tracked here.
 - Added defensive BERT search handling for 2D tensor shape, contiguous vector storage, shortlist-only penalties, invalid `top_k`, cold-start fallback, and all-negative rating input.
 - Added clearer BERT fallback/error logging and hardened Android parsing for fallback recommendation responses and decimal ratings.
 - Reduced Android recommendation-page jank by throttling auto load-more, removing per-row reveal animations from result rows, and using lighter poster image sizes for grid cards.
+- Fixed Android release JSON parsing after minification so recommendation API responses no longer fail with generic type errors.
+- Improved Android recommendation accuracy by sending aligned taste signals: explicit prompt text, watched movie plots, 1-10 ratings, genre metadata, and personal notes.
 
 ## 2026-06-15
 

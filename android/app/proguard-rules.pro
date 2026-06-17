@@ -19,3 +19,25 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Retrofit and Gson need generic signatures and annotations at runtime to
+# parse API responses in minified release builds.
+-keepattributes Signature,InnerClasses,EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,AnnotationDefault
+
+-keepclassmembers,allowshrinking,allowobfuscation interface * {
+    @retrofit2.http.* <methods>;
+}
+
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+
+-keep class com.lumitrace.app.data.** { *; }
+-keep class com.lumitrace.app.network.** { *; }
+
+-dontwarn javax.annotation.**
+-dontwarn kotlin.Unit
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-dontwarn retrofit2.KotlinExtensions
+-dontwarn org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement

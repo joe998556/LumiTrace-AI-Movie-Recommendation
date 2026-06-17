@@ -15,6 +15,7 @@ scratch/
 .pytest_cache/
 .mypy_cache/
 .playwright-mcp/
+.codex-remote-attachments/
 movie_vectors*.json
 movie_vectors*.json.tmp
 final_boss_vectors*.json
