@@ -288,6 +288,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     excludeIds = tasteMovies.map { it.id },
                     userGenreIds = genreIdsToSend,
                     userVoteCounts = ratingsToSend,
+                    playlistGenreIds = inferPlaylistGenres(query),
+                    preferredLanguages = inferPreferredLanguages(query),
                     topK = requestedTopK
                 )
 
@@ -328,6 +330,48 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             parts.add("Viewer note: $note")
         }
         return parts.joinToString(". ")
+    }
+
+    private fun inferPlaylistGenres(prompt: String): List<Int> {
+        val text = prompt.lowercase()
+        if (text.isBlank()) return emptyList()
+        val genres = linkedSetOf<Int>()
+        fun hasAny(vararg terms: String) = terms.any { text.contains(it) }
+
+        if (hasAny("mystery", "suspense", "twist", "detective", "whodunit", "懸疑", "推理", "反轉")) genres.add(9648)
+        if (hasAny("thriller", "tense", "psychological", "驚悚", "緊張")) genres.add(53)
+        if (hasAny("crime", "noir", "heist", "criminal", "犯罪", "黑色電影")) genres.add(80)
+        if (hasAny("drama", "slow burn", "slow-burn", "melancholy", "劇情", "慢節奏")) genres.add(18)
+        if (hasAny("romance", "romantic", "love", "愛情", "浪漫")) genres.add(10749)
+        if (hasAny("sci-fi", "science fiction", "space", "future", "科幻", "太空")) genres.add(878)
+        if (hasAny("horror", "scary", "haunted", "恐怖")) genres.add(27)
+        if (hasAny("comedy", "funny", "light", "喜劇", "輕鬆")) genres.add(35)
+        if (hasAny("animation", "animated", "動畫")) genres.add(16)
+        if (hasAny("documentary", "紀錄片")) genres.add(99)
+        if (hasAny("fantasy", "magical", "myth", "奇幻", "魔法")) genres.add(14)
+
+        return genres.toList()
+    }
+
+    private fun inferPreferredLanguages(prompt: String): List<String> {
+        val text = prompt.lowercase()
+        if (text.isBlank()) return emptyList()
+        val languages = linkedSetOf<String>()
+        fun hasAny(vararg terms: String) = terms.any { text.contains(it) }
+
+        if (hasAny("european", "europe", "歐洲", "欧洲")) {
+            languages.addAll(listOf("fr", "de", "es", "it", "da", "sv", "no", "nl", "pl", "pt", "fi"))
+        }
+        if (hasAny("french", "france", "法國", "法語")) languages.add("fr")
+        if (hasAny("german", "germany", "德國", "德語")) languages.add("de")
+        if (hasAny("spanish", "spain", "西班牙", "西語")) languages.add("es")
+        if (hasAny("italian", "italy", "義大利", "義語")) languages.add("it")
+        if (hasAny("japanese", "japan", "日本", "日語")) languages.add("ja")
+        if (hasAny("korean", "korea", "韓國", "韓語")) languages.add("ko")
+        if (hasAny("chinese", "mandarin", "taiwan", "hong kong", "中文", "華語", "台灣", "香港")) languages.add("zh")
+        if (hasAny("english", "british", "american", "英語", "美國", "英國")) languages.add("en")
+
+        return languages.toList()
     }
 
     private fun loadTmdbSearchPage(reset: Boolean) {

@@ -122,6 +122,10 @@ function bindUi() {
 
   document.getElementById("searchBtn").addEventListener("click", runSearch);
   document.getElementById("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
+  document.getElementById("playlistBtn").addEventListener("click", runZeroShotPlaylist);
+  document.getElementById("playlistPrompt").addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") runZeroShotPlaylist();
+  });
 
   // Panel controls
   document.getElementById("recommendFab").addEventListener("click", () => panelOpen ? closePanel() : openPanel());
@@ -368,6 +372,68 @@ async function runSearch() {
   } catch (err) { setStatus(`Search failed: ${err.message}`); }
 }
 
+async function runZeroShotPlaylist() {
+  const prompt = document.getElementById("playlistPrompt").value.trim();
+  if (!prompt) {
+    setStatus("Describe a viewing mood first.");
+    return;
+  }
+
+  const language = document.getElementById("playlistLanguage").value;
+  const genre = document.getElementById("playlistGenre").value;
+  const payload = {
+    overviews: [prompt],
+    exclude_ids: getFavorites().map((movie) => movie.id),
+    user_genre_ids: genre ? [[Number(genre)]] : [],
+    user_vote_counts: [8],
+    playlist_genre_ids: genre ? [Number(genre)] : [],
+    preferred_languages: language ? [language] : [],
+    top_k: 30,
+  };
+
+  setStatus("Generating zero-shot semantic playlist...");
+  resetRecScroll();
+  recDone = true;
+  document.getElementById("recommendationReason").textContent = "Tracing your scene prompt through the BERT vector index...";
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/semantic-recommendations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok || data.error) {
+      throw new Error(data.error || "Semantic playlist failed");
+    }
+
+    const movies = normalizeSemantic(data.results || []);
+    if (!movies.length) {
+      document.getElementById("recommendationReason").textContent = data.fallback || "No semantic playlist results.";
+      setStatus(data.fallback || "No semantic playlist results.");
+      openPanel();
+      return;
+    }
+
+    movies.forEach((movie) => seenRecIds.add(movie.id));
+    renderRecGrid(movies);
+    const filters = data.playlist || {};
+    const chips = [
+      filters.genre_ids?.length ? `genres ${filters.genre_ids.join(", ")}` : "",
+      filters.preferred_languages?.length ? `languages ${filters.preferred_languages.join(", ")}` : "",
+      filters.relaxed_context_filters ? "filters relaxed" : "",
+    ].filter(Boolean).join(" / ");
+    document.getElementById("recommendationReason").textContent =
+      `Zero-shot semantic playlist${chips ? ` (${chips})` : ""}.`;
+    setStatus(`Generated ${movies.length} semantic playlist picks.`);
+    openPanel();
+  } catch (err) {
+    setStatus(`Zero-shot playlist failed: ${err.message}`);
+    document.getElementById("recommendationReason").textContent = `Failed: ${err.message}`;
+    openPanel();
+  }
+}
+
 // --- Infinite Scroll ---
 function setupInfiniteScroll() {
   const obs = new IntersectionObserver((entries) => {
@@ -592,11 +658,26 @@ function resetRecScroll() {
 }
 
 async function loadSemanticRecs(favs) {
-  const payload = { overviews: favs.map((m) => m.overview).filter(Boolean), exclude_ids: favs.map((m) => m.id), user_genre_ids: favs.map((m) => m.genre_ids || []), user_vote_counts: favs.map((m) => m.vote_count || 0), top_k: 18 };
+  const ratings = getRatings();
+  const payload = {
+    overviews: favs.map((movie) => semanticTasteText(movie, ratings[movie.id])).filter(Boolean),
+    exclude_ids: favs.map((movie) => movie.id),
+    user_genre_ids: favs.map((movie) => movie.genre_ids || []),
+    user_vote_counts: favs.map((movie) => Number(ratings[movie.id]?.score || 5)),
+    top_k: 18,
+  };
   if (!payload.overviews.length) return [];
   const r = await fetch(`${BACKEND_URL}/semantic-recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   if (!r.ok) return [];
   return normalizeSemantic((await r.json()).results || []);
+}
+
+function semanticTasteText(movie, rating) {
+  const parts = [];
+  if (movie.title) parts.push(movie.title);
+  if (movie.overview) parts.push(movie.overview);
+  if (rating?.comment) parts.push(`Viewer note: ${rating.comment}`);
+  return parts.join(". ");
 }
 
 function renderRecGrid(movies) {
@@ -838,7 +919,7 @@ function normalizeMovies(movies) {
   return movies.filter((m) => m?.poster_path).map((m) => ({
     id: m.id, title: m.title || m.name || "Untitled", overview: m.overview || "",
     poster_path: m.poster_path, release_date: m.release_date || "",
-    vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0), genre_ids: m.genre_ids || [],
+    original_language: m.original_language || "", vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0), genre_ids: m.genre_ids || [],
   }));
 }
 
@@ -847,7 +928,7 @@ function normalizeSemantic(movies) {
   const maxR = Math.max(0.001, ...filtered.map((m) => Number(m.score || m.semantic_score || 0)));
   return filtered.map((m) => {
     const raw = Number(m.score || m.semantic_score || 0);
-    return { id: m.id, title: m.title || "Untitled", overview: m.overview || "", poster_path: m.poster_path, release_date: m.release_date || "", vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0), genre_ids: m.genre_ids || [], recommendationScore: Math.max(1, Math.min(100, Math.round((raw / maxR) * 70) + 30)) };
+    return { id: m.id, title: m.title || "Untitled", overview: m.overview || "", poster_path: m.poster_path, release_date: m.release_date || "", original_language: m.original_language || "", vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0), genre_ids: m.genre_ids || [], recommendationScore: Math.max(1, Math.min(100, Math.round((raw / maxR) * 70) + 30)) };
   });
 }
 

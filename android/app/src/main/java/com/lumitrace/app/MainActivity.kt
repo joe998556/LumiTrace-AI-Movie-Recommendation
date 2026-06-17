@@ -251,6 +251,7 @@ fun MovieScreen(viewModel: MovieViewModel) {
                             seedMovies = watchedMovies.toList(),
                             searchQuery = searchQuery,
                             aiEndpointReady = remoteSearchUrl.isNotBlank(),
+                            onPromptChange = viewModel::updateSearchQuery,
                             onRun = { viewModel.searchSemanticMovies(watchedMovies.toList()) },
                             onOpenTasteInput = { destination = AppDestination.TasteInput },
                             onOpenSettings = { destination = AppDestination.Settings },
@@ -266,7 +267,7 @@ fun MovieScreen(viewModel: MovieViewModel) {
                         item {
                             Reveal(index = 2) {
                                 RecommendationIdlePanel(
-                                    canRun = watchedMovies.isNotEmpty() || searchQuery.isNotBlank()
+                                    canRun = remoteSearchUrl.isNotBlank()
                                 )
                             }
                         }
@@ -517,6 +518,7 @@ private fun RecommendationScreen(
     seedMovies: List<Movie>,
     searchQuery: String,
     aiEndpointReady: Boolean,
+    onPromptChange: (String) -> Unit,
     onRun: () -> Unit,
     onOpenTasteInput: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -536,6 +538,7 @@ private fun RecommendationScreen(
             searchQuery = searchQuery,
             aiEndpointReady = aiEndpointReady,
             canRun = canRun,
+            onPromptChange = onPromptChange,
             onOpenTasteInput = onOpenTasteInput,
             onOpenSettings = onOpenSettings,
             onRun = onRun,
@@ -550,6 +553,7 @@ private fun RecommendationControlPanel(
     searchQuery: String,
     aiEndpointReady: Boolean,
     canRun: Boolean,
+    onPromptChange: (String) -> Unit,
     onOpenTasteInput: () -> Unit,
     onOpenSettings: () -> Unit,
     onRun: () -> Unit,
@@ -566,15 +570,36 @@ private fun RecommendationControlPanel(
             Text(
                 text = if (searchQuery.isBlank()) {
                     if (aiEndpointReady) {
-                        "Open Taste input to review watched movies, or run AI now for a backend fallback test."
+                        "Describe a scene, mood, language, or genre. LumiTrace can build a zero-shot semantic playlist without watched movies."
                     } else {
                         "Add your PC LAN endpoint or HTTPS BERT gateway in Settings before running AI recommendations."
                     }
                 } else {
-                    "Prompt: $searchQuery"
+                    "Zero-shot prompt: $searchQuery"
                 },
                 color = LumiTextSoft,
                 style = MaterialTheme.typography.bodyLarge
+            )
+
+            LumiTextField(
+                value = searchQuery,
+                onValueChange = onPromptChange,
+                placeholder = "Rainy night, slow European mystery, a subtle twist...",
+                onSubmit = onRun,
+                trailing = {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (searchQuery.isNotBlank()) {
+                            RoundIconButton(label = "Clear prompt", secondary = true, onClick = { onPromptChange("") }) {
+                                ThinCloseIcon(color = LumiTextSoft, modifier = Modifier.size(16.dp))
+                            }
+                        }
+                        if (canRun) {
+                            RoundIconButton(label = "Generate playlist", onClick = onRun) {
+                                ThinSearchIcon(color = Ink, modifier = Modifier.size(17.dp))
+                            }
+                        }
+                    }
+                }
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {

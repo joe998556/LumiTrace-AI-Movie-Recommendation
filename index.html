@@ -125,6 +125,51 @@
             <button data-genre="37" class="genre-chip" type="button">Western</button>
           </div>
 
+          <section class="zero-shot-panel" aria-label="Zero-shot semantic playlist">
+            <div>
+              <p class="section-kicker">Zero-shot playlist</p>
+              <h3 class="zero-shot-title">Describe the viewing mood.</h3>
+              <p class="zero-shot-copy">Turn an abstract scene into a semantic movie list without saving or rating anything first.</p>
+            </div>
+            <label class="field-label" for="playlistPrompt">
+              Scene prompt
+              <textarea id="playlistPrompt" class="input textarea zero-shot-input" placeholder="A rainy-night European mystery with a quiet pace and a subtle twist..."></textarea>
+            </label>
+            <div class="zero-shot-controls">
+              <label class="field-label compact-label" for="playlistLanguage">
+                Language
+                <select id="playlistLanguage" class="input select-input">
+                  <option value="">Auto</option>
+                  <option value="en">English</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="es">Spanish</option>
+                  <option value="it">Italian</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="zh">Chinese</option>
+                </select>
+              </label>
+              <label class="field-label compact-label" for="playlistGenre">
+                Genre
+                <select id="playlistGenre" class="input select-input">
+                  <option value="">Auto</option>
+                  <option value="9648">Mystery</option>
+                  <option value="53">Thriller</option>
+                  <option value="80">Crime</option>
+                  <option value="18">Drama</option>
+                  <option value="878">Sci-Fi</option>
+                  <option value="27">Horror</option>
+                  <option value="10749">Romance</option>
+                </select>
+              </label>
+              <button id="playlistBtn" class="btn btn-primary" type="button">
+                Generate semantic playlist
+                <span class="btn-icon">-&gt;</span>
+              </button>
+            </div>
+          </section>
+
           <section id="movieGrid" class="movie-grid" aria-live="polite"></section>
         </div>
       </section>

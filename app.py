@@ -85,6 +85,30 @@ def clean_nested_int_list(values: Any, limit: int = 50) -> list[list[int]]:
     return [clean_int_list(item, limit=20) for item in values[:limit]]
 
 
+def clean_float_list(values: Any, limit: int = 50) -> list[float]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[float] = []
+    for value in values[:limit]:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        cleaned.append(max(1.0, min(10.0, number)))
+    return cleaned
+
+
+def clean_language_list(values: Any, limit: int = 12) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[str] = []
+    for value in values[:limit]:
+        code = str(value or "").strip().lower().split("-")[0]
+        if len(code) == 2 and code.isalpha() and code not in cleaned:
+            cleaned.append(code)
+    return cleaned
+
+
 def clean_text_list(values: Any, limit: int = 20, max_len: int = 2000) -> list[str]:
     if not isinstance(values, list):
         return []
@@ -167,7 +191,9 @@ def semantic_recommendations():
         "overviews": clean_text_list(data.get("overviews")),
         "exclude_ids": clean_int_list(data.get("exclude_ids"), limit=100),
         "user_genre_ids": clean_nested_int_list(data.get("user_genre_ids"), limit=100),
-        "user_vote_counts": clean_int_list(data.get("user_vote_counts"), limit=100),
+        "user_vote_counts": clean_float_list(data.get("user_vote_counts"), limit=100),
+        "playlist_genre_ids": clean_int_list(data.get("playlist_genre_ids"), limit=24),
+        "preferred_languages": clean_language_list(data.get("preferred_languages"), limit=12),
         "top_k": clamp_int(data.get("top_k"), default=18, low=1, high=30),
     }
 

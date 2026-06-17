@@ -18,6 +18,7 @@ All notable project maintenance updates are tracked here.
 - Reduced Android recommendation-page jank by throttling auto load-more, removing per-row reveal animations from result rows, and using lighter poster image sizes for grid cards.
 - Fixed Android release JSON parsing after minification so recommendation API responses no longer fail with generic type errors.
 - Improved Android recommendation accuracy by sending aligned taste signals: explicit prompt text, watched movie plots, 1-10 ratings, genre metadata, and personal notes.
+- Added zero-shot semantic playlist support with free-form scene prompts, optional language/genre filters, Web UI controls, and Android recommendation-page prompt input.
 
 ## 2026-06-15
 

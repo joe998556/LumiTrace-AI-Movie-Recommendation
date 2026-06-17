@@ -151,7 +151,30 @@ The BERT service embeds the watched movie overviews and uses them as the user's 
 
 This means a movie you loved and a movie you disliked do not teach the recommender the same thing. The service does not subtract disliked movie vectors from the taste embedding; low ratings are conservative negative feedback rather than a claim that embedding-space "opposites" are meaningful.
 
-### 5. Advanced Mode: Score Candidate Movies
+### 5. Advanced Mode: Zero-Shot Semantic Playlists
+
+LumiTrace can also generate a playlist from a free-form scene prompt, without requiring watched movies first.
+
+Example:
+
+```text
+A rainy-night European mystery with a quiet pace and a subtle twist.
+```
+
+The client sends that text as the semantic query, optionally with language and genre filters:
+
+```json
+{
+  "overviews": ["A rainy-night European mystery with a quiet pace and a subtle twist."],
+  "playlist_genre_ids": [9648, 53],
+  "preferred_languages": ["fr", "de", "es", "it"],
+  "top_k": 30
+}
+```
+
+The BERT service embeds the prompt, compares it with the local movie vector tensor via `torch.mm`, and combines the semantic score with TMDB genre/language metadata. This makes LumiTrace closer to an on-demand semantic playlist generator than a fixed hand-curated list system.
+
+### 6. Advanced Mode: Score Candidate Movies
 
 The service compares the user's taste query with every precomputed movie vector in the local BERT service.
 
@@ -197,7 +220,7 @@ This keeps disliked movies from pointing the taste vector into noisy "opposite e
 
 If there are no positive taste inputs yet, LumiTrace falls back to a metadata quality shortlist and still applies low-rating penalties when disliked movies are available.
 
-### 6. Advanced Mode: Hybrid Ranking
+### 7. Advanced Mode: Hybrid Ranking
 
 The optional `final_boss_engine.py` experiment can blend three offline item-vector signals:
 

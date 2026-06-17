@@ -227,6 +227,7 @@ def clean_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
         "overview": overview,
         "poster_path": poster_path,
         "release_date": movie.get("release_date") or "",
+        "original_language": movie.get("original_language") or "",
         "vote_average": float(movie.get("vote_average") or 0),
         "vote_count": int(movie.get("vote_count") or 0),
         "genre_ids": movie.get("genre_ids") or [],
@@ -269,6 +270,7 @@ def movie_text(movie: dict[str, Any]) -> str:
         [
             f"Title: {movie['title']}",
             f"Overview: {movie['overview']}",
+            f"Original language: {movie.get('original_language') or 'unknown'}",
             f"Rating: {movie['vote_average']}",
             f"Genres: {', '.join(str(genre) for genre in movie.get('genre_ids', []))}",
         ]

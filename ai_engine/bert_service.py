@@ -26,6 +26,33 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = "AventIQ-AI/bert-movie-recommendation-system"
 DEFAULT_VECTOR_FILES = ("final_boss_vectors.json", "movie_vectors.json")
 
+GENRE_HINTS = {
+    9648: ("mystery", "suspense", "twist", "whodunit", "detective", "懸疑", "推理", "反轉"),
+    53: ("thriller", "tense", "psychological", "驚悚", "緊張"),
+    80: ("crime", "noir", "heist", "criminal", "犯罪", "黑色電影"),
+    18: ("drama", "melancholy", "slow burn", "slow-burn", "intimate", "劇情", "慢節奏"),
+    10749: ("romance", "romantic", "love", "愛情", "浪漫"),
+    878: ("sci-fi", "science fiction", "space", "future", "科幻", "太空"),
+    27: ("horror", "scary", "haunted", "恐怖", "鬼"),
+    35: ("comedy", "funny", "light", "喜劇", "輕鬆"),
+    16: ("animation", "animated", "動畫"),
+    99: ("documentary", "documentary-style", "紀錄片"),
+    14: ("fantasy", "magical", "myth", "奇幻", "魔法"),
+}
+
+LANGUAGE_HINTS = {
+    "fr": ("french", "france", "paris", "法國", "法語"),
+    "de": ("german", "germany", "berlin", "德國", "德語"),
+    "es": ("spanish", "spain", "西班牙", "西語"),
+    "it": ("italian", "italy", "義大利", "義語"),
+    "ja": ("japanese", "japan", "日本", "日語"),
+    "ko": ("korean", "korea", "韓國", "韓語"),
+    "zh": ("chinese", "taiwan", "hong kong", "mandarin", "中文", "華語", "台灣", "香港"),
+    "en": ("english", "british", "american", "英語", "美國", "英國"),
+}
+
+EUROPEAN_LANGUAGE_CODES = ("fr", "de", "es", "it", "da", "sv", "no", "nl", "pl", "pt", "fi", "is", "tr")
+
 
 def build_parser(default_vectors: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the LumiTrace BERT semantic recommendation service.")
@@ -137,6 +164,7 @@ def clean_movie(movie: dict[str, Any]) -> dict[str, Any]:
         "overview": movie.get("overview") or "",
         "poster_path": movie.get("poster_path"),
         "release_date": movie.get("release_date") or "",
+        "original_language": movie.get("original_language") or "",
         "vote_average": float(movie.get("vote_average") or 0),
         "vote_count": int(movie.get("vote_count") or 0),
         "genre_ids": movie.get("genre_ids") or [],
@@ -239,6 +267,63 @@ def flatten_genres(values: Any) -> set[int]:
     return genres
 
 
+def clean_language_code(value: Any) -> str | None:
+    code = str(value or "").strip().lower()
+    if not code:
+        return None
+    code = code.split("-")[0]
+    if len(code) != 2 or not code.isalpha():
+        return None
+    return code
+
+
+def clean_language_list(values: Any, limit: int = 12) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[str] = []
+    for value in values[:limit]:
+        code = clean_language_code(value)
+        if code and code not in cleaned:
+            cleaned.append(code)
+    return cleaned
+
+
+def clean_flat_int_list(values: Any, limit: int = 24) -> list[int]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[int] = []
+    for value in values[:limit]:
+        try:
+            number = int(value)
+        except (TypeError, ValueError):
+            continue
+        if number not in cleaned:
+            cleaned.append(number)
+    return cleaned
+
+
+def infer_context_filters(texts: list[str]) -> tuple[list[int], list[str]]:
+    """Infer lightweight genre/language filters from a zero-shot playlist prompt."""
+    prompt = " ".join(texts).lower()
+    inferred_genres: list[int] = []
+    inferred_languages: list[str] = []
+
+    for genre_id, hints in GENRE_HINTS.items():
+        if any(hint in prompt for hint in hints):
+            inferred_genres.append(genre_id)
+
+    for language, hints in LANGUAGE_HINTS.items():
+        if any(hint in prompt for hint in hints):
+            inferred_languages.append(language)
+
+    if any(hint in prompt for hint in ("european", "europe", "歐洲", "欧洲")):
+        for language in EUROPEAN_LANGUAGE_CODES:
+            if language not in inferred_languages:
+                inferred_languages.append(language)
+
+    return inferred_genres, inferred_languages
+
+
 def build_genre_weights(user_genre_ids: list[list[int]], user_ratings: list[float]) -> dict[int, float]:
     """Build genre weights from user ratings.
 
@@ -273,6 +358,24 @@ def score_metadata(movie: dict[str, Any], genre_weights: dict[int, float]) -> fl
     rating_score = max(0.0, min(0.05, (float(movie.get("vote_average") or 0) - 5.0) * 0.01))
 
     return genre_score + rating_score
+
+
+def score_context_filters(
+    movie: dict[str, Any],
+    playlist_genre_ids: set[int],
+    preferred_languages: set[str],
+) -> float:
+    score = 0.0
+    movie_genres = {int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()}
+    if playlist_genre_ids:
+        overlap = len(movie_genres.intersection(playlist_genre_ids))
+        score += min(0.18, overlap * 0.06)
+
+    language = clean_language_code(movie.get("original_language"))
+    if language and language in preferred_languages:
+        score += 0.08
+
+    return score
 
 
 def clamp_rating(value: Any) -> float:
@@ -384,6 +487,22 @@ def search():
     user_genre_ids = data.get("user_genre_ids", [])
     if not isinstance(user_genre_ids, list):
         user_genre_ids = []
+    playlist_genre_ids = set(
+        clean_flat_int_list(
+            data.get("playlist_genre_ids")
+            or data.get("required_genre_ids")
+            or data.get("filter_genre_ids")
+            or []
+        )
+    )
+    preferred_languages = set(
+        clean_language_list(
+            data.get("preferred_languages")
+            or data.get("playlist_languages")
+            or data.get("languages")
+            or []
+        )
+    )
 
     overviews = data.get("overviews")
     if not overviews and data.get("text"):
@@ -391,6 +510,9 @@ def search():
     if not isinstance(overviews, list):
         overviews = []
     texts = [str(text).strip() for text in overviews if str(text).strip()]
+    inferred_genres, inferred_languages = infer_context_filters(texts)
+    playlist_genre_ids.update(inferred_genres)
+    preferred_languages.update(inferred_languages)
 
     # Parse user ratings (1.0-10.0), default to 5 for missing/invalid.
     raw_ratings = data.get("user_vote_counts", [])
@@ -445,7 +567,8 @@ def search():
         )
 
     # First shortlist from the positive taste signal or metadata fallback.
-    pool_size = min(len(MOVIES), max(top_k * 50, 300))
+    has_context_filters = bool(playlist_genre_ids or preferred_languages)
+    pool_size = min(len(MOVIES), max(top_k * 80, 1000 if has_context_filters else 300))
     _, top_indices_tensor = torch.topk(shortlist_scores, k=pool_size)
     top_indices = top_indices_tensor.detach().cpu().tolist()
 
@@ -473,8 +596,9 @@ def search():
     multipliers = shortlist_multiplier.detach().cpu().tolist()
 
     candidates: list[dict[str, Any]] = []
+    relaxed_context_filters = False
 
-    def add_candidate(index: int, shortlist_position: int) -> None:
+    def add_candidate(index: int, shortlist_position: int, apply_context_filters: bool = True) -> None:
         movie = MOVIES[index]
         if movie["id"] in exclude_ids:
             return
@@ -482,9 +606,16 @@ def search():
             return
         if movie.get("vote_count", 0) < 20:
             return
+        movie_genres = {int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()}
+        if apply_context_filters and playlist_genre_ids and movie_genres.isdisjoint(playlist_genre_ids):
+            return
+        language = clean_language_code(movie.get("original_language"))
+        if apply_context_filters and preferred_languages and language and language not in preferred_languages:
+            return
 
         meta_score = score_metadata(movie, genre_weights)
-        final = float(adjusted_scores[shortlist_position]) + meta_score
+        context_score = score_context_filters(movie, playlist_genre_ids, preferred_languages)
+        final = float(adjusted_scores[shortlist_position]) + meta_score + context_score
         candidates.append(
             {
                 **movie,
@@ -493,15 +624,33 @@ def search():
                 "negative_penalty": round(float(penalties[shortlist_position]), 4),
                 "penalty_multiplier": round(float(multipliers[shortlist_position]), 4),
                 "metadata_score": round(meta_score, 4),
+                "context_score": round(context_score, 4),
                 "score": round(final, 4),
+                "playlist_genre_match": sorted(movie_genres.intersection(playlist_genre_ids)),
+                "playlist_language_match": bool(language and language in preferred_languages),
             }
         )
 
     for position, movie_index in enumerate(top_indices):
         add_candidate(movie_index, position)
 
+    if not candidates and has_context_filters:
+        relaxed_context_filters = True
+        for position, movie_index in enumerate(top_indices):
+            add_candidate(movie_index, position, apply_context_filters=False)
+
     candidates.sort(key=lambda m: m["score"], reverse=True)
-    return jsonify({"results": candidates[:top_k]})
+    return jsonify(
+        {
+            "results": candidates[:top_k],
+            "playlist": {
+                "mode": "zero_shot_semantic",
+                "genre_ids": sorted(playlist_genre_ids),
+                "preferred_languages": sorted(preferred_languages),
+                "relaxed_context_filters": relaxed_context_filters,
+            },
+        }
+    )
 
 
 def parse_args() -> argparse.Namespace:

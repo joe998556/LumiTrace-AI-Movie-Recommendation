@@ -144,7 +144,31 @@ Cold-start and all-negative cases are handled explicitly:
 - no taste text: return a metadata quality fallback from the local index
 - only low-rated movies: build a metadata shortlist, then apply the low-rating penalty
 
-## 4. Hybrid Ranking
+## 4. Zero-Shot Semantic Playlist
+
+Zero-shot playlist mode skips the watched-movie requirement. The user can describe an abstract viewing context, for example:
+
+```text
+I want a rainy-night European mystery with a quiet pace and a subtle twist.
+```
+
+The service treats that text as a semantic query:
+
+```text
+playlist_embedding = BERT(scene_prompt)
+semantic_scores = movie_vector_tensor @ playlist_embedding
+```
+
+Optional metadata filters can be sent with the request:
+
+- `playlist_genre_ids`: TMDB genre IDs such as Mystery `9648` or Thriller `53`
+- `preferred_languages`: original-language codes such as `fr`, `de`, `es`, `it`, `ja`
+
+The backend also has lightweight keyword inference for common prompts such as "European", "mystery", "thriller", "slow burn", "rainy night", or Chinese equivalents such as "歐洲", "懸疑", and "反轉". These inferred filters boost and filter candidates after the semantic shortlist. If filters are too strict and produce no results, the service relaxes them and returns the strongest semantic matches instead of failing empty.
+
+This overlaps with hand-curated movie lists, but the behavior is different: the playlist is generated from the user's invented context at request time rather than selected from a fixed list taxonomy.
+
+## 5. Hybrid Ranking
 
 The optional `Final Boss Engine` can combine three offline item-vector signals:
 
