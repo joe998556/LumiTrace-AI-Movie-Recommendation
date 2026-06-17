@@ -32,7 +32,14 @@ At query time it performs a dense matrix multiplication:
 semantic_scores = movie_vector_tensor @ user_embedding
 ```
 
-This is a linear scan over the local vector index. It is acceptable for single-user local/lab experiments at the current presets, especially on CUDA, but it is not the right architecture for a high-concurrency public service.
+In implementation this is a single PyTorch matrix multiplication plus a `torch.topk` shortlist:
+
+```python
+semantic_scores = torch.mm(movie_vector_tensor, user_embedding.T).squeeze(1)
+top_scores, top_indices = torch.topk(adjusted_semantic_scores, k=pool_size)
+```
+
+This is a linear scan over the local vector index, but it uses optimized tensor kernels rather than Python loops. It is acceptable for single-user local/lab experiments at the current presets, especially on CUDA, but it is not the right architecture for a high-concurrency public service.
 
 If the corpus grows beyond the current local presets or the service needs multiple concurrent users, the next retrieval layer should be an ANN/vector index such as:
 
@@ -48,12 +55,23 @@ Ratings are treated as preference strength, not as negative semantic vectors.
 Current behavior:
 
 - high ratings increase the semantic contribution of that watched movie
-- low ratings reduce the semantic contribution of that watched movie
+- low ratings are excluded from the positive taste embedding
+- low ratings apply a post-ranking penalty to candidates that are very similar to disliked movies
 - genre weights are clamped to `>= 0`
 
 The service does not currently subtract disliked movie embeddings from the taste vector. This avoids the common vector-space mistake where a negative embedding is interpreted as an "opposite movie" even though embedding spaces usually do not work that way.
 
-This also means low ratings are conservative: they reduce influence more than they actively ban a semantic region. Stronger dislike modeling would need an explicit negative-candidate penalty or a separate contrastive ranking stage.
+Penalty formula:
+
+```text
+negative_similarity = cosine_similarity(candidate, disliked_movie)
+dislike_strength = (5 - rating) / 4
+negative_penalty = clamp((negative_similarity - 0.55) / 0.45, 0, 1) * dislike_strength
+penalty_multiplier = 1 - 0.8 * negative_penalty
+adjusted_semantic_score = bert_score * penalty_multiplier
+```
+
+This also means low ratings are conservative: they discount very similar candidates without assuming there is a meaningful "opposite direction" in embedding space.
 
 ## SVD And Genome Signals
 
@@ -61,11 +79,11 @@ The default public and Android flows do not train collaborative filtering from t
 
 The optional `ai_engine/final_boss_engine.py` script can build offline item vectors from external MovieLens-style datasets:
 
-- MovieLens ratings for SVD item vectors
+- MovieLens ratings for pre-trained matrix-factorization item embeddings
 - MovieLens Genome/tag data for tag-profile vectors
 - TMDB BERT vectors for semantic vectors
 
-That path is an offline experiment. It should not be described as online personalized collaborative filtering. In a privacy-first single-user local setup, there is no central user-item matrix large enough to train fresh SVD per user.
+That path is an offline experiment. It should not be described as online personalized collaborative filtering. In a privacy-first single-user local setup, there is no central user-item matrix large enough to train fresh SVD per user. A runtime system can compare the current user's liked movies with pre-trained item embeddings, but the embeddings come from an external dataset.
 
 ## Production Hardening Needed
 

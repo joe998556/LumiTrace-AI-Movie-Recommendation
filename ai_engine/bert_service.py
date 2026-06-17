@@ -236,7 +236,7 @@ def flatten_genres(values: Any) -> set[int]:
     return genres
 
 
-def build_genre_weights(user_genre_ids: list[list[int]], user_ratings: list[int]) -> dict[int, float]:
+def build_genre_weights(user_genre_ids: list[list[int]], user_ratings: list[float]) -> dict[int, float]:
     """Build genre weights from user ratings.
 
     Each watched movie contributes +1 base weight per genre, plus (rating - 5) delta.
@@ -270,6 +270,14 @@ def score_metadata(movie: dict[str, Any], genre_weights: dict[int, float]) -> fl
     rating_score = max(0.0, min(0.05, (float(movie.get("vote_average") or 0) - 5.0) * 0.01))
 
     return genre_score + rating_score
+
+
+def clamp_rating(value: Any) -> float:
+    try:
+        rating = float(value)
+    except (TypeError, ValueError):
+        return 5.0
+    return max(1.0, min(10.0, rating))
 
 
 @app.route("/status", methods=["GET"])
@@ -333,63 +341,101 @@ def search():
     if not isinstance(user_genre_ids, list):
         user_genre_ids = []
 
-    # Parse user ratings (1-10), default to 5 for missing/invalid
+    # Parse user ratings (1.0-10.0), default to 5 for missing/invalid.
     raw_ratings = data.get("user_vote_counts", [])
     if not isinstance(raw_ratings, list):
         raw_ratings = []
-    user_ratings: list[int] = []
+    user_ratings: list[float] = []
     for val in raw_ratings:
-        try:
-            r = int(val)
-            user_ratings.append(max(1, min(10, r)))
-        except (TypeError, ValueError):
-            user_ratings.append(5)
-    # Pad to match user_genre_ids length
-    while len(user_ratings) < len(user_genre_ids):
-        user_ratings.append(5)
+        user_ratings.append(clamp_rating(val))
+    # Pad to match all taste inputs.
+    while len(user_ratings) < max(len(user_genre_ids), len(texts)):
+        user_ratings.append(5.0)
 
     # Build rating-weighted genre profile
     genre_weights = build_genre_weights(user_genre_ids, user_ratings)
 
-    # Build rating-weighted user embeddings
+    # Build rating-weighted user embeddings. Low-rated movies are not
+    # subtracted as negative vectors; they are used later as a post-ranking
+    # penalty against candidates that are too similar to disliked items.
     raw_embeddings = embed_texts(texts)  # shape: (n_texts, dim)
+    semantic_ratings = user_ratings[:len(texts)]
+    positive_indices = [index for index, rating in enumerate(semantic_ratings) if rating >= 5.0]
+    negative_indices = [index for index, rating in enumerate(semantic_ratings) if rating < 5.0]
 
-    if len(user_ratings) >= len(texts):
-        # Use ratings as weights for semantic embedding
+    if positive_indices:
+        selected_embeddings = raw_embeddings[positive_indices]
         weights = torch.tensor(
-            [max(0.1, r / 5.0) for r in user_ratings[:len(texts)]],
+            [max(0.1, semantic_ratings[index] / 5.0) for index in positive_indices],
             dtype=torch.float32,
             device=DEVICE,
         )
-        # Weighted average of embeddings
-        weighted = raw_embeddings * weights.unsqueeze(1)
-        user_embedding = F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1)
     else:
-        # Fallback: simple average
-        user_embedding = F.normalize(raw_embeddings.mean(dim=0, keepdim=True), p=2, dim=1)
+        selected_embeddings = raw_embeddings
+        weights = torch.ones(len(texts), dtype=torch.float32, device=DEVICE) * 0.1
+    weighted = selected_embeddings * weights.unsqueeze(1)
+    user_embedding = F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1)
 
-    # Semantic scores: cosine similarity
-    semantic_scores = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1).detach().cpu().tolist()
+    # Semantic scores: one tensor matmul against the pre-normalized index.
+    semantic_scores_tensor = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1)
+
+    negative_penalty = torch.zeros_like(semantic_scores_tensor)
+    if negative_indices:
+        negative_embeddings = raw_embeddings[negative_indices]
+        negative_similarity = torch.mm(VECTOR_TENSOR, negative_embeddings.T)
+        dislike_strength = torch.tensor(
+            [(5.0 - semantic_ratings[index]) / 4.0 for index in negative_indices],
+            dtype=torch.float32,
+            device=DEVICE,
+        ).clamp(0.0, 1.0)
+        penalty_curve = ((negative_similarity - 0.55) / 0.45).clamp(0.0, 1.0)
+        negative_penalty = (penalty_curve * dislike_strength.unsqueeze(0)).max(dim=1).values
+
+    penalty_multiplier = 1.0 - (negative_penalty * 0.8)
+    adjusted_semantic_scores = semantic_scores_tensor * penalty_multiplier
+
+    pool_size = min(len(MOVIES), max(top_k * 20, 100))
+    _, top_indices_tensor = torch.topk(adjusted_semantic_scores, k=pool_size)
+    top_indices = top_indices_tensor.detach().cpu().tolist()
+
+    semantic_scores = semantic_scores_tensor.detach().cpu().tolist()
+    adjusted_scores = adjusted_semantic_scores.detach().cpu().tolist()
+    penalties = negative_penalty.detach().cpu().tolist()
+    multipliers = penalty_multiplier.detach().cpu().tolist()
 
     candidates: list[dict[str, Any]] = []
-    for movie, sem_score in zip(MOVIES, semantic_scores):
+
+    def add_candidate(index: int) -> None:
+        movie = MOVIES[index]
         if movie["id"] in exclude_ids:
-            continue
+            return
         if not movie.get("poster_path"):
-            continue
+            return
         if movie.get("vote_count", 0) < 20:
-            continue
+            return
 
         meta_score = score_metadata(movie, genre_weights)
-        final = float(sem_score) + meta_score
+        final = float(adjusted_scores[index]) + meta_score
         candidates.append(
             {
                 **movie,
-                "semantic_score": round(float(sem_score), 4),
+                "semantic_score": round(float(semantic_scores[index]), 4),
+                "adjusted_semantic_score": round(float(adjusted_scores[index]), 4),
+                "negative_penalty": round(float(penalties[index]), 4),
+                "penalty_multiplier": round(float(multipliers[index]), 4),
                 "metadata_score": round(meta_score, 4),
                 "score": round(final, 4),
             }
         )
+
+    for movie_index in top_indices:
+        add_candidate(movie_index)
+
+    if len(candidates) < top_k:
+        seen = set(top_indices)
+        for movie_index in range(len(MOVIES)):
+            if movie_index not in seen:
+                add_candidate(movie_index)
 
     candidates.sort(key=lambda m: m["score"], reverse=True)
     return jsonify({"results": candidates[:top_k]})

@@ -12,6 +12,7 @@ All notable project maintenance updates are tracked here.
 - Added architecture limit notes that separate browser-local state from service-side vector indexes.
 - Clarified that SVD/Genome support is an offline experiment, not online collaborative filtering over private local user history.
 - Clarified that current BERT retrieval uses a linear Torch tensor scan and should move to ANN/vector indexing for larger or public workloads.
+- Optimized BERT search scoring with Torch matrix multiplication, `torch.topk` shortlist ranking, decimal user ratings, and post-ranking penalties for low-rated movies.
 
 ## 2026-06-15
 

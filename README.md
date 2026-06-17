@@ -75,6 +75,7 @@ Recent maintenance work:
 - Moved the Android AI endpoint into Settings so public builds do not embed a lab gateway.
 - Added rating-weighted BERT recommendations: high scores boost similar movies, low scores reduce similar movies.
 - Clarified current architecture limits: browser `localStorage` stores user taste only, while BERT vectors live in the service process.
+- Added a low-rating post-ranking penalty so disliked movies reduce similar candidates without using negative vector subtraction.
 - Added a Windows AI quickstart BAT that asks for a TMDB key, lets users choose vector size, detects the LAN IP, and prints the Android endpoint.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
@@ -157,7 +158,14 @@ The service compares the user's taste query with every precomputed movie vector 
 bert_score = cosine_similarity(user_embedding, movie_embedding)
 ```
 
-The current implementation uses a linear Torch tensor similarity scan over the loaded index. This is practical for local single-user experiments at the included presets, but a public high-concurrency service should use an ANN/vector index such as Faiss, HNSWLib, SQLite vector extensions, or a managed vector database.
+Implementation detail:
+
+```python
+semantic_scores = torch.mm(movie_vector_tensor, user_embedding.T).squeeze(1)
+top_scores, top_indices = torch.topk(adjusted_semantic_scores, k=pool_size)
+```
+
+`movie_vector_tensor` is pre-normalized when the BERT service starts, so this matrix multiplication acts as batched cosine similarity. At the current 30k local index scale, this keeps retrieval lightweight without introducing a heavier vector database. A public high-concurrency service should still move to an ANN/vector index such as Faiss, HNSWLib, SQLite vector extensions, or a managed vector database.
 
 In rating-weighted mode, semantic matching is combined with metadata preferences so the model can explain recommendations in human terms:
 
@@ -168,6 +176,17 @@ semantic_weight = max(0.1, user_rating / 5)
 ```
 
 High-rated watched movies pull similar candidates upward. Low-rated watched movies reduce the same region of the taste space.
+
+Low ratings are applied as a post-ranking penalty rather than negative vector subtraction:
+
+```text
+negative_similarity = cosine_similarity(candidate, disliked_movie)
+negative_penalty = clamp((negative_similarity - 0.55) / 0.45, 0, 1) * dislike_strength
+penalty_multiplier = 1 - 0.8 * negative_penalty
+adjusted_semantic_score = bert_score * penalty_multiplier
+```
+
+This keeps disliked movies from pointing the taste vector into noisy "opposite embedding" space.
 
 ### 6. Advanced Mode: Hybrid Ranking
 

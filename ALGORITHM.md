@@ -105,7 +105,14 @@ Current implementation detail:
 semantic_scores = movie_vector_tensor @ user_embedding
 ```
 
-This is a linear scan over the loaded tensor. It is reasonable for local single-user experiments at the included presets, especially on CUDA, but it is not a production-scale high-concurrency retrieval layer. Larger corpora should move to Faiss, HNSWLib, SQLite vector extensions, or another ANN/vector index.
+In code this is implemented as a single PyTorch matrix multiplication against the pre-normalized index:
+
+```python
+semantic_scores = torch.mm(movie_vector_tensor, user_embedding.T).squeeze(1)
+top_scores, top_indices = torch.topk(adjusted_semantic_scores, k=pool_size)
+```
+
+This is still a linear scan over the loaded tensor, but it is vectorized and runs through optimized CPU/GPU tensor kernels rather than Python loops. It is reasonable for local single-user experiments at the included presets, especially on CUDA. It is not a production-scale high-concurrency retrieval layer. Larger corpora should move to Faiss, HNSWLib, SQLite vector extensions, or another ANN/vector index.
 
 If multiple watched movies are provided, the service uses a rating-weighted user embedding. Ratings control contribution strength, not vector direction.
 
@@ -113,7 +120,17 @@ If multiple watched movies are provided, the service uses a rating-weighted user
 semantic_weight = max(0.1, rating / 5.0)
 ```
 
-Low-rated movies therefore contribute less to the semantic query. The service does not subtract disliked movie embeddings, because negative embedding vectors are not reliable "opposite taste" representations.
+Low-rated movies are not included as negative vectors in the taste embedding. Instead, they are used as a post-ranking penalty:
+
+```text
+negative_similarity = cosine_similarity(candidate, disliked_movie)
+dislike_strength = (5 - rating) / 4
+negative_penalty = clamp((negative_similarity - 0.55) / 0.45, 0, 1) * dislike_strength
+penalty_multiplier = 1 - 0.8 * negative_penalty
+adjusted_semantic_score = bert_score * penalty_multiplier
+```
+
+This means a candidate that is very close to a movie the user rated 1-4 is discounted after the normal semantic match is computed. The service does not subtract disliked movie embeddings, because negative embedding vectors are not reliable "opposite taste" representations.
 
 ## 4. Hybrid Ranking
 
@@ -129,12 +146,12 @@ final_score =
 Signal meanings:
 
 - `BERT`: plot meaning, theme, and semantic similarity from movie descriptions.
-- `SVD`: offline item vectors trained from MovieLens-style rating patterns.
+- `SVD`: pre-trained matrix-factorization item embeddings from MovieLens-style rating patterns.
 - `Genome`: style and tag profile from MovieLens Genome features.
 
 If SVD or Genome vectors are unavailable, the service falls back to the available signals and normalizes the weights.
 
-This is not online personalized collaborative filtering. The public and Android flows do not maintain a central user-item matrix, so they cannot train fresh SVD from private single-user local history. SVD/Genome are optional experiments built from external datasets.
+This is not online personalized collaborative filtering. The public and Android flows do not maintain a central user-item matrix, so they cannot train fresh SVD from private single-user local history. SVD/Genome are optional experiments built from external datasets. A runtime recommender can compare the user's liked movie set with these pre-trained item embeddings, but it should be documented as pre-trained matrix factorization rather than local collaborative training.
 
 ## 5. Filtering And Practical Ranking Rules
 
