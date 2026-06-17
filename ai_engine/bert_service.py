@@ -51,6 +51,20 @@ except ImportError as exc:
 app = Flask(__name__)
 CORS(app)
 
+BERT_GATEWAY_TOKEN: str = ""
+
+
+@app.before_request
+def check_gateway_token():
+    """If BERT_GATEWAY_TOKEN is set, require X-LumiTrace-Gateway header on POST endpoints."""
+    if not BERT_GATEWAY_TOKEN:
+        return
+    if request.method != "POST":
+        return
+    header = request.headers.get("X-LumiTrace-Gateway", "")
+    if header != BERT_GATEWAY_TOKEN:
+        return jsonify({"error": "Forbidden: invalid or missing gateway token"}), 403
+
 TOKENIZER: Any = None
 MODEL: Any = None
 DEVICE: Any = None
@@ -222,23 +236,40 @@ def flatten_genres(values: Any) -> set[int]:
     return genres
 
 
-def score_metadata(movie: dict[str, Any], user_genres: set[int], user_vote_counts: list[int]) -> float:
+def build_genre_weights(user_genre_ids: list[list[int]], user_ratings: list[int]) -> dict[int, float]:
+    """Build genre weights from user ratings.
+
+    Each watched movie contributes +1 base weight per genre, plus (rating - 5) delta.
+    Ratings default to 5 (neutral) when missing.
+    Final weights are clamped to >= 0.
+    """
+    weights: dict[int, float] = {}
+    for genres, rating in zip(user_genre_ids, user_ratings):
+        delta = rating - 5  # -4 to +5
+        for genre_id in genres:
+            try:
+                gid = int(genre_id)
+            except (TypeError, ValueError):
+                continue
+            weights[gid] = weights.get(gid, 0) + 1 + delta
+    # Clamp to >= 0
+    return {gid: max(0.0, w) for gid, w in weights.items()}
+
+
+def score_metadata(movie: dict[str, Any], genre_weights: dict[int, float]) -> float:
+    """Score a movie based on genre overlap with user's rating-weighted genre profile."""
     movie_genres = {int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()}
-    genre_overlap = len(movie_genres & user_genres)
-    genre_score = min(0.12, genre_overlap * 0.04)
 
-    rating_score = max(0.0, min(0.08, (float(movie.get("vote_average") or 0) - 5.0) * 0.02))
-    vote_count = max(1, int(movie.get("vote_count") or 1))
-    popularity_score = min(0.05, math.log10(vote_count) * 0.01)
+    # Genre score: sum of matching genre weights, capped
+    genre_score = 0.0
+    for gid in movie_genres:
+        genre_score += genre_weights.get(gid, 0.0)
+    genre_score = min(0.25, genre_score * 0.02)
 
-    if user_vote_counts:
-        avg_user_votes = sum(user_vote_counts) / len(user_vote_counts)
-        distance = abs(math.log1p(vote_count) - math.log1p(avg_user_votes))
-        popularity_fit = max(0.0, 0.04 - distance * 0.01)
-    else:
-        popularity_fit = 0.0
+    # TMDB rating bonus (small influence)
+    rating_score = max(0.0, min(0.05, (float(movie.get("vote_average") or 0) - 5.0) * 0.01))
 
-    return genre_score + rating_score + popularity_score + popularity_fit
+    return genre_score + rating_score
 
 
 @app.route("/status", methods=["GET"])
@@ -248,7 +279,6 @@ def status():
             "status": "online",
             "model": MODEL_NAME,
             "device": str(DEVICE),
-            "vector_file": str(VECTOR_PATH) if VECTOR_PATH else None,
             "movie_count": len(MOVIES),
             "index_loaded": VECTOR_TENSOR is not None,
         }
@@ -280,6 +310,7 @@ def reload_db():
 def search():
     try:
         import torch
+        import torch.nn.functional as F
     except ImportError as exc:
         raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
 
@@ -298,18 +329,50 @@ def search():
 
     top_k = max(1, min(50, int(data.get("top_k") or 10)))
     exclude_ids = {int(value) for value in data.get("exclude_ids", []) if str(value).isdigit()}
-    user_genres = flatten_genres(data.get("user_genre_ids", []))
-    user_vote_counts = [
-        int(value)
-        for value in data.get("user_vote_counts", [])
-        if str(value).isdigit() and int(value) >= 0
-    ]
+    user_genre_ids = data.get("user_genre_ids", [])
+    if not isinstance(user_genre_ids, list):
+        user_genre_ids = []
 
-    user_embeddings = embed_texts(texts)
-    semantic_scores = torch.mm(VECTOR_TENSOR, user_embeddings.T).max(dim=1)[0].detach().cpu().tolist()
+    # Parse user ratings (1-10), default to 5 for missing/invalid
+    raw_ratings = data.get("user_vote_counts", [])
+    if not isinstance(raw_ratings, list):
+        raw_ratings = []
+    user_ratings: list[int] = []
+    for val in raw_ratings:
+        try:
+            r = int(val)
+            user_ratings.append(max(1, min(10, r)))
+        except (TypeError, ValueError):
+            user_ratings.append(5)
+    # Pad to match user_genre_ids length
+    while len(user_ratings) < len(user_genre_ids):
+        user_ratings.append(5)
+
+    # Build rating-weighted genre profile
+    genre_weights = build_genre_weights(user_genre_ids, user_ratings)
+
+    # Build rating-weighted user embeddings
+    raw_embeddings = embed_texts(texts)  # shape: (n_texts, dim)
+
+    if len(user_ratings) >= len(texts):
+        # Use ratings as weights for semantic embedding
+        weights = torch.tensor(
+            [max(0.1, r / 5.0) for r in user_ratings[:len(texts)]],
+            dtype=torch.float32,
+            device=DEVICE,
+        )
+        # Weighted average of embeddings
+        weighted = raw_embeddings * weights.unsqueeze(1)
+        user_embedding = F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1)
+    else:
+        # Fallback: simple average
+        user_embedding = F.normalize(raw_embeddings.mean(dim=0, keepdim=True), p=2, dim=1)
+
+    # Semantic scores: cosine similarity
+    semantic_scores = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1).detach().cpu().tolist()
 
     candidates: list[dict[str, Any]] = []
-    for movie, semantic_score in zip(MOVIES, semantic_scores):
+    for movie, sem_score in zip(MOVIES, semantic_scores):
         if movie["id"] in exclude_ids:
             continue
         if not movie.get("poster_path"):
@@ -317,17 +380,18 @@ def search():
         if movie.get("vote_count", 0) < 20:
             continue
 
-        metadata_score = score_metadata(movie, user_genres, user_vote_counts)
-        final_score = float(semantic_score) + metadata_score
+        meta_score = score_metadata(movie, genre_weights)
+        final = float(sem_score) + meta_score
         candidates.append(
             {
                 **movie,
-                "semantic_score": round(float(semantic_score), 4),
-                "score": round(final_score, 4),
+                "semantic_score": round(float(sem_score), 4),
+                "metadata_score": round(meta_score, 4),
+                "score": round(final, 4),
             }
         )
 
-    candidates.sort(key=lambda movie: movie["score"], reverse=True)
+    candidates.sort(key=lambda m: m["score"], reverse=True)
     return jsonify({"results": candidates[:top_k]})
 
 
@@ -336,7 +400,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    global BERT_GATEWAY_TOKEN
     load_dotenv(ROOT / ".env")
+    BERT_GATEWAY_TOKEN = os.getenv("BERT_GATEWAY_TOKEN", "")
     args = parse_args()
     try:
         device = resolve_device(args.device)
