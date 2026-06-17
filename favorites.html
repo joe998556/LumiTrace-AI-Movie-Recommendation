@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LumiTrace — Collection</title>
+  <title>LumiTrace | Collection</title>
   <link rel="icon" href="data:,">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --ground: #0a0a1a;
@@ -22,7 +24,7 @@
       --text-muted: #606080;
     }
     * { box-sizing: border-box; margin: 0; }
-    body { background: linear-gradient(160deg, #06060f 0%, #100820 35%, #1a0a30 55%, #0e0618 80%, #06060f 100%); background-attachment: fixed; color: var(--text-primary); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; line-height: 1.55; min-height: 100vh; overflow-x: hidden; }
+    body { background: #080807; background-attachment: fixed; color: var(--text-primary); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.55; min-height: 100vh; overflow-x: hidden; }
     a { color: inherit; }
     ::selection { background: rgba(20,184,166,0.3); }
     ::-webkit-scrollbar { width: 6px; }
@@ -62,11 +64,12 @@
     .chip:hover { border-color: var(--glass-border-hover); color: var(--text-secondary); }
 
     .loader-dots { display: flex; gap: 5px; align-items: center; justify-content: center; }
-    .loader-dots span { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); animation: dotPulse 1.2s ease-in-out infinite; }
+    .loader-dots span { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); animation: dotPulse 1.2s cubic-bezier(0.22,1,0.36,1) infinite; }
     .loader-dots span:nth-child(2) { animation-delay: 0.15s; }
     .loader-dots span:nth-child(3) { animation-delay: 0.3s; }
     @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
   </style>
+  <link rel="stylesheet" href="styles.css?v=teal-v1">
 </head>
 <body>
   <canvas id="starfield"></canvas>
@@ -384,7 +387,7 @@
             <div class="line-clamp-2" style="font-size:12px; font-weight:500; min-height:2.4em; line-height:1.2;">${esc(m.title)}</div>
             <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:11px;">
               <span style="color:#606080;">${year}</span>
-              <span style="color:${c};">${s.toFixed(1)}</span>
+              <span style="color:${c}; font-weight:700;">TMDB ${s.toFixed(1)}</span>
             </div>
             <div style="margin-top:6px;">${ratingBadgeHtml(m.id)}</div>
             <button class="remove-btn" style="width:100%; margin-top:8px; padding:6px 0; border-radius:8px; font-size:11px; font-weight:500; font-family:inherit; cursor:pointer; background:var(--gradient); color:#fff; border:none; transition:all 150ms; display:flex; align-items:center; justify-content:center; gap:4px;">
@@ -490,7 +493,7 @@
           <div data-title="${esc(m.title)}" class="line-clamp-2" style="font-size:12px; font-weight:500; min-height:2.4em; line-height:1.2;">${esc(m.title)}</div>
           <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:11px;">
             <span style="color:#606080;">${year}</span>
-            <span style="color:${c};">${s.toFixed(1)}</span>
+            <span style="color:${c}; font-weight:700;">TMDB ${s.toFixed(1)}</span>
           </div>
           <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
             ${m.recScore ? `<span style="font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(20,184,166,0.15); color:#14b8a6;">${m.recScore}%</span>` : ""}
@@ -526,7 +529,7 @@
           <img src="${IMG}${m.poster_path}" style="width:72px; border-radius:8px; object-fit:cover; aspect-ratio:2/3;">
           <div>
             <div style="font-size:13px; font-weight:500; margin-bottom:4px;">${esc(m.title)}</div>
-            <div style="font-size:11px; color:#606080;">${m.release_date?.slice(0,4)||""} · ${m.vote_average.toFixed(1)} · ${(m.vote_count||0).toLocaleString()} votes</div>
+            <div style="font-size:11px; color:#606080;">${m.release_date?.slice(0,4)||""} · TMDB ${m.vote_average.toFixed(1)} · ${(m.vote_count||0).toLocaleString()} votes</div>
             ${m.recScore ? `<div style="margin-top:6px; font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(20,184,166,0.15); color:#14b8a6; width:fit-content;">Match ${m.recScore}%</div>` : ""}
           </div>
         </div>

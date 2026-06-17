@@ -3,410 +3,230 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LumiTrace</title>
+  <meta name="description" content="LumiTrace is a local-first AI movie recommendation workspace powered by TMDB metadata and optional BERT semantic vectors.">
+  <meta property="og:title" content="LumiTrace AI Movie Recommendation">
+  <meta property="og:description" content="Save films you like, build a taste profile, and discover movies that fit your viewing style.">
+  <title>LumiTrace | AI movie recommendation</title>
   <link rel="icon" href="data:,">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="script.js?v=glass-v1" defer></script>
-  <style>
-    :root {
-      --ground: #0a0a1a;
-      --glass-bg: rgba(255,255,255,0.05);
-      --glass-bg-hover: rgba(255,255,255,0.08);
-      --glass-border: rgba(255,255,255,0.1);
-      --glass-border-hover: rgba(255,255,255,0.2);
-      --glass-blur: 16px;
-      --primary: #14b8a6;
-      --primary-hover: #0d9488;
-      --secondary: #5eead4;
-      --gradient: linear-gradient(135deg, #14b8a6, #5eead4);
-      --text-primary: #f0f0ff;
-      --text-secondary: #a0a0c0;
-      --text-muted: #606080;
-    }
-    * { box-sizing: border-box; margin: 0; }
-    body {
-      background: linear-gradient(160deg, #06060f 0%, #100820 35%, #1a0a30 55%, #0e0618 80%, #06060f 100%);
-      background-attachment: fixed;
-      color: var(--text-primary);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 14px;
-      line-height: 1.55;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    ::selection { background: rgba(167,139,250,0.3); }
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-
-    #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: transparent; }
-
-    .glass {
-      background: rgba(12,12,28,0.6);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-    }
-    .glass:hover {
-      background: rgba(12,12,28,0.7);
-      border-color: var(--glass-border-hover);
-    }
-
-    .poster-card {
-      background: rgba(12,12,28,0.5);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      overflow: hidden;
-      opacity: 0;
-      transform: translateY(24px);
-    }
-    .poster-card.in-view {
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity 500ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1), border-color 150ms ease-out, box-shadow 150ms ease-out;
-    }
-    .poster-card:hover {
-      border-color: rgba(20,184,166,0.4);
-      transform: translateY(-4px);
-      box-shadow: 0 8px 32px rgba(20,184,166,0.12);
-      transition: transform 150ms ease-out, border-color 150ms ease-out, box-shadow 150ms ease-out;
-    }
-
-    .line-clamp-2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-    .line-clamp-3 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-
-    .tab {
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 150ms ease-out;
-    }
-    .tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
-    .tab.active {
-      color: var(--text-primary);
-      background: rgba(20,184,166,0.15);
-      border-color: rgba(20,184,166,0.3);
-    }
-
-    .chip {
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 150ms ease-out;
-    }
-    .chip:hover { color: var(--text-secondary); }
-    .chip.active { color: var(--primary); border-color: rgba(20,184,166,0.3); background: rgba(20,184,166,0.1); }
-
-    .btn {
-      border: none;
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 150ms ease-out;
-    }
-    .btn-gradient {
-      background: var(--gradient);
-      color: #fff;
-    }
-    .btn-gradient:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-secondary);
-      border: 1px solid var(--glass-border);
-    }
-    .btn-ghost:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
-
-    .input {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-family: inherit;
-      color: var(--text-primary);
-      outline: none;
-      transition: border-color 150ms ease-out;
-    }
-    .input:focus { border-color: var(--primary); }
-    .input::placeholder { color: var(--text-muted); }
-
-    .loader-dots { display: flex; gap: 5px; align-items: center; justify-content: center; }
-    .loader-dots span { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); animation: dotPulse 1.2s ease-in-out infinite; }
-    .loader-dots span:nth-child(2) { animation-delay: 0.15s; }
-    .loader-dots span:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes dotPulse { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=teal-v1">
+  <script src="script.js?v=atelier-v1" defer></script>
 </head>
 <body>
-  <canvas id="starfield"></canvas>
+  <a class="skip-link" href="#main">Skip to movie browser</a>
 
-  <div style="position:relative; z-index:1; max-width:1400px; margin:0 auto; padding:24px 32px;">
-
-    <!-- Hero Banner -->
-    <section class="glass" style="padding:32px 36px; margin-bottom:32px; position:relative; overflow:hidden;">
-      <div style="position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(20,184,166,0.3), transparent);"></div>
-      <div style="display:flex; align-items:flex-end; justify-content:space-between;">
-        <div>
-          <div style="font-size:18px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:10px;">LumiTrace</div>
-          <h1 style="font-size:36px; font-weight:700; letter-spacing:-0.02em; line-height:1.15;">Movie Recommendations</h1>
-          <p style="font-size:13px; color:var(--text-muted); margin-top:10px; max-width:480px; line-height:1.6;">Save films you enjoy. LumiTrace builds a taste profile from genres, ratings, and BERT semantic vectors to find movies you'll love.</p>
-        </div>
-        <a href="ALGORITHM.md" style="font-size:12px; color:var(--text-muted); text-decoration:none; border:1px solid var(--glass-border); border-radius:8px; padding:8px 14px; transition:all 150ms; white-space:nowrap; flex-shrink:0; margin-left:24px;">Algorithm</a>
+  <div class="page-shell">
+    <nav class="nav-island reveal" aria-label="Primary navigation">
+      <a class="brand-mark" href="/">
+        <span class="brand-glyph">L</span>
+        <span class="brand-copy">
+          <span class="brand-title">LumiTrace</span>
+          <span class="brand-subtitle">Taste engine</span>
+        </span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="ALGORITHM.md">Algorithm</a>
+        <a class="nav-link" href="/favorites.html" target="_blank" rel="noopener">Collection</a>
+        <a class="nav-link" href="README.md">Docs</a>
       </div>
-      <div style="position:absolute; bottom:0; left:0; right:0; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);"></div>
-    </section>
+    </nav>
 
-    <!-- API Key -->
-    <section class="glass" style="padding:20px; margin-bottom:32px;">
-      <div style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:end;">
-        <label>
-          <div style="font-size:12px; font-weight:500; color:var(--text-muted); margin-bottom:6px;">TMDB API Key</div>
-          <input id="apiKeyInput" type="password" autocomplete="off" class="input" style="width:100%;" placeholder="Paste your TMDB API key">
-        </label>
-        <div style="display:flex; gap:8px;">
-          <button id="saveKeyBtn" class="btn btn-gradient">Save & Load</button>
-          <button id="clearKeyBtn" class="btn btn-ghost">Clear</button>
-        </div>
-      </div>
-      <p id="keyStatus" style="font-size:12px; color:var(--text-muted); margin-top:10px;"></p>
-    </section>
-
-    <!-- Title + Search -->
-    <section style="display:grid; grid-template-columns:1fr auto; gap:16px; align-items:center; margin-bottom:20px;">
-      <div>
-        <h2 id="categoryTitle" style="font-size:18px; font-weight:600; letter-spacing:-0.01em;">Trending</h2>
-        <p id="categoryDesc" style="font-size:12px; color:var(--text-muted); margin-top:2px;">Current TMDB trends.</p>
-      </div>
-      <div style="display:flex; gap:8px;">
-        <input id="searchInput" class="input" style="width:260px;" placeholder="Search movies...">
-        <button id="searchBtn" class="btn btn-ghost">Search</button>
-      </div>
-    </section>
-
-    <!-- Category Tabs -->
-    <section style="display:flex; flex-direction:column; gap:10px; margin-bottom:24px;">
-      <div id="categoryTabs" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:2px;">
-        <button data-category="trending" class="tab active">Trending</button>
-        <button data-category="popular" class="tab">Popular</button>
-        <button data-category="top_rated" class="tab">Top Rated</button>
-        <button data-category="now_playing" class="tab">Now Playing</button>
-        <button data-category="upcoming" class="tab">Upcoming</button>
-      </div>
-      <div id="genreChips" style="display:flex; gap:4px; overflow-x:auto; padding-bottom:2px;">
-        <button data-genre="28" class="chip">Action</button>
-        <button data-genre="12" class="chip">Adventure</button>
-        <button data-genre="16" class="chip">Animation</button>
-        <button data-genre="35" class="chip">Comedy</button>
-        <button data-genre="80" class="chip">Crime</button>
-        <button data-genre="99" class="chip">Documentary</button>
-        <button data-genre="18" class="chip">Drama</button>
-        <button data-genre="10751" class="chip">Family</button>
-        <button data-genre="14" class="chip">Fantasy</button>
-        <button data-genre="27" class="chip">Horror</button>
-        <button data-genre="9648" class="chip">Mystery</button>
-        <button data-genre="10749" class="chip">Romance</button>
-        <button data-genre="878" class="chip">Sci-Fi</button>
-        <button data-genre="53" class="chip">Thriller</button>
-        <button data-genre="37" class="chip">Western</button>
-      </div>
-    </section>
-
-    <!-- Movie Grid -->
-    <section id="movieGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:16px;"></section>
-
-    <footer style="border-top:1px solid var(--glass-border); padding:32px 0; margin-top:48px;">
-      <p style="font-size:11px; color:var(--text-muted); line-height:1.6;">Movie metadata and posters provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.</p>
-    </footer>
-  </div>
-
-  <!-- Rating Modal -->
-  <div id="ratingModal" style="position:fixed; inset:0; z-index:70; display:none; opacity:0; transition:opacity 200ms; align-items:center; justify-content:center; padding:16px;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.6);" id="ratingBackdrop"></div>
-    <div style="position:relative; z-index:1; width:100%; max-width:380px; background:rgba(10,10,26,0.95); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; transform:scale(0.96); transition:transform 250ms cubic-bezier(0.22,1,0.36,1);">
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--glass-border);">
-        <span style="font-size:14px; font-weight:600;">Rate this movie</span>
-        <button id="closeRatingBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px;">&times;</button>
-      </div>
-      <div id="ratingBody" style="padding:20px;">
-        <div style="display:flex; gap:14px; margin-bottom:20px;">
-          <img id="ratingPoster" style="width:64px; border-radius:8px; object-fit:cover; aspect-ratio:2/3;">
-          <div>
-            <div id="ratingTitle" style="font-size:14px; font-weight:500;"></div>
-            <div id="ratingMeta" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
+    <main id="main">
+      <section class="workspace-hero">
+        <div class="bezel reveal">
+          <div class="bezel-core hero-core">
+            <div>
+              <span class="eyebrow">AI movie recommendation</span>
+              <h1 class="hero-title">Trace your taste.</h1>
+              <p class="hero-copy">Paste a TMDB API key, browse live movie data, save films that feel right, then let LumiTrace build a recommendation profile from metadata and optional BERT vectors.</p>
+            </div>
+            <div class="hero-metrics" aria-label="Project capabilities">
+              <div class="metric">
+                <strong>30k</strong>
+                <span>xlarge vector target</span>
+              </div>
+              <div class="metric">
+                <strong>BERT</strong>
+                <span>semantic mode</span>
+              </div>
+              <div class="metric">
+                <strong>local</strong>
+                <span>browser favorites</span>
+              </div>
+            </div>
           </div>
         </div>
-        <div style="margin-bottom:16px;">
-          <div style="font-size:12px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Score</div>
-          <div id="ratingScoreBtns" style="display:flex; gap:6px;"></div>
+
+        <aside class="bezel reveal" aria-label="TMDB setup">
+          <div class="bezel-core control-core">
+            <div>
+              <p class="section-kicker">Start here</p>
+              <h2 class="panel-title">Connect TMDB</h2>
+              <p class="panel-copy">The key stays in your browser localStorage unless you set one in the backend environment.</p>
+            </div>
+
+            <label class="field-label" for="apiKeyInput">
+              TMDB API Key
+              <input id="apiKeyInput" type="password" autocomplete="off" class="input" placeholder="Paste your TMDB API key">
+            </label>
+
+            <div class="button-row">
+              <button id="saveKeyBtn" class="btn btn-primary" type="button">
+                Save and load
+                <span class="btn-icon">-&gt;</span>
+              </button>
+              <button id="clearKeyBtn" class="btn btn-ghost" type="button">Clear key</button>
+            </div>
+
+            <p id="keyStatus" class="status-line" aria-live="polite"></p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="bezel browse-shell reveal" aria-label="Movie browser">
+        <div class="bezel-core browse-core">
+          <div class="browse-topline">
+            <div>
+              <p class="section-kicker">Browse</p>
+              <h2 id="categoryTitle" class="section-title">Trending</h2>
+              <p id="categoryDesc" class="section-desc">Current TMDB trends.</p>
+            </div>
+            <div class="search-bar" role="search">
+              <input id="searchInput" class="input" placeholder="Search movies..." aria-label="Search movies">
+              <button id="searchBtn" class="btn btn-ghost" type="button">Search</button>
+            </div>
+          </div>
+
+          <div id="categoryTabs" class="tab-rail" aria-label="Movie categories">
+            <button data-category="trending" class="category-tab active" type="button">Trending</button>
+            <button data-category="popular" class="category-tab" type="button">Popular</button>
+            <button data-category="top_rated" class="category-tab" type="button">Top rated</button>
+            <button data-category="now_playing" class="category-tab" type="button">Now playing</button>
+            <button data-category="upcoming" class="category-tab" type="button">Upcoming</button>
+          </div>
+
+          <div id="genreChips" class="chip-rail" aria-label="Genres">
+            <button data-genre="28" class="genre-chip" type="button">Action</button>
+            <button data-genre="12" class="genre-chip" type="button">Adventure</button>
+            <button data-genre="16" class="genre-chip" type="button">Animation</button>
+            <button data-genre="35" class="genre-chip" type="button">Comedy</button>
+            <button data-genre="80" class="genre-chip" type="button">Crime</button>
+            <button data-genre="99" class="genre-chip" type="button">Documentary</button>
+            <button data-genre="18" class="genre-chip" type="button">Drama</button>
+            <button data-genre="10751" class="genre-chip" type="button">Family</button>
+            <button data-genre="14" class="genre-chip" type="button">Fantasy</button>
+            <button data-genre="27" class="genre-chip" type="button">Horror</button>
+            <button data-genre="9648" class="genre-chip" type="button">Mystery</button>
+            <button data-genre="10749" class="genre-chip" type="button">Romance</button>
+            <button data-genre="878" class="genre-chip" type="button">Sci-Fi</button>
+            <button data-genre="53" class="genre-chip" type="button">Thriller</button>
+            <button data-genre="37" class="genre-chip" type="button">Western</button>
+          </div>
+
+          <section id="movieGrid" class="movie-grid" aria-live="polite"></section>
         </div>
-        <div style="margin-bottom:20px;">
-          <div style="font-size:12px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">Comment (optional)</div>
-          <textarea id="ratingComment" class="input" style="width:100%; height:72px; resize:none; font-size:12px;" placeholder="What did you think?"></textarea>
+      </section>
+
+      <footer class="app-footer">
+        Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.
+      </footer>
+    </main>
+  </div>
+
+  <div id="ratingModal" class="modal" style="display:none; opacity:0;">
+    <div id="ratingBackdrop" class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">Rate this movie</span>
+        <button id="closeRatingBtn" class="icon-button" type="button" aria-label="Close rating modal">x</button>
+      </div>
+      <div id="ratingBody" class="modal-body">
+        <div class="rating-preview">
+          <img id="ratingPoster" alt="">
+          <div>
+            <div id="ratingTitle" class="panel-title"></div>
+            <div id="ratingMeta" class="panel-copy"></div>
+          </div>
         </div>
-        <div style="display:flex; gap:8px;">
-          <button id="saveRatingBtn" class="btn btn-gradient" style="flex:1;">Save</button>
-          <button id="deleteRatingBtn" class="btn btn-ghost" style="display:none;">Delete</button>
+        <label class="field-label">
+          Score
+          <div id="ratingScoreBtns" class="score-grid"></div>
+        </label>
+        <label class="field-label rating-comment">
+          Comment (optional)
+          <textarea id="ratingComment" class="input textarea" placeholder="What did you think?"></textarea>
+        </label>
+        <div class="button-row rating-actions">
+          <button id="saveRatingBtn" class="btn btn-primary" type="button">Save</button>
+          <button id="deleteRatingBtn" class="btn btn-ghost" type="button" style="display:none;">Delete</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- FAB -->
-  <button id="recommendFab" style="position:fixed; bottom:24px; right:24px; z-index:50; width:48px; height:48px; border-radius:12px; background:var(--gradient); color:#fff; border:none; font-size:18px; cursor:pointer; transition:all 150ms ease-out; box-shadow:0 4px 16px rgba(167,139,250,0.3); backdrop-filter:blur(8px);">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-    <span id="fabBadge" style="position:absolute; top:-4px; right:-4px; min-width:18px; height:18px; border-radius:9px; background:rgba(20,184,166,0.3); border:1px solid rgba(20,184,166,0.5); font-size:10px; font-weight:600; display:none; align-items:center; justify-content:center; padding:0 4px; color:#fff;">0</span>
+  <button id="recommendFab" class="recommend-fab" type="button" aria-label="Open recommendations">
+    <span class="fab-symbol">AI</span>
+    <span class="fab-copy">
+      <strong>Recommendations</strong>
+      <small>For you</small>
+    </span>
+    <span id="fabBadge" class="fab-badge">0</span>
   </button>
 
-  <!-- Explanation Modal -->
-  <div id="explanationModal" style="position:fixed; inset:0; z-index:60; display:none; opacity:0; transition:opacity 200ms; align-items:center; justify-content:center; padding:16px;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px);" id="explanationBackdrop"></div>
-    <div class="explanation-content" style="position:relative; z-index:1; width:100%; max-width:420px; background:rgba(10,10,26,0.9); border:1px solid var(--glass-border); border-radius:16px; overflow:hidden; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); transform:scale(0.96); transition:transform 250ms cubic-bezier(0.22,1,0.36,1);">
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--glass-border);">
-        <span style="font-size:13px; font-weight:600;">Why this recommendation?</span>
-        <button id="closeExplanationBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:16px; padding:4px;">&times;</button>
+  <div id="explanationModal" class="modal" style="display:none; opacity:0;">
+    <div id="explanationBackdrop" class="modal-backdrop"></div>
+    <div class="explanation-content">
+      <div class="modal-head">
+        <span class="modal-title">Why this recommendation?</span>
+        <button id="closeExplanationBtn" class="icon-button" type="button" aria-label="Close explanation">x</button>
       </div>
-      <div id="explanationBody" style="padding:20px; max-height:60vh; overflow-y:auto;"></div>
+      <div id="explanationBody" class="modal-body explanation-body"></div>
     </div>
   </div>
 
-  <!-- Overlay -->
-  <div id="recommendOverlay" style="position:fixed; inset:0; z-index:40; pointer-events:none; opacity:0; transition:opacity 300ms;">
-    <div style="position:absolute; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px);" id="overlayBackdrop"></div>
+  <div id="recommendOverlay" class="recommend-overlay">
+    <div id="overlayBackdrop"></div>
   </div>
 
-  <!-- Recommendation Panel -->
-  <div id="recommendPanel" style="position:fixed; bottom:0; right:0; z-index:50; width:min(720px, 96vw); max-height:88vh; transform:translateY(100%); transition:transform 350ms cubic-bezier(0.22,1,0.36,1);">
-    <div style="background:rgba(10,10,26,0.92); border:1px solid var(--glass-border); border-bottom:none; border-radius:16px 16px 0 0; overflow:hidden; display:flex; flex-direction:column; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);">
-      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--glass-border);">
+  <div id="recommendPanel" class="recommend-panel">
+    <div class="recommend-panel-core">
+      <div class="panel-head">
         <div>
-          <div style="font-size:14px; font-weight:600;">Recommendations</div>
-          <div id="recommendationReason" style="font-size:11px; color:var(--text-muted); margin-top:2px;">Scroll for more.</div>
+          <div class="panel-title">Recommendations</div>
+          <div id="recommendationReason" class="panel-copy">Scroll for more.</div>
         </div>
-        <button id="closePanelBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:18px; padding:4px;">&times;</button>
+        <button id="closePanelBtn" class="icon-button" type="button" aria-label="Close recommendations">x</button>
       </div>
-      <div style="padding:12px 20px; border-bottom:1px solid var(--glass-border); display:flex; align-items:center; gap:12px;">
-        <a href="/favorites.html" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.2); border-radius:8px; padding:6px 12px; font-size:12px; font-weight:500; color:var(--primary); text-decoration:none; transition:all 150ms;">
-          Collection <span id="panelFavCount" style="font-size:11px; opacity:0.7;"></span>
+      <div class="panel-subhead">
+        <a class="collection-pill" href="/favorites.html" target="_blank" rel="noopener">
+          Collection <span id="panelFavCount"></span>
         </a>
-        <span id="panelFavSummary" style="font-size:11px; color:var(--text-muted);"></span>
+        <span id="panelFavSummary" class="panel-summary"></span>
       </div>
-      <div id="recScrollArea" style="overflow-y:auto; padding:16px 20px; max-height:60vh;">
-        <div id="recommendationGrid" style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
-          <div id="recSentinel" style="grid-column:1/-1; display:flex; justify-content:center; padding:24px;"><div class="loader-dots" id="recLoaderDots" style="opacity:0"><span></span><span></span><span></span></div></div>
+      <div id="recScrollArea" class="scroll-area">
+        <div id="recommendationGrid" class="recommendation-grid">
+          <div id="recSentinel" class="grid-sentinel">
+            <div class="loader-dots is-idle" id="recLoaderDots"><span></span><span></span><span></span></div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Starfield Script -->
   <script>
-  (function() {
-    const canvas = document.getElementById('starfield');
-    const ctx = canvas.getContext('2d');
-    let w, h, scrollY = 0, time = 0;
-    const stars = [];
-    const meteors = [];
-    let nextMeteor = 300;
-
-    function resize() {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-    window.addEventListener('scroll', () => scrollY = window.scrollY);
-
-    // Create stars
-    for (let i = 0; i < 180; i++) {
-      stars.push({
-        x: Math.random() * 3000,
-        y: Math.random() * 10000,
-        r: 0.3 + Math.random() * 1.5,
-        twinkleSpeed: 0.005 + Math.random() * 0.02,
-        twinkleOffset: Math.random() * Math.PI * 2,
-        drift: (Math.random() - 0.5) * 0.1,
-      });
-    }
-
-    function spawnMeteor() {
-      meteors.push({
-        x: Math.random() * w * 0.8,
-        y: -10,
-        vx: 2 + Math.random() * 3,
-        vy: 3 + Math.random() * 4,
-        life: 1,
-        decay: 0.015 + Math.random() * 0.01,
-        len: 40 + Math.random() * 60,
-      });
-    }
-
-    function draw() {
-      time++;
-      ctx.clearRect(0, 0, w, h);
-
-      // Draw stars
-      stars.forEach((s) => {
-        const drawX = (s.x + s.drift * time) % w;
-        const drawY = s.y - scrollY * 0.3;
-        const wrappedY = ((drawY % (h * 3)) + h * 3) % (h * 3) - h;
-        if (wrappedY < -10 || wrappedY > h + 10) return;
-
-        const twinkle = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(time * s.twinkleSpeed + s.twinkleOffset));
-        ctx.beginPath();
-        ctx.arc(drawX, wrappedY, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 200, 255, ${twinkle * 0.6})`;
-        ctx.fill();
-
-        // Subtle glow on brighter stars
-        if (s.r > 1.2) {
-          ctx.beginPath();
-          ctx.arc(drawX, wrappedY, s.r * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(20, 184, 166, ${twinkle * 0.1})`;
-          ctx.fill();
-        }
-      });
-
-      // Meteors
-      if (time > nextMeteor) {
-        spawnMeteor();
-        nextMeteor = time + 300 + Math.random() * 400;
-      }
-
-      for (let i = meteors.length - 1; i >= 0; i--) {
-        const m = meteors[i];
-        m.x += m.vx;
-        m.y += m.vy;
-        m.life -= m.decay;
-
-        if (m.life <= 0) { meteors.splice(i, 1); continue; }
-
-        const grad = ctx.createLinearGradient(m.x, m.y, m.x - m.vx * m.len / 5, m.y - m.vy * m.len / 5);
-        grad.addColorStop(0, `rgba(94, 234, 212, ${m.life * 0.9})`);
-        grad.addColorStop(1, `rgba(20, 184, 166, 0)`);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(m.x, m.y);
-        ctx.lineTo(m.x - m.vx * m.len / 5, m.y - m.vy * m.len / 5);
-        ctx.stroke();
-      }
-
-      requestAnimationFrame(draw);
-    }
-    draw();
-  })();
+    document.addEventListener("DOMContentLoaded", () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll(".reveal").forEach((node) => observer.observe(node));
+    });
   </script>
 </body>
 </html>

@@ -24,11 +24,11 @@ let recLoading = false;
 let recDone = false;
 
 const CATEGORY_META = {
-  trending:    { title: "🔥 Trending Movies",  desc: "What's hot this week on TMDB.", endpoint: "trending/movie/week" },
-  popular:     { title: "⭐ Popular Movies",    desc: "All-time audience favorites.", endpoint: "movie/popular" },
-  top_rated:   { title: "🏆 Top Rated Movies",  desc: "Highest-rated films by viewers.", endpoint: "movie/top_rated" },
-  now_playing: { title: "🎬 Now Playing",       desc: "Currently in theaters.", endpoint: "movie/now_playing" },
-  upcoming:    { title: "🔜 Upcoming Movies",   desc: "Coming soon to theaters.", endpoint: "movie/upcoming" },
+  trending:    { title: "Trending",    desc: "What is moving across TMDB this week.", endpoint: "trending/movie/week" },
+  popular:     { title: "Popular",     desc: "Audience favorites with broad viewing momentum.", endpoint: "movie/popular" },
+  top_rated:   { title: "Top rated",   desc: "Highest-rated films from the TMDB community.", endpoint: "movie/top_rated" },
+  now_playing: { title: "Now playing", desc: "Films currently in theaters.", endpoint: "movie/now_playing" },
+  upcoming:    { title: "Upcoming",    desc: "Movies arriving soon.", endpoint: "movie/upcoming" },
 };
 
 const GENRE_NAMES = {
@@ -246,7 +246,7 @@ function openRatingModal(movie) {
   document.getElementById("ratingPoster").src = `${IMAGE_BASE}${movie.poster_path}`;
   document.getElementById("ratingTitle").textContent = movie.title;
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
-  document.getElementById("ratingMeta").textContent = `${year} · TMDB ${movie.vote_average.toFixed(1)}`;
+  document.getElementById("ratingMeta").textContent = `${year || "Unknown year"} / TMDB ${movie.vote_average.toFixed(1)}`;
   document.getElementById("ratingComment").value = existing ? existing.comment : "";
   document.getElementById("deleteRatingBtn").style.display = existing ? "" : "none";
 
@@ -255,14 +255,14 @@ function openRatingModal(movie) {
   container.innerHTML = "";
   for (let i = 1; i <= 10; i++) {
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.textContent = i;
-    btn.style.cssText = `width:32px; height:32px; border-radius:8px; border:1px solid ${i <= currentRatingScore ? "var(--primary)" : "var(--glass-border)"}; background:${i <= currentRatingScore ? "var(--gradient)" : "transparent"}; color:${i <= currentRatingScore ? "#fff" : "var(--text-muted)"}; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 100ms;`;
+    btn.className = `score-btn${i <= currentRatingScore ? " is-active" : ""}`;
     btn.addEventListener("click", () => {
       currentRatingScore = i;
-      // Update all buttons
       container.querySelectorAll("button").forEach((b, idx) => {
         const n = idx + 1;
-        b.style.cssText = `width:32px; height:32px; border-radius:8px; border:1px solid ${n <= currentRatingScore ? "var(--primary)" : "var(--glass-border)"}; background:${n <= currentRatingScore ? "var(--gradient)" : "transparent"}; color:${n <= currentRatingScore ? "#fff" : "var(--text-muted)"}; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 100ms;`;
+        b.classList.toggle("is-active", n <= currentRatingScore);
       });
     });
     container.appendChild(btn);
@@ -334,7 +334,7 @@ async function loadGenre(genreId) {
   if (!requireKey()) return;
   const name = GENRE_NAMES[genreId] || genreId;
   resetScrollState("genre");
-  document.getElementById("categoryTitle").textContent = `🎭 ${name} Movies`;
+  document.getElementById("categoryTitle").textContent = `${name} movies`;
   document.getElementById("categoryDesc").textContent = `Best ${name.toLowerCase()} films ranked by rating.`;
   setStatus(`Loading ${name} movies...`);
   try {
@@ -354,7 +354,7 @@ async function runSearch() {
   if (!query) { loadCategory(currentCategory); return; }
   currentSearchQuery = query;
   resetScrollState("search");
-  document.getElementById("categoryTitle").textContent = `🔍 Search: ${query}`;
+  document.getElementById("categoryTitle").textContent = `Search: ${query}`;
   document.getElementById("categoryDesc").textContent = `Results for "${query}".`;
   setStatus(`Searching...`);
   try {
@@ -381,7 +381,7 @@ function attachSentinel() {
   const grid = document.getElementById("movieGrid");
   const s = document.createElement("div");
   s.id = "loadMoreSentinel";
-  s.className = "col-span-full flex justify-center py-8";
+  s.className = "grid-sentinel";
   s.innerHTML = `<div class="loader-dots" id="loaderDots" style="opacity:0"><span></span><span></span><span></span></div>`;
   grid.appendChild(s);
   window._infiniteScrollObserver.observe(s);
@@ -417,28 +417,25 @@ async function loadMore() {
 function setLoaderVisible(v) { const d = document.getElementById("loaderDots"); if (d) d.style.opacity = v ? "1" : "0"; }
 
 // --- Movie Cards ---
-function imdbBadge(movie) {
+function tmdbBadge(movie) {
   const s = movie.vote_average;
-  const c = s >= 7 ? "#14b8a6" : s >= 5 ? "#a0a0c0" : "#606080";
-  return `<span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="font-weight:600;color:${c}">${s.toFixed(1)}</span><span style="color:#606080;font-size:11px;">/10</span></span>`;
+  return `<span class="rating-value"><small>TMDB</small>${s.toFixed(1)}</span>`;
 }
 
 function ratingBadgeHtml(movieId) {
   const r = getMovieRating(movieId);
-  if (!r) return `<span class="rating-badge" data-movie-id="${movieId}" style="font-size:10px; color:var(--text-muted); cursor:pointer; padding:2px 6px; border:1px dashed var(--glass-border); border-radius:4px; transition:all 150ms;">Rate</span>`;
-  const c = r.score >= 8 ? "#14b8a6" : r.score >= 5 ? "#a0a0c0" : "#606080";
-  return `<span class="rating-badge" data-movie-id="${movieId}" style="font-size:10px; font-weight:600; color:${c}; cursor:pointer; padding:2px 6px; background:rgba(20,184,166,0.1); border:1px solid rgba(20,184,166,0.2); border-radius:4px; transition:all 150ms;">${r.score}/10</span>`;
+  if (!r) return `<button class="rating-badge" data-movie-id="${movieId}" type="button">Rate</button>`;
+  return `<button class="rating-badge is-rated" data-movie-id="${movieId}" type="button">${r.score}/10</button>`;
 }
 
 function updateCardRating(badgeEl, movieId) {
   const r = getMovieRating(movieId);
   if (!r) {
     badgeEl.textContent = "Rate";
-    badgeEl.style.cssText = "font-size:10px; color:var(--text-muted); cursor:pointer; padding:2px 6px; border:1px dashed var(--glass-border); border-radius:4px; transition:all 150ms;";
+    badgeEl.className = "rating-badge";
   } else {
-    const c = r.score >= 8 ? "#14b8a6" : r.score >= 5 ? "#a0a0c0" : "#606080";
     badgeEl.textContent = `${r.score}/10`;
-    badgeEl.style.cssText = `font-size:10px; font-weight:600; color:${c}; cursor:pointer; padding:2px 6px; background:rgba(20,184,166,0.1); border:1px solid rgba(20,184,166,0.2); border-radius:4px; transition:all 150ms;`;
+    badgeEl.className = "rating-badge is-rated";
   }
 }
 
@@ -449,20 +446,23 @@ function appendMovieCards(movies) {
   movies.forEach((movie) => {
     const card = document.createElement("article");
     card.className = "poster-card";
+    card.dataset.movieId = String(movie.id);
     const active = favSet.has(movie.id);
     const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
     card.innerHTML = `
-      <img style="aspect-ratio:2/3; width:100%; object-fit:cover;" src="${IMAGE_BASE}${movie.poster_path}" alt="${esc(movie.title)}" loading="lazy">
-      <div style="padding:12px;">
-        <h3 class="line-clamp-2" style="font-size:13px; font-weight:500; min-height:2.4em; line-height:1.2;">${esc(movie.title)}</h3>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:8px;">
-          <span style="font-size:11px; color:#606080;">${year}</span>
-          ${imdbBadge(movie)}
+      <a class="poster-link" href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" rel="noopener">
+        <img class="poster-image" src="${IMAGE_BASE}${movie.poster_path}" alt="${esc(movie.title)} poster" loading="lazy">
+      </a>
+      <div class="poster-content">
+        <h3 class="poster-title line-clamp-2">${esc(movie.title)}</h3>
+        <div class="poster-meta">
+          <span>${year || "N/A"}</span>
+          ${tmdbBadge(movie)}
         </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+        <div class="card-actions">
           ${ratingBadgeHtml(movie.id)}
         </div>
-        <button class="fav-btn" style="width:100%; margin-top:10px; padding:7px 0; border-radius:8px; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 150ms; ${active ? "background:linear-gradient(135deg,#14b8a6,#5eead4); color:#fff; border:none;" : "background:transparent; color:#606080; border:1px solid rgba(255,255,255,0.1);"}">${active ? "Saved" : "Save"}</button>
+        <button class="fav-btn${active ? " is-saved" : ""}" data-movie-id="${movie.id}" type="button">${active ? "Saved" : "Save"}</button>
       </div>`;
     card.querySelector(".fav-btn").addEventListener("click", () => toggleFav(movie, card));
     card.querySelector(".rating-badge").addEventListener("click", (e) => { e.stopPropagation(); openRatingModal(movie); });
@@ -478,14 +478,10 @@ function toggleFav(movie, cardEl) {
   const next = exists ? favs.filter((f) => f.id !== movie.id) : [...favs, movie];
   saveFavorites(next);
   updateFabBadge();
-  // Update all cards with this movie
-  document.querySelectorAll(".fav-btn").forEach((btn) => {
-    const c = btn.closest("article");
-    if (c?.querySelector("h3")?.textContent === movie.title) {
-      const isFav = next.some((f) => f.id === movie.id);
-      btn.style.cssText = `width:100%; margin-top:10px; padding:7px 0; border-radius:8px; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 150ms; ${isFav ? "background:linear-gradient(135deg,#14b8a6,#5eead4); color:#fff; border:none;" : "background:transparent; color:#606080; border:1px solid rgba(255,255,255,0.1);"}`;
-      btn.textContent = isFav ? "Saved" : "Save";
-    }
+  document.querySelectorAll(`.fav-btn[data-movie-id="${movie.id}"]`).forEach((btn) => {
+    const isFav = next.some((f) => f.id === movie.id);
+    btn.classList.toggle("is-saved", isFav);
+    btn.textContent = isFav ? "Saved" : "Save";
   });
   // Update panel summary and reset recommendations
   updatePanelSummary();
@@ -496,7 +492,7 @@ function updatePanelSummary() {
   const favs = getFavorites();
   const el = document.getElementById("panelFavSummary");
   const countEl = document.getElementById("panelFavCount");
-  el.textContent = favs.length > 0 ? `recommendations based on your taste` : "no favorites yet — showing popular picks";
+  el.textContent = favs.length > 0 ? "recommendations based on your taste" : "no favorites yet; showing popular picks";
   if (countEl) countEl.textContent = favs.length > 0 ? favs.length : "";
 }
 
@@ -524,7 +520,7 @@ async function loadMoreRecs() {
       else {
         appendRecCards(movies.map((m) => ({ ...m, recommendationScore: Math.round(Math.min(95, m.vote_average * 10)) })));
         recPage++;
-        document.getElementById("recommendationReason").textContent = "Popular picks — save movies for personalized recommendations.";
+        document.getElementById("recommendationReason").textContent = "Popular picks; save movies for personalized recommendations.";
       }
       recLoading = false;
       setRecLoaderVisible(false);
@@ -571,7 +567,7 @@ async function loadMoreRecs() {
       const candidates = scored.map((m) => ({ ...m, recommendationScore: Math.round((m._r / maxS) * 95) + 5 })).sort((a, b) => b.recommendationScore - a.recommendationScore);
       appendRecCards(candidates);
       recPage++;
-      document.getElementById("recommendationReason").textContent = `From ${favs.length} favorites · scroll for more.`;
+      document.getElementById("recommendationReason").textContent = `From ${favs.length} favorites; scroll for more.`;
     }
   } catch (err) {
     document.getElementById("recommendationReason").textContent = `Failed: ${err.message}`;
@@ -608,8 +604,10 @@ function renderRecGrid(movies) {
   grid.innerHTML = "";
   const sentinel = document.getElementById("recSentinel");
   movies.forEach((m) => {
-    if (sentinel) grid.insertBefore(makeRecCard(m), sentinel);
-    else grid.appendChild(makeRecCard(m));
+    const card = makeRecCard(m);
+    if (sentinel) grid.insertBefore(card, sentinel);
+    else grid.appendChild(card);
+    requestAnimationFrame(() => card.classList.add("in-view"));
   });
 }
 
@@ -623,6 +621,7 @@ function appendRecCards(movies) {
     const card = makeRecCard(m);
     if (sentinel) grid.insertBefore(card, sentinel);
     else grid.appendChild(card);
+    requestAnimationFrame(() => card.classList.add("in-view"));
   });
 }
 
@@ -631,24 +630,26 @@ function makeRecCard(movie) {
   const favSet = new Set(favs.map((m) => m.id));
   const card = document.createElement("article");
   card.className = "poster-card";
+  card.dataset.movieId = String(movie.id);
   const active = favSet.has(movie.id);
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
   const s = movie.vote_average;
-  const scoreColor = s >= 7 ? "#14b8a6" : "#606080";
   card.innerHTML = `
-    <img style="aspect-ratio:2/3; width:100%; object-fit:cover;" src="${IMAGE_BASE}${movie.poster_path}" alt="${esc(movie.title)}" loading="lazy">
-    <div style="padding:10px;">
-      <div data-title="${esc(movie.title)}" class="line-clamp-2" style="font-size:12px; font-weight:500; min-height:2.4em; line-height:1.2;">${esc(movie.title)}</div>
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:11px;">
-        <span style="color:#606080;">${year}</span>
-        <span style="color:${scoreColor};">${s.toFixed(1)}</span>
+    <a class="poster-link" href="https://www.themoviedb.org/movie/${movie.id}" target="_blank" rel="noopener">
+      <img class="poster-image" src="${IMAGE_BASE}${movie.poster_path}" alt="${esc(movie.title)} poster" loading="lazy">
+    </a>
+    <div class="poster-content">
+      <h3 data-title="${esc(movie.title)}" class="poster-title line-clamp-2">${esc(movie.title)}</h3>
+      <div class="poster-meta">
+        <span>${year || "N/A"}</span>
+        ${tmdbBadge(movie)}
       </div>
-      <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
-        ${movie.recScore ? `<span style="font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(20,184,166,0.15); color:#14b8a6;">${movie.recScore}%</span>` : ""}
+      <div class="rec-card-actions">
+        ${movie.recommendationScore ? `<span class="match-badge">${Math.round(movie.recommendationScore)}%</span>` : ""}
         ${ratingBadgeHtml(movie.id)}
-        <button class="why-btn" style="font-size:10px; color:#606080; background:none; border:none; cursor:pointer; margin-left:auto; padding:0;">why?</button>
+        <button class="why-btn" type="button">why?</button>
       </div>
-      <button class="rec-fav-btn" style="width:100%; margin-top:8px; padding:6px 0; border-radius:8px; font-size:11px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 150ms; ${active ? "background:linear-gradient(135deg,#14b8a6,#5eead4); color:#fff; border:none;" : "background:transparent; color:#606080; border:1px solid rgba(255,255,255,0.1);"}">${active ? "Saved" : "Save"}</button>
+      <button class="rec-fav-btn${active ? " is-saved" : ""}" data-movie-id="${movie.id}" type="button">${active ? "Saved" : "Save"}</button>
     </div>`;
   card.querySelector(".rating-badge").addEventListener("click", (e) => { e.stopPropagation(); openRatingModal(movie); });
   card.querySelector(".rec-fav-btn").addEventListener("click", () => {
@@ -660,7 +661,7 @@ function makeRecCard(movie) {
     updatePanelSummary();
     const btn = card.querySelector(".rec-fav-btn");
     const isFav = next.some((f) => f.id === movie.id);
-    btn.style.cssText = `width:100%; margin-top:8px; padding:6px 0; border-radius:8px; font-size:11px; font-weight:500; font-family:inherit; cursor:pointer; transition:all 150ms; ${isFav ? "background:linear-gradient(135deg,#14b8a6,#5eead4); color:#fff; border:none;" : "background:transparent; color:#606080; border:1px solid rgba(255,255,255,0.1);"}`;
+    btn.classList.toggle("is-saved", isFav);
     btn.textContent = isFav ? "Saved" : "Save";
   });
   card.querySelector(".why-btn").addEventListener("click", (e) => { e.stopPropagation(); showExplanation(movie); });
@@ -739,6 +740,96 @@ function buildReasons(movie, profile, favs) {
   else if (movie.recommendationScore >= 50) reasons.push({ icon: "🧠", title: "Similar vibe", detail: "Shares themes with your favorites.", w: 20 });
   const fm = favs.map((f) => ({ t: f.title, o: (f.genre_ids || []).filter((id) => mg.includes(id)).length })).sort((a, b) => b.o - a.o);
   if (fm.length && fm[0].o >= 2) reasons.push({ icon: "🎬", title: `Like "${fm[0].t}"`, detail: `Shares ${fm[0].o} genres.`, w: 15 });
+  return reasons.sort((a, b) => b.w - a.w).slice(0, 3);
+}
+
+function showExplanation(movie) {
+  const favs = getFavorites();
+  const profile = buildProfile(favs);
+  const reasons = buildReasons(movie, profile, favs);
+  const year = movie.release_date ? movie.release_date.slice(0, 4) : "N/A";
+  const match = movie.recommendationScore ? `<span class="match-badge">Match ${Math.round(movie.recommendationScore)}%</span>` : "";
+  document.getElementById("explanationBody").innerHTML = `
+    <div class="explanation-preview">
+      <img src="${IMAGE_BASE}${movie.poster_path}" alt="${esc(movie.title)} poster">
+      <div>
+        <h3 class="explanation-title">${esc(movie.title)}</h3>
+        <div class="explanation-meta">
+          <span>${year}</span>
+          <span>TMDB ${movie.vote_average.toFixed(1)}</span>
+          <span>${(movie.vote_count || 0).toLocaleString()} votes</span>
+        </div>
+        <div style="margin-top:10px;">${match}</div>
+        <p class="explanation-overview line-clamp-3">${esc(movie.overview || "")}</p>
+      </div>
+    </div>
+    <div class="reason-list">
+      ${reasons.length ? reasons.map((reason) => `
+        <div class="reason-card">
+          <span class="reason-icon">${reason.icon}</span>
+          <div>
+            <b>${reason.title}</b>
+            <span>${reason.detail}</span>
+          </div>
+        </div>`).join("") : '<div class="reason-card"><span class="reason-icon">TIP</span><div><b>Save more movies</b><span>LumiTrace can explain recommendations better after it sees more of your taste.</span></div></div>'}
+    </div>`;
+  const modal = document.getElementById("explanationModal");
+  modal.style.display = "flex";
+  requestAnimationFrame(() => {
+    modal.style.opacity = "1";
+    modal.querySelector(".explanation-content").style.transform = "scale(1)";
+  });
+}
+
+function buildReasons(movie, profile, favs) {
+  const movieGenres = movie.genre_ids || [];
+  const reasons = [];
+  const ratings = getRatings();
+  const matched = movieGenres.filter((id) => profile.genreWeights.has(id) && profile.genreWeights.get(id) > 0);
+
+  if (matched.length) {
+    const top = matched.sort((a, b) => (profile.genreWeights.get(b) || 0) - (profile.genreWeights.get(a) || 0))[0];
+    const weight = profile.genreWeights.get(top) || 0;
+    const genreName = GENRE_NAMES[top] || top;
+    const ratedGenreMovies = favs.filter((fav) => (fav.genre_ids || []).includes(top) && ratings[fav.id] && ratings[fav.id].score > 5);
+    if (ratedGenreMovies.length) {
+      const avgScore = ratedGenreMovies.reduce((sum, fav) => sum + ratings[fav.id].score, 0) / ratedGenreMovies.length;
+      reasons.push({ icon: "GEN", title: `You rate ${genreName} well`, detail: `Your saved ${genreName} movies average ${avgScore.toFixed(1)}/10. This film sits in the same lane.`, w: 50 });
+    } else {
+      reasons.push({ icon: "GEN", title: `Strong ${genreName} signal`, detail: `Your collection gives ${genreName} a profile weight of ${weight}.`, w: 40 });
+    }
+  }
+
+  const highRated = favs.filter((fav) => ratings[fav.id]?.score >= 8);
+  const similarHighRated = highRated.filter((fav) => (fav.genre_ids || []).some((id) => movieGenres.includes(id)));
+  if (similarHighRated.length) {
+    reasons.push({ icon: "TOP", title: "Close to your top-rated films", detail: `It shares genre DNA with ${similarHighRated.length} movie${similarHighRated.length > 1 ? "s" : ""} you rated 8 or higher.`, w: 45 });
+  }
+
+  const diff = Math.abs(movie.vote_average - profile.avgVote);
+  if (diff < 1.5) {
+    reasons.push({ icon: "AVG", title: "Rating band match", detail: `Your favorites average ${profile.avgVote.toFixed(1)}. This film is ${movie.vote_average.toFixed(1)} on TMDB.`, w: 25 });
+  } else if (movie.vote_average >= 7.5) {
+    reasons.push({ icon: "RAT", title: "Critically strong candidate", detail: `TMDB viewers rate it ${movie.vote_average.toFixed(1)}.`, w: 15 });
+  }
+
+  if (movie.vote_count >= 10000) {
+    reasons.push({ icon: "POP", title: "Large audience signal", detail: `${movie.vote_count.toLocaleString()} votes make the score harder to fake.`, w: 20 });
+  }
+
+  if (movie.recommendationScore >= 70) {
+    reasons.push({ icon: "SEM", title: "Story and theme match", detail: "The semantic signal places this close to your saved films.", w: 35 });
+  } else if (movie.recommendationScore >= 50) {
+    reasons.push({ icon: "SIM", title: "Similar viewing mood", detail: "It shares enough profile signals to be worth testing.", w: 20 });
+  }
+
+  const closestFavorite = favs
+    .map((fav) => ({ title: fav.title, overlap: (fav.genre_ids || []).filter((id) => movieGenres.includes(id)).length }))
+    .sort((a, b) => b.overlap - a.overlap)[0];
+  if (closestFavorite?.overlap >= 2) {
+    reasons.push({ icon: "REF", title: `Near "${closestFavorite.title}"`, detail: `Shares ${closestFavorite.overlap} genres with that saved movie.`, w: 15 });
+  }
+
   return reasons.sort((a, b) => b.w - a.w).slice(0, 3);
 }
 

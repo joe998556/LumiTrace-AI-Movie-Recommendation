@@ -14,7 +14,9 @@ scratch/
 .mypy_cache/
 .playwright-mcp/
 movie_vectors*.json
+movie_vectors*.json.tmp
 final_boss_vectors*.json
+final_boss_vectors*.json.tmp
 *.pt
 *.pth
 *.pkl
