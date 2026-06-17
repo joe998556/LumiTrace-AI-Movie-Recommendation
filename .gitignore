@@ -3,6 +3,8 @@
 !.env.example
 .vscode/
 .claude/
+.agents/
+skills-lock.json
 *.db
 *.sqlite
 *.sqlite3
@@ -22,3 +24,4 @@ final_boss_vectors*.json.tmp
 *.pkl
 *.npy
 *.npz
+android_app/
