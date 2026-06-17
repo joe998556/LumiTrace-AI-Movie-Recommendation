@@ -11,9 +11,13 @@ LumiTrace is an Android movie discovery app built with Kotlin and Jetpack Compos
 - Send watched movie taste signals to an optional BERT semantic recommendation endpoint.
 - Keep TMDB keys and AI gateway URLs in local encrypted preferences when supported by the device.
 
+For APK users, see the step-by-step [User Guide](USER_GUIDE.md).
+
 ## Privacy Defaults
 
 The open-source build does not include a TMDB API key, gateway token, lab server IP, or private BERT endpoint.
+
+This means users can browse and journal with only a TMDB key. AI recommendations require their own HTTPS BERT gateway.
 
 Users configure these from the app:
 

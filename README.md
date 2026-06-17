@@ -256,6 +256,7 @@ BERT recommendation service
 |   `-- check_setup.py             # Local readiness checker
 |-- android/                       # Kotlin/Jetpack Compose mobile app
 |   |-- README.md                  # Android setup, AI gateway, and release notes
+|   |-- USER_GUIDE.md              # APK install and endpoint setup guide
 |   `-- app/                       # Android app module
 |-- setup_recommender.bat          # Windows one-click recommender setup
 |-- docs/
