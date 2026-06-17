@@ -86,6 +86,8 @@ Edge cases:
 - only low-rated movies: metadata shortlist plus negative penalty
 - invalid `top_k`: default to `10`
 
+The BERT service logs these fallback/error paths at INFO/WARNING/ERROR level so users running the Windows setup script can understand what happened from the terminal output.
+
 ## SVD And Genome Signals
 
 The default public and Android flows do not train collaborative filtering from the user's private local history.

@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 sealed class UiState {
     object Idle : UiState()
@@ -248,11 +247,6 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             overviewsToSend.addAll(tasteMovies.map { it.overview })
         }
 
-        if (overviewsToSend.isEmpty()) {
-            _uiState.value = UiState.Idle
-            return
-        }
-
         viewModelScope.launch {
             semanticLoading = true
             if (!expand) {
@@ -266,8 +260,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     userGenreIds = tasteMovies.map { it.genreIds },
                     userVoteCounts = tasteMovies.map { movie ->
                         (_journalEntries.value[movie.id]?.rating?.takeIf { it > 0f } ?: NEUTRAL_USER_RATING)
-                            .roundToInt()
-                            .coerceIn(0, MAX_USER_RATING.toInt())
+                            .toDouble()
+                            .coerceIn(1.0, MAX_USER_RATING.toDouble())
                     },
                     topK = requestedTopK
                 )
@@ -284,7 +278,9 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     _uiState.value = UiState.Success(response.results, isSearch = true)
                 } else {
                     semanticEndReached = true
-                    _uiState.value = UiState.Error(response.fallback ?: "No semantic results found.")
+                    _uiState.value = UiState.Error(
+                        response.error ?: response.fallback ?: "No semantic results found."
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Failed to reach AI engine")

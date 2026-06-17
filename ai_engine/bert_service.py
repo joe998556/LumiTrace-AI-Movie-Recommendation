@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import math
 import os
 import sys
@@ -50,6 +51,8 @@ except ImportError as exc:
 
 app = Flask(__name__)
 CORS(app)
+logging.basicConfig(level=os.getenv("LUMITRACE_LOG_LEVEL", "INFO").upper(), format="%(levelname)s: %(message)s")
+logger = logging.getLogger("lumitrace.bert")
 
 BERT_GATEWAY_TOKEN: str = ""
 
@@ -294,6 +297,7 @@ def movie_quality_score(movie: dict[str, Any]) -> float:
 
 
 def fallback_recommendations(top_k: int, exclude_ids: set[int]) -> list[dict[str, Any]]:
+    logger.info("No taste profile found, falling back to metadata-quality movies.")
     candidates: list[dict[str, Any]] = []
     for movie in MOVIES:
         if movie["id"] in exclude_ids:
@@ -362,10 +366,13 @@ def search():
         raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
 
     if VECTOR_TENSOR is None:
+        logger.warning("Search requested before vector index was loaded.")
         return jsonify({"error": "Vector index is not loaded", "results": []}), 503
     if not MOVIES:
+        logger.warning("Search requested with an empty movie index.")
         return jsonify({"error": "Vector index is empty", "results": []}), 503
     if VECTOR_TENSOR.dim() != 2:
+        logger.error("Vector index has invalid tensor shape: %s", tuple(VECTOR_TENSOR.shape))
         return jsonify({"error": "Vector index must be a 2D tensor", "results": []}), 500
 
     data = request.get_json(silent=True) or {}
@@ -407,6 +414,11 @@ def search():
     # penalty against candidates that are too similar to disliked items.
     raw_embeddings = ensure_2d_tensor(embed_texts(texts))  # shape: (n_texts, dim)
     if raw_embeddings.dim() != 2 or raw_embeddings.size(1) != VECTOR_TENSOR.size(1):
+        logger.error(
+            "Embedding dimension mismatch: embedding=%s index=%s",
+            tuple(raw_embeddings.shape),
+            tuple(VECTOR_TENSOR.shape),
+        )
         return jsonify({"error": "Embedding dimension does not match vector index", "results": []}), 500
     semantic_ratings = user_ratings[:len(texts)]
     positive_indices = [index for index, rating in enumerate(semantic_ratings) if rating >= 5.0]
@@ -424,6 +436,7 @@ def search():
         semantic_scores_tensor = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1)
         shortlist_scores = semantic_scores_tensor
     else:
+        logger.info("Only low-rated taste inputs were provided; using metadata shortlist plus negative penalties.")
         semantic_scores_tensor = torch.zeros(len(MOVIES), dtype=torch.float32, device=DEVICE)
         shortlist_scores = torch.tensor(
             [movie_quality_score(movie) for movie in MOVIES],

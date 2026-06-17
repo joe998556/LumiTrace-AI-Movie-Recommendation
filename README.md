@@ -329,7 +329,7 @@ TMDB provides the movie catalog, posters, genres, titles, and overviews. LumiTra
 This is the easiest path for people who just want to install the APK and try BERT recommendations on their own Windows PC.
 
 1. Go to the latest GitHub Release.
-2. Download and install `LumiTrace-v1.0.1-release.apk`.
+2. Download and install `LumiTrace-v1.0.2-release.apk`.
 3. Download the Source code zip and extract it on your Windows PC.
 4. Double-click:
 
