@@ -10,6 +10,7 @@
 [![Flask](https://img.shields.io/badge/Flask_API-Backend-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![BERT](https://img.shields.io/badge/BERT-Semantic%20Embeddings-FF6B6B?style=for-the-badge)](ALGORITHM.md)
 [![TMDB](https://img.shields.io/badge/TMDB-Movie%20Metadata-01B4E4?style=for-the-badge)](https://www.themoviedb.org/)
+[![Android](https://img.shields.io/badge/Android-Jetpack%20Compose-2DD4BF?style=for-the-badge&logo=android&logoColor=white)](android/README.md)
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
 [![CI](https://img.shields.io/github/actions/workflow/status/joe998556/LumiTrace-AI-Movie-Recommendation/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
 
@@ -45,7 +46,8 @@ The public demo works without account registration or a database. Favorites are 
 | Ranking | Metadata ranking in demo, optional BERT/SVD/Genome for advanced mode |
 | Backend | Flask API for TMDB proxying and static app serving |
 | Demo surface | Web UI for entering a TMDB key, collecting favorites, and showing recommendations |
-| Safety | `.env`-based secrets, ignored local DB/vector/model files |
+| Mobile app | Android Kotlin/Jetpack Compose app with local TMDB key storage, watched movies, ratings, notes, and optional AI gateway |
+| Safety | `.env`-based secrets, ignored local DB/vector/model files, Android local properties, APKs, and keystores |
 
 ## Current Status
 
@@ -67,6 +69,7 @@ Recent maintenance work:
 - Ignored local secrets, SQLite databases, generated vectors, model files, IDE settings, and local agent settings.
 - Added contribution and security policy documents for future maintainers.
 - Added [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md) for ongoing development.
+- Added an [Android app](android/README.md) with no embedded lab endpoint; users bring their own TMDB key and optional HTTPS BERT gateway.
 
 ## How The Recommendation Works
 
@@ -192,6 +195,9 @@ The default clone-and-run path uses only the Flask backend and browser-local fav
 |-- tools/
 |   |-- bootstrap_recommender.py   # Download TMDB data and build BERT vectors
 |   `-- check_setup.py             # Local readiness checker
+|-- android/                       # Kotlin/Jetpack Compose mobile app
+|   |-- README.md                  # Android setup, AI gateway, and release notes
+|   `-- app/                       # Android app module
 |-- setup_recommender.bat          # Windows one-click recommender setup
 |-- docs/
 |   `-- OPERATIONS.md              # Local operations runbook
