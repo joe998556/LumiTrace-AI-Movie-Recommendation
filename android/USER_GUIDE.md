@@ -18,7 +18,7 @@ LumiTrace does not include a shared TMDB key or a shared AI endpoint. This is in
 
 ## Install The APK
 
-1. Download `LumiTrace-v1.0.2-release.apk` from GitHub Releases.
+1. Download `LumiTrace-v1.0.3-release.apk` from GitHub Releases.
 2. Open the APK on your Android device.
 3. If Android blocks the install, allow installs from this source.
 4. Install LumiTrace.

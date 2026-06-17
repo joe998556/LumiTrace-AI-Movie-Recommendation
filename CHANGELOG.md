@@ -15,6 +15,7 @@ All notable project maintenance updates are tracked here.
 - Optimized BERT search scoring with Torch matrix multiplication, `torch.topk` shortlist ranking, decimal user ratings, and post-ranking penalties for low-rated movies.
 - Added defensive BERT search handling for 2D tensor shape, contiguous vector storage, shortlist-only penalties, invalid `top_k`, cold-start fallback, and all-negative rating input.
 - Added clearer BERT fallback/error logging and hardened Android parsing for fallback recommendation responses and decimal ratings.
+- Reduced Android recommendation-page jank by throttling auto load-more, removing per-row reveal animations from result rows, and using lighter poster image sizes for grid cards.
 
 ## 2026-06-15
 

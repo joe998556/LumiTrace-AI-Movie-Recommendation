@@ -313,14 +313,13 @@ fun MovieScreen(viewModel: MovieViewModel) {
                                     viewModel.loadMoreSemanticMovies(watchedMovies.toList())
                                 }
                             }
-                            Reveal(index = rowIndex + 3) {
-                                MovieGridRow(
-                                    row = row,
-                                    watchedMovieIds = watchedMovieIds,
-                                    onToggleWatched = onToggleWatched,
-                                    onSelect = { selectedMovie = it }
-                                )
-                            }
+                            MovieGridRow(
+                                row = row,
+                                watchedMovieIds = watchedMovieIds,
+                                onToggleWatched = onToggleWatched,
+                                onSelect = { selectedMovie = it },
+                                posterImageSize = "w342"
+                            )
                         }
                     }
                 }
@@ -523,8 +522,7 @@ private fun RecommendationScreen(
     onOpenSettings: () -> Unit,
     onBackHome: () -> Unit
 ) {
-    val hasTasteSignal = seedMovies.isNotEmpty() || searchQuery.isNotBlank()
-    val canRun = aiEndpointReady && hasTasteSignal
+    val canRun = aiEndpointReady
 
     Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
         SectionHeader(
@@ -568,7 +566,7 @@ private fun RecommendationControlPanel(
             Text(
                 text = if (searchQuery.isBlank()) {
                     if (aiEndpointReady) {
-                        "Open Taste input to review watched movies, or run AI after marking a few titles."
+                        "Open Taste input to review watched movies, or run AI now for a backend fallback test."
                     } else {
                         "Add your PC LAN endpoint or HTTPS BERT gateway in Settings before running AI recommendations."
                     }
@@ -617,15 +615,15 @@ private fun RecommendationIdlePanel(canRun: Boolean) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Eyebrow("Ready")
             Text(
-                text = if (canRun) "Recommendation page is ready" else "Waiting for watched movies",
+                text = if (canRun) "Recommendation page is ready" else "Waiting for AI endpoint",
                 color = LumiText,
                 style = MaterialTheme.typography.headlineSmall
             )
             Text(
                 text = if (canRun) {
-                    "The UI shell is in place. Connect the IIS rewrite/BERT backend, then run the AI recommendation from this page."
+                    "Run AI recommendation now, or add watched movies first for stronger personal taste signals."
                 } else {
-                    "Go back to Home and mark a few movies as Watched to build the taste profile."
+                    "Open Settings and add your BERT endpoint before running recommendations."
                 },
                 color = LumiTextSoft,
                 style = MaterialTheme.typography.bodyLarge
@@ -1139,7 +1137,8 @@ private fun MovieGridRow(
     row: List<Movie>,
     watchedMovieIds: Set<Int>,
     onToggleWatched: (Movie) -> Unit,
-    onSelect: (Movie) -> Unit
+    onSelect: (Movie) -> Unit,
+    posterImageSize: String = "w342"
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
         row.forEach { movie ->
@@ -1148,7 +1147,8 @@ private fun MovieGridRow(
                     movie = movie,
                     isWatched = movie.id in watchedMovieIds,
                     onToggleWatched = { onToggleWatched(movie) },
-                    onClick = { onSelect(movie) }
+                    onClick = { onSelect(movie) },
+                    posterImageSize = posterImageSize
                 )
             }
         }
@@ -1216,7 +1216,8 @@ private fun MovieCard(
     movie: Movie,
     isWatched: Boolean,
     onToggleWatched: () -> Unit,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    posterImageSize: String = "w342"
 ) {
     DoubleBezel(radius = 26.dp, innerRadius = 20.dp, outerPadding = 5.dp) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -1229,7 +1230,7 @@ private fun MovieCard(
                             .clip(RoundedCornerShape(18.dp))
                             .background(PanelSoft)
                     ) {
-                        MoviePoster(movie = movie, imageSize = "w500", modifier = Modifier.fillMaxSize())
+                        MoviePoster(movie = movie, imageSize = posterImageSize, modifier = Modifier.fillMaxSize())
                     }
                 }
                 Column(

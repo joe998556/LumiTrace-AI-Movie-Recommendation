@@ -33,7 +33,7 @@ The setup script will ask you to paste this key. The key is used to download mov
 
 ## Easiest Setup
 
-1. Download `LumiTrace-v1.0.2-release.apk` from the latest GitHub Release and install it on Android.
+1. Download `LumiTrace-v1.0.3-release.apk` from the latest GitHub Release and install it on Android.
 2. Download the Source code zip from the same Release.
 3. Extract the zip on your Windows PC.
 4. Double-click:

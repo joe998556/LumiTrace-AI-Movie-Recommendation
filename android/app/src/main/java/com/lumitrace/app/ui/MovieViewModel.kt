@@ -50,6 +50,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     private var semanticTopK = SEMANTIC_PAGE_SIZE
     private var semanticEndReached = false
     private var semanticLoading = false
+    private var lastSemanticLoadMoreAt = 0L
+    private var lastSemanticLoadMoreSize = 0
     private var tmdbSearchPage = 0
     private var tmdbSearchQuery = ""
     private var tmdbSearchEndReached = false
@@ -219,6 +221,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         semanticTopK = SEMANTIC_PAGE_SIZE
         semanticEndReached = false
         semanticLoading = false
+        lastSemanticLoadMoreAt = 0L
+        lastSemanticLoadMoreSize = 0
         _uiState.value = UiState.Idle
     }
 
@@ -228,7 +232,13 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadMoreSemanticMovies(seedMovies: List<Movie> = emptyList()) {
-        if (semanticEndReached || semanticLoading || _uiState.value !is UiState.Success) return
+        val currentSize = (_uiState.value as? UiState.Success)?.movies?.size ?: return
+        val now = System.currentTimeMillis()
+        if (semanticEndReached || semanticLoading || currentSize == 0) return
+        if (currentSize == lastSemanticLoadMoreSize) return
+        if (now - lastSemanticLoadMoreAt < SEMANTIC_LOAD_MORE_COOLDOWN_MS) return
+        lastSemanticLoadMoreAt = now
+        lastSemanticLoadMoreSize = currentSize
         searchSemanticMovies(seedMovies = seedMovies, expand = true)
     }
 
@@ -251,6 +261,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             semanticLoading = true
             if (!expand) {
                 semanticEndReached = false
+                lastSemanticLoadMoreAt = 0L
+                lastSemanticLoadMoreSize = 0
                 _uiState.value = UiState.Loading
             }
             try {
@@ -516,5 +528,6 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         private const val MAX_USER_RATING = 10f
         private const val NEUTRAL_USER_RATING = 5f
         private const val SEMANTIC_PAGE_SIZE = 20
+        private const val SEMANTIC_LOAD_MORE_COOLDOWN_MS = 1800L
     }
 }
