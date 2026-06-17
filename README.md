@@ -4,7 +4,7 @@
 
 ### AI Movie Recommendation Engine
 
-**A clone-and-run movie recommender: paste your TMDB API key, save movies you like, then get taste-based recommendations.**
+**An open-source movie taste engine with a Web demo, Android app, and optional BERT semantic recommender. Bring your own TMDB key, mark what you watched, rate it, and turn taste into recommendations.**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask_API-Backend-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
@@ -14,7 +14,7 @@
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
 [![CI](https://img.shields.io/github/actions/workflow/status/joe998556/LumiTrace-AI-Movie-Recommendation/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
 
-[Algorithm](ALGORITHM.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
+[Algorithm](ALGORITHM.md) | [Android](android/README.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
 
 </div>
 
@@ -22,17 +22,30 @@
 
 ## Why LumiTrace?
 
-Most movie recommenders lean on broad labels like genre, rating, or popularity. LumiTrace is built around a different question:
+At-home movie watching has never had more choice, but choice is now the problem. Most people do not need another giant catalog. They need a faster way to find films that actually match their taste.
+
+LumiTrace is built around a more personal question:
 
 > If a user likes these stories, what other movies feel semantically close?
 
-The web app is only the demo surface. The core of the project is the recommendation pipeline:
+The website and Android app are only the surfaces. The core of the project is the recommendation pipeline:
 
 ```text
-TMDB API key -> trending movies -> local favorites -> taste profile -> ranked recommendations
+TMDB movies -> watched list -> ratings and notes -> taste profile -> ranked recommendations
 ```
 
-The public demo works without account registration or a database. Favorites are stored in the browser, recommendations are generated from the user's saved movies, and the advanced BERT pipeline remains available for deeper semantic recommendation experiments.
+The public flow works without registration or a hosted user database. User taste data stays local by default, while the optional BERT gateway can be connected for deeper semantic recommendations.
+
+## What Makes It Interesting
+
+| Layer | Why It Matters |
+| --- | --- |
+| No-account demo | Anyone can clone it, paste a TMDB key, and test movie discovery immediately. |
+| Personal taste signals | Watched movies, ratings, genres, plots, and notes become a lightweight taste profile. |
+| Rating-weighted BERT | A 9/10 watched movie boosts similar stories; a 2/10 movie suppresses similar matches. |
+| Web plus mobile | The same idea works as a browser demo and a Kotlin/Jetpack Compose Android app. |
+| Public-safe setup | The repo ships without private endpoints, tokens, vector indexes, APKs, or keystores. |
+| Scalable experiment path | Start with TMDB metadata ranking, then plug in a BERT vector service for semantic retrieval. |
 
 ## Project Snapshot
 
@@ -40,10 +53,10 @@ The public demo works without account registration or a database. Favorites are 
 | --- | --- |
 | Public demo core | TMDB metadata, favorite genres, rating/vote signals |
 | Advanced engine | BERT semantic similarity over movie plots |
-| User signal | Saved favorite movies, genres, vote counts, movie IDs |
+| User signal | Watched movies, ratings, genres, plot overviews, movie IDs |
 | Retrieval | TMDB trending, search, and discover endpoints |
 | Advanced retrieval | Precomputed movie vector index from TMDB metadata |
-| Ranking | Metadata ranking in demo, optional BERT/SVD/Genome for advanced mode |
+| Ranking | Metadata ranking in demo, rating-weighted BERT/SVD/Genome paths for advanced mode |
 | Backend | Flask API for TMDB proxying and static app serving |
 | Demo surface | Web UI for entering a TMDB key, collecting favorites, and showing recommendations |
 | Mobile app | Android Kotlin/Jetpack Compose app with local TMDB key storage, watched movies, ratings, notes, and optional AI gateway |
@@ -57,6 +70,10 @@ Recent maintenance work:
 
 - Reworked the app into a public demo mode with no registration required.
 - Added browser-local favorites and recommendations from user-provided TMDB API keys.
+- Added a public-safe Android app under [android/](android/README.md).
+- Added watched movies, 1.0-10.0 personal ratings, and short journal notes in the mobile app.
+- Moved the Android AI endpoint into Settings so public builds do not embed a lab gateway.
+- Added rating-weighted BERT recommendations: high scores boost similar movies, low scores reduce similar movies.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
 - Added a one-command recommender bootstrapper with selectable data sizes.
@@ -69,13 +86,12 @@ Recent maintenance work:
 - Ignored local secrets, SQLite databases, generated vectors, model files, IDE settings, and local agent settings.
 - Added contribution and security policy documents for future maintainers.
 - Added [ROADMAP.md](ROADMAP.md) and [CHANGELOG.md](CHANGELOG.md) for ongoing development.
-- Added an [Android app](android/README.md) with no embedded lab endpoint; users bring their own TMDB key and optional HTTPS BERT gateway.
 
 ## How The Recommendation Works
 
 ### 1. Public Demo: Build A Taste Profile
 
-In the public demo flow, users paste their own TMDB API key, browse trending movies, and save movies they like. LumiTrace stores those favorites in browser localStorage and builds a lightweight taste profile from:
+In the public demo flow, users paste their own TMDB API key, browse live TMDB movies, and save films that match their taste. LumiTrace stores those signals locally and builds a lightweight taste profile from:
 
 - favorite movie genres
 - vote averages
@@ -114,14 +130,22 @@ Generated vector files are intentionally ignored by Git because they can be larg
 
 ### 4. Advanced Mode: Build A User Taste Query
 
-When a user saves favorite movies, the backend collects recent favorites and sends the BERT service:
+When a user marks movies as watched, the client can send the BERT service:
 
-- favorite movie overviews
-- favorite movie IDs to exclude from results
+- watched movie overviews
+- watched movie IDs to exclude from results
 - genre IDs as taste constraints
-- vote counts as a popularity signal
+- personal ratings as preference weights
 
-The BERT service embeds the favorite overviews and uses them as the user's taste query.
+The BERT service embeds the watched movie overviews and uses them as the user's taste query. Ratings change the strength and direction of the signal:
+
+| User rating | Effect |
+| --- | --- |
+| 1-4 | Reduce similar genre/semantic matches |
+| 5 | Neutral taste signal |
+| 6-10 | Boost similar genre/semantic matches |
+
+This means a movie you loved and a movie you disliked do not teach the recommender the same thing.
 
 ### 5. Advanced Mode: Score Candidate Movies
 
@@ -132,6 +156,16 @@ bert_score = cosine_similarity(user_embedding, movie_embedding)
 ```
 
 For multiple favorites, LumiTrace keeps the strongest semantic match signal so a candidate can match one clear part of the user's taste.
+
+In rating-weighted mode, semantic matching is combined with metadata preferences so the model can explain recommendations in human terms:
+
+```text
+rating_delta = user_rating - 5
+genre_weight = max(0, 1 + rating_delta)
+semantic_weight = max(0.1, user_rating / 5)
+```
+
+High-rated watched movies pull similar candidates upward. Low-rated watched movies reduce the same region of the taste space.
 
 ### 6. Advanced Mode: Hybrid Ranking
 
@@ -177,6 +211,31 @@ Recommended Movies
 
 The default clone-and-run path uses only the Flask backend and browser-local favorites. The BERT service can still run separately for advanced semantic recommendation experiments.
 
+## Android App
+
+The Android app lives in [android/](android/README.md). It is a public-safe mobile client for the same recommendation idea:
+
+- paste and store a TMDB API key locally
+- browse TMDB movie feeds and search results
+- mark movies as watched
+- rate watched movies from 1.0 to 10.0
+- write short private notes
+- open an independent recommendation page
+- optionally connect a HTTPS BERT gateway from Settings
+
+The open-source Android build does not include a private AI endpoint. This is intentional. APKs can be reverse engineered, so long-lived gateway tokens and private model hosts should stay behind a server-side reverse proxy.
+
+```text
+Android app
+  |-- local TMDB key
+  |-- local watched movies
+  |-- local ratings and notes
+  |
+  | optional HTTPS gateway
+  v
+BERT recommendation service
+```
+
 ## Repository Structure
 
 ```text
@@ -211,6 +270,14 @@ The default clone-and-run path uses only the Flask backend and browser-local fav
 ```
 
 ## Quick Start
+
+Choose one surface:
+
+| Surface | Path | Use When |
+| --- | --- | --- |
+| Web demo | repository root | You want the fastest clone-and-run recommendation demo. |
+| Android app | [android/](android/README.md) | You want the mobile UI with watched movies, ratings, notes, and optional AI gateway. |
+| BERT service | [ai_engine/](ai_engine/) | You want semantic recommendation over generated movie vectors. |
 
 Install dependencies:
 
@@ -367,14 +434,19 @@ Ignored local files include:
 - `.venv/`
 - `.vscode/`
 - `.claude/`
+- `.agents/`
 - `scratch/`
 - `movie_vectors.json`
 - `final_boss_vectors.json`
 - model weights and array files such as `*.pt`, `*.pth`, `*.pkl`, `*.npy`, `*.npz`
+- Android `local.properties`
+- Android build outputs, APKs, AABs, and keystores
 
 API keys are loaded from `.env` and are not committed to the repository.
 
 For the public demo, the TMDB API key entered in the UI is stored only in browser localStorage and sent to the local Flask proxy as a request header.
+
+For the Android app, the TMDB key and optional AI endpoint are stored on the device. The public source does not embed a lab endpoint, fixed server IP, gateway token, or signing key.
 
 For contribution and security guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
