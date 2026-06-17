@@ -184,7 +184,7 @@ def load_vector_index(path: Path) -> bool:
         return False
 
     tensor = torch.tensor(vectors, dtype=torch.float32, device=DEVICE)
-    VECTOR_TENSOR = F.normalize(tensor, p=2, dim=1)
+    VECTOR_TENSOR = F.normalize(tensor, p=2, dim=1).contiguous()
     VECTOR_PATH = path
     MOVIES = movies
     print(f"Loaded {len(MOVIES):,} movie vectors from {path}")
@@ -280,6 +280,45 @@ def clamp_rating(value: Any) -> float:
     return max(1.0, min(10.0, rating))
 
 
+def ensure_2d_tensor(tensor: Any) -> Any:
+    if tensor.dim() == 1:
+        return tensor.unsqueeze(0)
+    return tensor
+
+
+def movie_quality_score(movie: dict[str, Any]) -> float:
+    vote_average = max(0.0, min(10.0, float(movie.get("vote_average") or 0))) / 10.0
+    vote_count = max(0, int(movie.get("vote_count") or 0))
+    popularity = min(1.0, math.log1p(vote_count) / math.log1p(10000))
+    return vote_average * 0.7 + popularity * 0.3
+
+
+def fallback_recommendations(top_k: int, exclude_ids: set[int]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for movie in MOVIES:
+        if movie["id"] in exclude_ids:
+            continue
+        if not movie.get("poster_path"):
+            continue
+        if movie.get("vote_count", 0) < 20:
+            continue
+        score = movie_quality_score(movie)
+        candidates.append(
+            {
+                **movie,
+                "semantic_score": 0.0,
+                "adjusted_semantic_score": round(score, 4),
+                "negative_penalty": 0.0,
+                "penalty_multiplier": 1.0,
+                "metadata_score": round(score, 4),
+                "score": round(score, 4),
+                "fallback_reason": "metadata_cold_start",
+            }
+        )
+    candidates.sort(key=lambda m: m["score"], reverse=True)
+    return candidates[:top_k]
+
+
 @app.route("/status", methods=["GET"])
 def status():
     return jsonify(
@@ -324,22 +363,27 @@ def search():
 
     if VECTOR_TENSOR is None:
         return jsonify({"error": "Vector index is not loaded", "results": []}), 503
+    if not MOVIES:
+        return jsonify({"error": "Vector index is empty", "results": []}), 503
+    if VECTOR_TENSOR.dim() != 2:
+        return jsonify({"error": "Vector index must be a 2D tensor", "results": []}), 500
 
     data = request.get_json(silent=True) or {}
+    try:
+        top_k = max(1, min(50, int(data.get("top_k") or 10)))
+    except (TypeError, ValueError):
+        top_k = 10
+    exclude_ids = {int(value) for value in data.get("exclude_ids", []) if str(value).isdigit()}
+    user_genre_ids = data.get("user_genre_ids", [])
+    if not isinstance(user_genre_ids, list):
+        user_genre_ids = []
+
     overviews = data.get("overviews")
     if not overviews and data.get("text"):
         overviews = [data.get("text")]
     if not isinstance(overviews, list):
         overviews = []
     texts = [str(text).strip() for text in overviews if str(text).strip()]
-    if not texts:
-        return jsonify({"error": "overviews or text is required", "results": []}), 400
-
-    top_k = max(1, min(50, int(data.get("top_k") or 10)))
-    exclude_ids = {int(value) for value in data.get("exclude_ids", []) if str(value).isdigit()}
-    user_genre_ids = data.get("user_genre_ids", [])
-    if not isinstance(user_genre_ids, list):
-        user_genre_ids = []
 
     # Parse user ratings (1.0-10.0), default to 5 for missing/invalid.
     raw_ratings = data.get("user_vote_counts", [])
@@ -355,57 +399,69 @@ def search():
     # Build rating-weighted genre profile
     genre_weights = build_genre_weights(user_genre_ids, user_ratings)
 
+    if not texts:
+        return jsonify({"results": fallback_recommendations(top_k, exclude_ids), "fallback": "metadata_cold_start"})
+
     # Build rating-weighted user embeddings. Low-rated movies are not
     # subtracted as negative vectors; they are used later as a post-ranking
     # penalty against candidates that are too similar to disliked items.
-    raw_embeddings = embed_texts(texts)  # shape: (n_texts, dim)
+    raw_embeddings = ensure_2d_tensor(embed_texts(texts))  # shape: (n_texts, dim)
+    if raw_embeddings.dim() != 2 or raw_embeddings.size(1) != VECTOR_TENSOR.size(1):
+        return jsonify({"error": "Embedding dimension does not match vector index", "results": []}), 500
     semantic_ratings = user_ratings[:len(texts)]
     positive_indices = [index for index, rating in enumerate(semantic_ratings) if rating >= 5.0]
     negative_indices = [index for index, rating in enumerate(semantic_ratings) if rating < 5.0]
 
     if positive_indices:
-        selected_embeddings = raw_embeddings[positive_indices]
+        selected_embeddings = ensure_2d_tensor(raw_embeddings[positive_indices])
         weights = torch.tensor(
             [max(0.1, semantic_ratings[index] / 5.0) for index in positive_indices],
             dtype=torch.float32,
             device=DEVICE,
         )
+        weighted = selected_embeddings * weights.unsqueeze(1)
+        user_embedding = ensure_2d_tensor(F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1))
+        semantic_scores_tensor = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1)
+        shortlist_scores = semantic_scores_tensor
     else:
-        selected_embeddings = raw_embeddings
-        weights = torch.ones(len(texts), dtype=torch.float32, device=DEVICE) * 0.1
-    weighted = selected_embeddings * weights.unsqueeze(1)
-    user_embedding = F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1)
+        semantic_scores_tensor = torch.zeros(len(MOVIES), dtype=torch.float32, device=DEVICE)
+        shortlist_scores = torch.tensor(
+            [movie_quality_score(movie) for movie in MOVIES],
+            dtype=torch.float32,
+            device=DEVICE,
+        )
 
-    # Semantic scores: one tensor matmul against the pre-normalized index.
-    semantic_scores_tensor = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1)
+    # First shortlist from the positive taste signal or metadata fallback.
+    pool_size = min(len(MOVIES), max(top_k * 50, 300))
+    _, top_indices_tensor = torch.topk(shortlist_scores, k=pool_size)
+    top_indices = top_indices_tensor.detach().cpu().tolist()
 
-    negative_penalty = torch.zeros_like(semantic_scores_tensor)
+    shortlist_semantic_scores = semantic_scores_tensor[top_indices_tensor]
+    shortlist_base_scores = shortlist_scores[top_indices_tensor]
+    shortlist_penalty = torch.zeros_like(shortlist_base_scores)
     if negative_indices:
-        negative_embeddings = raw_embeddings[negative_indices]
-        negative_similarity = torch.mm(VECTOR_TENSOR, negative_embeddings.T)
+        negative_embeddings = ensure_2d_tensor(raw_embeddings[negative_indices])
+        shortlist_vectors = VECTOR_TENSOR[top_indices_tensor]
+        negative_similarity = torch.mm(shortlist_vectors, negative_embeddings.T)
         dislike_strength = torch.tensor(
             [(5.0 - semantic_ratings[index]) / 4.0 for index in negative_indices],
             dtype=torch.float32,
             device=DEVICE,
         ).clamp(0.0, 1.0)
         penalty_curve = ((negative_similarity - 0.55) / 0.45).clamp(0.0, 1.0)
-        negative_penalty = (penalty_curve * dislike_strength.unsqueeze(0)).max(dim=1).values
+        shortlist_penalty = (penalty_curve * dislike_strength.unsqueeze(0)).max(dim=1).values
 
-    penalty_multiplier = 1.0 - (negative_penalty * 0.8)
-    adjusted_semantic_scores = semantic_scores_tensor * penalty_multiplier
+    shortlist_multiplier = 1.0 - (shortlist_penalty * 0.8)
+    shortlist_adjusted_scores = shortlist_base_scores * shortlist_multiplier
 
-    pool_size = min(len(MOVIES), max(top_k * 20, 100))
-    _, top_indices_tensor = torch.topk(adjusted_semantic_scores, k=pool_size)
-    top_indices = top_indices_tensor.detach().cpu().tolist()
-
-    semantic_scores = semantic_scores_tensor.detach().cpu().tolist()
-    adjusted_scores = adjusted_semantic_scores.detach().cpu().tolist()
-    penalties = negative_penalty.detach().cpu().tolist()
-    multipliers = penalty_multiplier.detach().cpu().tolist()
+    semantic_scores = shortlist_semantic_scores.detach().cpu().tolist()
+    adjusted_scores = shortlist_adjusted_scores.detach().cpu().tolist()
+    penalties = shortlist_penalty.detach().cpu().tolist()
+    multipliers = shortlist_multiplier.detach().cpu().tolist()
 
     candidates: list[dict[str, Any]] = []
 
-    def add_candidate(index: int) -> None:
+    def add_candidate(index: int, shortlist_position: int) -> None:
         movie = MOVIES[index]
         if movie["id"] in exclude_ids:
             return
@@ -415,27 +471,21 @@ def search():
             return
 
         meta_score = score_metadata(movie, genre_weights)
-        final = float(adjusted_scores[index]) + meta_score
+        final = float(adjusted_scores[shortlist_position]) + meta_score
         candidates.append(
             {
                 **movie,
-                "semantic_score": round(float(semantic_scores[index]), 4),
-                "adjusted_semantic_score": round(float(adjusted_scores[index]), 4),
-                "negative_penalty": round(float(penalties[index]), 4),
-                "penalty_multiplier": round(float(multipliers[index]), 4),
+                "semantic_score": round(float(semantic_scores[shortlist_position]), 4),
+                "adjusted_semantic_score": round(float(adjusted_scores[shortlist_position]), 4),
+                "negative_penalty": round(float(penalties[shortlist_position]), 4),
+                "penalty_multiplier": round(float(multipliers[shortlist_position]), 4),
                 "metadata_score": round(meta_score, 4),
                 "score": round(final, 4),
             }
         )
 
-    for movie_index in top_indices:
-        add_candidate(movie_index)
-
-    if len(candidates) < top_k:
-        seen = set(top_indices)
-        for movie_index in range(len(MOVIES)):
-            if movie_index not in seen:
-                add_candidate(movie_index)
+    for position, movie_index in enumerate(top_indices):
+        add_candidate(movie_index, position)
 
     candidates.sort(key=lambda m: m["score"], reverse=True)
     return jsonify({"results": candidates[:top_k]})

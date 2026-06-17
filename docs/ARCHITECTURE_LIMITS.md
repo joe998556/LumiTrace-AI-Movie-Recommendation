@@ -41,6 +41,12 @@ top_scores, top_indices = torch.topk(adjusted_semantic_scores, k=pool_size)
 
 This is a linear scan over the local vector index, but it uses optimized tensor kernels rather than Python loops. It is acceptable for single-user local/lab experiments at the current presets, especially on CUDA, but it is not the right architecture for a high-concurrency public service.
 
+Defensive implementation details:
+
+- vectors are normalized and made contiguous when the index loads
+- user embeddings are forced to 2D before matrix multiplication
+- embedding/index dimension mismatches return an explicit error
+
 If the corpus grows beyond the current local presets or the service needs multiple concurrent users, the next retrieval layer should be an ANN/vector index such as:
 
 - Faiss
@@ -56,7 +62,7 @@ Current behavior:
 
 - high ratings increase the semantic contribution of that watched movie
 - low ratings are excluded from the positive taste embedding
-- low ratings apply a post-ranking penalty to candidates that are very similar to disliked movies
+- low ratings apply a shortlist-only post-ranking penalty to candidates that are very similar to disliked movies
 - genre weights are clamped to `>= 0`
 
 The service does not currently subtract disliked movie embeddings from the taste vector. This avoids the common vector-space mistake where a negative embedding is interpreted as an "opposite movie" even though embedding spaces usually do not work that way.
@@ -64,6 +70,7 @@ The service does not currently subtract disliked movie embeddings from the taste
 Penalty formula:
 
 ```text
+shortlist = topk(positive_or_baseline_scores)
 negative_similarity = cosine_similarity(candidate, disliked_movie)
 dislike_strength = (5 - rating) / 4
 negative_penalty = clamp((negative_similarity - 0.55) / 0.45, 0, 1) * dislike_strength
@@ -71,7 +78,13 @@ penalty_multiplier = 1 - 0.8 * negative_penalty
 adjusted_semantic_score = bert_score * penalty_multiplier
 ```
 
-This also means low ratings are conservative: they discount very similar candidates without assuming there is a meaningful "opposite direction" in embedding space.
+This also means low ratings are conservative: they discount very similar candidates without assuming there is a meaningful "opposite direction" in embedding space. The penalty is computed only for the shortlist, keeping the expensive negative-feedback path bounded.
+
+Edge cases:
+
+- no overviews/text: metadata quality fallback
+- only low-rated movies: metadata shortlist plus negative penalty
+- invalid `top_k`: default to `10`
 
 ## SVD And Genome Signals
 

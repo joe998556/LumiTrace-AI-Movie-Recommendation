@@ -76,6 +76,7 @@ Recent maintenance work:
 - Added rating-weighted BERT recommendations: high scores boost similar movies, low scores reduce similar movies.
 - Clarified current architecture limits: browser `localStorage` stores user taste only, while BERT vectors live in the service process.
 - Added a low-rating post-ranking penalty so disliked movies reduce similar candidates without using negative vector subtraction.
+- Hardened BERT search edge cases: contiguous vector tensors, 2D embedding guards, shortlist-only negative penalties, and metadata fallback for cold-start/all-negative taste input.
 - Added a Windows AI quickstart BAT that asks for a TMDB key, lets users choose vector size, detects the LAN IP, and prints the Android endpoint.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
@@ -167,6 +168,11 @@ top_scores, top_indices = torch.topk(adjusted_semantic_scores, k=pool_size)
 
 `movie_vector_tensor` is pre-normalized when the BERT service starts, so this matrix multiplication acts as batched cosine similarity. At the current 30k local index scale, this keeps retrieval lightweight without introducing a heavier vector database. A public high-concurrency service should still move to an ANN/vector index such as Faiss, HNSWLib, SQLite vector extensions, or a managed vector database.
 
+The service also applies two defensive tensor safeguards:
+
+- vector indexes are normalized and stored as contiguous 2D tensors at startup
+- user embeddings are forced to 2D before matrix multiplication, so single-vector inputs do not break `torch.mm`
+
 In rating-weighted mode, semantic matching is combined with metadata preferences so the model can explain recommendations in human terms:
 
 ```text
@@ -177,16 +183,19 @@ semantic_weight = max(0.1, user_rating / 5)
 
 High-rated watched movies pull similar candidates upward. Low-rated watched movies reduce the same region of the taste space.
 
-Low ratings are applied as a post-ranking penalty rather than negative vector subtraction:
+Low ratings are applied as a shortlist re-ranking penalty rather than negative vector subtraction:
 
 ```text
+shortlist = topk(positive_or_baseline_scores)
 negative_similarity = cosine_similarity(candidate, disliked_movie)
 negative_penalty = clamp((negative_similarity - 0.55) / 0.45, 0, 1) * dislike_strength
 penalty_multiplier = 1 - 0.8 * negative_penalty
 adjusted_semantic_score = bert_score * penalty_multiplier
 ```
 
-This keeps disliked movies from pointing the taste vector into noisy "opposite embedding" space.
+This keeps disliked movies from pointing the taste vector into noisy "opposite embedding" space. The penalty is computed only for the shortlist rather than the full index, so negative feedback stays cheap even when the local index is large.
+
+If there are no positive taste inputs yet, LumiTrace falls back to a metadata quality shortlist and still applies low-rating penalties when disliked movies are available.
 
 ### 6. Advanced Mode: Hybrid Ranking
 

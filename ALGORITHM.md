@@ -114,15 +114,22 @@ top_scores, top_indices = torch.topk(adjusted_semantic_scores, k=pool_size)
 
 This is still a linear scan over the loaded tensor, but it is vectorized and runs through optimized CPU/GPU tensor kernels rather than Python loops. It is reasonable for local single-user experiments at the included presets, especially on CUDA. It is not a production-scale high-concurrency retrieval layer. Larger corpora should move to Faiss, HNSWLib, SQLite vector extensions, or another ANN/vector index.
 
+Defensive tensor handling:
+
+- `movie_vector_tensor` is normalized and made contiguous at index load time
+- `user_embedding` is forced to 2D before `torch.mm`
+- if the embedding dimension does not match the loaded index dimension, the service returns a clear error instead of failing inside matrix multiplication
+
 If multiple watched movies are provided, the service uses a rating-weighted user embedding. Ratings control contribution strength, not vector direction.
 
 ```text
 semantic_weight = max(0.1, rating / 5.0)
 ```
 
-Low-rated movies are not included as negative vectors in the taste embedding. Instead, they are used as a post-ranking penalty:
+Low-rated movies are not included as negative vectors in the taste embedding. Instead, they are used as a shortlist re-ranking penalty:
 
 ```text
+shortlist = topk(positive_or_baseline_scores)
 negative_similarity = cosine_similarity(candidate, disliked_movie)
 dislike_strength = (5 - rating) / 4
 negative_penalty = clamp((negative_similarity - 0.55) / 0.45, 0, 1) * dislike_strength
@@ -130,7 +137,12 @@ penalty_multiplier = 1 - 0.8 * negative_penalty
 adjusted_semantic_score = bert_score * penalty_multiplier
 ```
 
-This means a candidate that is very close to a movie the user rated 1-4 is discounted after the normal semantic match is computed. The service does not subtract disliked movie embeddings, because negative embedding vectors are not reliable "opposite taste" representations.
+This means a candidate that is very close to a movie the user rated 1-4 is discounted after the normal semantic match is computed. The penalty is calculated only on the shortlist, not the full movie index. The service does not subtract disliked movie embeddings, because negative embedding vectors are not reliable "opposite taste" representations.
+
+Cold-start and all-negative cases are handled explicitly:
+
+- no taste text: return a metadata quality fallback from the local index
+- only low-rated movies: build a metadata shortlist, then apply the low-rating penalty
 
 ## 4. Hybrid Ranking
 
