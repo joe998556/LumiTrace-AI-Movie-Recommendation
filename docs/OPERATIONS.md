@@ -15,6 +15,8 @@ The public demo does not require registration, a database, or a generated vector
 
 When `REMOTE_SEARCH_URL` is configured, the web demo first asks the BERT semantic service for recommendations. If the service is not configured or unavailable, the UI falls back to TMDB metadata ranking.
 
+Generated vector indexes are service-side files. They are not loaded into browser `localStorage`.
+
 ## Local Startup
 
 1. Install dependencies.
@@ -107,7 +109,13 @@ Non-interactive example:
 python tools/bootstrap_recommender.py --preset small --tmdb-key YOUR_TMDB_KEY
 ```
 
-Windows users can run:
+Windows APK users should prefer the guided setup:
+
+```text
+LumiTrace-Windows-AI-Setup.bat
+```
+
+Developer-only vector setup still supports:
 
 ```text
 setup_recommender.bat
@@ -185,6 +193,7 @@ Check:
 - Use `--device cuda` on a CUDA-capable GPU machine.
 - Keep `movie_vectors.json` on a fast local disk.
 - Use the CPU backend with a remote GPU BERT service if the machines are on the same LAN.
+- The current service uses a linear Torch tensor similarity scan. If you need larger indexes or concurrent public traffic, move retrieval to Faiss, HNSWLib, SQLite vector extensions, or another ANN/vector index.
 
 ### Streaming links are incomplete
 

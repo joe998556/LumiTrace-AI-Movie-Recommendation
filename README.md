@@ -14,7 +14,7 @@
 [![Status](https://img.shields.io/badge/Status-Active%20Prototype-22C55E?style=for-the-badge)](CHANGELOG.md)
 [![CI](https://img.shields.io/github/actions/workflow/status/joe998556/LumiTrace-AI-Movie-Recommendation/ci.yml?branch=main&label=CI&style=for-the-badge)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
 
-[Algorithm](ALGORITHM.md) | [Android](android/README.md) | [Windows AI Quickstart](docs/WINDOWS_AI_QUICKSTART.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
+[Algorithm](ALGORITHM.md) | [Limits](docs/ARCHITECTURE_LIMITS.md) | [Android](android/README.md) | [Windows AI Quickstart](docs/WINDOWS_AI_QUICKSTART.md) | [Operations](docs/OPERATIONS.md) | [Roadmap](ROADMAP.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [Setup](#quick-start)
 
 </div>
 
@@ -55,8 +55,8 @@ The public flow works without registration or a hosted user database. User taste
 | Advanced engine | BERT semantic similarity over movie plots |
 | User signal | Watched movies, ratings, genres, plot overviews, movie IDs |
 | Retrieval | TMDB trending, search, and discover endpoints |
-| Advanced retrieval | Precomputed movie vector index from TMDB metadata |
-| Ranking | Metadata ranking in demo, rating-weighted BERT/SVD/Genome paths for advanced mode |
+| Advanced retrieval | Precomputed movie vector index loaded by the optional BERT service |
+| Ranking | Metadata ranking in demo, rating-weighted BERT service in advanced mode; SVD/Genome are offline experimental item-vector builders |
 | Backend | Flask API for TMDB proxying and static app serving |
 | Demo surface | Web UI for entering a TMDB key, collecting favorites, and showing recommendations |
 | Mobile app | Android Kotlin/Jetpack Compose app with local TMDB key storage, watched movies, ratings, notes, and optional AI gateway |
@@ -74,6 +74,7 @@ Recent maintenance work:
 - Added watched movies, 1.0-10.0 personal ratings, and short journal notes in the mobile app.
 - Moved the Android AI endpoint into Settings so public builds do not embed a lab gateway.
 - Added rating-weighted BERT recommendations: high scores boost similar movies, low scores reduce similar movies.
+- Clarified current architecture limits: browser `localStorage` stores user taste only, while BERT vectors live in the service process.
 - Added a Windows AI quickstart BAT that asks for a TMDB key, lets users choose vector size, detects the LAN IP, and prints the Android endpoint.
 - Simplified the backend to static serving, TMDB proxying, optional streaming proxying, and health checks.
 - Added an optional semantic recommendation proxy so the web demo can use the BERT service when configured.
@@ -127,7 +128,7 @@ The generated semantic index is saved as:
 movie_vectors.json
 ```
 
-Generated vector files are intentionally ignored by Git because they can be large and can be regenerated.
+Generated vector files are intentionally ignored by Git because they can be large and can be regenerated. They are not stored in browser `localStorage`; the optional BERT service loads them server-side as a normalized Torch tensor.
 
 ### 4. Advanced Mode: Build A User Taste Query
 
@@ -138,25 +139,25 @@ When a user marks movies as watched, the client can send the BERT service:
 - genre IDs as taste constraints
 - personal ratings as preference weights
 
-The BERT service embeds the watched movie overviews and uses them as the user's taste query. Ratings change the strength and direction of the signal:
+The BERT service embeds the watched movie overviews and uses them as the user's taste query. Ratings change the strength of the signal:
 
 | User rating | Effect |
 | --- | --- |
-| 1-4 | Reduce similar genre/semantic matches |
+| 1-4 | Reduce the movie's contribution and clamp related genre weight |
 | 5 | Neutral taste signal |
 | 6-10 | Boost similar genre/semantic matches |
 
-This means a movie you loved and a movie you disliked do not teach the recommender the same thing.
+This means a movie you loved and a movie you disliked do not teach the recommender the same thing. The service does not subtract disliked movie vectors from the taste embedding; low ratings are conservative negative feedback rather than a claim that embedding-space "opposites" are meaningful.
 
 ### 5. Advanced Mode: Score Candidate Movies
 
-The service compares the user's taste query with every precomputed movie vector.
+The service compares the user's taste query with every precomputed movie vector in the local BERT service.
 
 ```text
 bert_score = cosine_similarity(user_embedding, movie_embedding)
 ```
 
-For multiple favorites, LumiTrace keeps the strongest semantic match signal so a candidate can match one clear part of the user's taste.
+The current implementation uses a linear Torch tensor similarity scan over the loaded index. This is practical for local single-user experiments at the included presets, but a public high-concurrency service should use an ANN/vector index such as Faiss, HNSWLib, SQLite vector extensions, or a managed vector database.
 
 In rating-weighted mode, semantic matching is combined with metadata preferences so the model can explain recommendations in human terms:
 
@@ -170,7 +171,7 @@ High-rated watched movies pull similar candidates upward. Low-rated watched movi
 
 ### 6. Advanced Mode: Hybrid Ranking
 
-The advanced engine can blend three signals:
+The optional `final_boss_engine.py` experiment can blend three offline item-vector signals:
 
 ```text
 final_score =
@@ -182,12 +183,13 @@ final_score =
 | Signal | Meaning |
 | --- | --- |
 | BERT | Plot meaning, theme, atmosphere, story similarity |
-| SVD | Collaborative filtering signal from rating patterns |
+| SVD | Offline item vectors trained from external MovieLens-style rating patterns |
 | Genome | MovieLens-style tag and style profile |
 
-If SVD or Genome vectors are missing, the service falls back to the available signals and normalizes the weights.
+If SVD or Genome vectors are missing, the service falls back to the available signals and normalizes the weights. The public and Android flows do not train online collaborative filtering from a private single-user history.
 
 For the full breakdown, see [ALGORITHM.md](ALGORITHM.md).
+For current performance and production limits, see [docs/ARCHITECTURE_LIMITS.md](docs/ARCHITECTURE_LIMITS.md).
 
 ## Architecture
 
@@ -211,6 +213,8 @@ Recommended Movies
 ```
 
 The default clone-and-run path uses only the Flask backend and browser-local favorites. The BERT service can still run separately for advanced semantic recommendation experiments.
+
+Browser storage is intentionally limited to lightweight user settings and movie records. Large vector indexes stay in the BERT service process, not in `localStorage`.
 
 ## Android App
 
@@ -262,6 +266,7 @@ BERT recommendation service
 |-- LumiTrace-Windows-AI-Setup.bat # Windows guided BERT setup for APK users
 |-- setup_recommender.bat          # Windows one-click recommender setup
 |-- docs/
+|   |-- ARCHITECTURE_LIMITS.md     # Current search, storage, and production limits
 |   |-- WINDOWS_AI_QUICKSTART.md   # Non-technical APK + local BERT setup guide
 |   `-- OPERATIONS.md              # Local operations runbook
 |-- ALGORITHM.md                   # Recommendation algorithm explanation
@@ -509,7 +514,7 @@ Next planned improvements:
 - recommendation explanations
 - small sample vector index for smoke tests
 - vector search optimization
-- optional vector database integration for larger local indexes
+- optional ANN/vector index integration for larger local indexes
 
 See [ROADMAP.md](ROADMAP.md) for the full plan.
 

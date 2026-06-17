@@ -1,6 +1,6 @@
 # Recommendation Algorithm
 
-LumiTrace is organized around a recommendation engine rather than a traditional movie browsing website. The public demo collects user preference signals in the browser and uses TMDB metadata for a lightweight recommendation flow. The advanced mode documents a BERT vector pipeline and ranking service for deeper semantic experiments.
+LumiTrace is organized around a recommendation engine rather than a traditional movie browsing website. The public demo collects user preference signals in the browser and uses TMDB metadata for a lightweight recommendation flow. The advanced mode documents a service-side BERT vector pipeline for deeper semantic experiments.
 
 ## 0. Public Demo Recommendation Flow
 
@@ -12,7 +12,9 @@ Public demo flow:
 TMDB API key -> trending/search results -> browser-local favorites -> taste profile -> TMDB discover -> local ranking
 ```
 
-When a user saves favorite movies, LumiTrace stores those movie records in browser `localStorage`. The recommendation button builds a taste profile from:
+When a user saves favorite movies, LumiTrace stores those movie records in browser `localStorage`. This browser storage is only for lightweight user state. It does not store BERT vectors or generated model indexes.
+
+The recommendation button builds a taste profile from:
 
 - favorite movie genre IDs
 - favorite movie vote averages
@@ -62,6 +64,8 @@ movie_vectors.json
 
 This file acts as the semantic movie index. It is ignored by Git because it can become large and can be regenerated from the scripts.
 
+The index is loaded by `ai_engine/bert_service.py`, not by the browser. At startup, the service normalizes vectors into a Torch tensor so search can use tensor operations rather than repeatedly parsing JSON.
+
 The bootstrapper supports selectable data sizes:
 
 ```text
@@ -95,11 +99,25 @@ movie_embedding = precomputed BERT(movie_overview)
 bert_score = cosine_similarity(user_embedding, movie_embedding)
 ```
 
-If multiple favorite movies are provided, the service keeps the strongest match signal for each candidate. This lets a recommendation match one strong part of the user's taste rather than averaging everything into a blurry profile.
+Current implementation detail:
+
+```text
+semantic_scores = movie_vector_tensor @ user_embedding
+```
+
+This is a linear scan over the loaded tensor. It is reasonable for local single-user experiments at the included presets, especially on CUDA, but it is not a production-scale high-concurrency retrieval layer. Larger corpora should move to Faiss, HNSWLib, SQLite vector extensions, or another ANN/vector index.
+
+If multiple watched movies are provided, the service uses a rating-weighted user embedding. Ratings control contribution strength, not vector direction.
+
+```text
+semantic_weight = max(0.1, rating / 5.0)
+```
+
+Low-rated movies therefore contribute less to the semantic query. The service does not subtract disliked movie embeddings, because negative embedding vectors are not reliable "opposite taste" representations.
 
 ## 4. Hybrid Ranking
 
-The advanced `Final Boss Engine` can combine three recommendation signals:
+The optional `Final Boss Engine` can combine three offline item-vector signals:
 
 ```text
 final_score =
@@ -111,10 +129,12 @@ final_score =
 Signal meanings:
 
 - `BERT`: plot meaning, theme, and semantic similarity from movie descriptions.
-- `SVD`: collaborative filtering signal from MovieLens-style rating patterns.
+- `SVD`: offline item vectors trained from MovieLens-style rating patterns.
 - `Genome`: style and tag profile from MovieLens Genome features.
 
 If SVD or Genome vectors are unavailable, the service falls back to the available signals and normalizes the weights.
+
+This is not online personalized collaborative filtering. The public and Android flows do not maintain a central user-item matrix, so they cannot train fresh SVD from private single-user local history. SVD/Genome are optional experiments built from external datasets.
 
 ## 5. Filtering And Practical Ranking Rules
 
@@ -158,4 +178,6 @@ Planned improvements:
 - add conversational preference input
 - evaluate recommendation quality with hand-labeled examples
 - add a small demo vector index for easier local testing
-- move large vector retrieval to a dedicated vector database if the corpus grows
+- move large vector retrieval to a dedicated ANN/vector index if the corpus grows
+
+For engineering limits and production hardening notes, see [docs/ARCHITECTURE_LIMITS.md](docs/ARCHITECTURE_LIMITS.md).

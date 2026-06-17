@@ -9,6 +9,9 @@ All notable project maintenance updates are tracked here.
 - Updated Android documentation for private LAN endpoints such as `http://192.168.x.x:5001/search` and public HTTPS gateways.
 - Updated the Android client to allow private LAN HTTP BERT endpoints while keeping public gateway guidance on HTTPS.
 - Added Android v1.0.1 release notes for the local AI setup flow.
+- Added architecture limit notes that separate browser-local state from service-side vector indexes.
+- Clarified that SVD/Genome support is an offline experiment, not online collaborative filtering over private local user history.
+- Clarified that current BERT retrieval uses a linear Torch tensor scan and should move to ANN/vector indexing for larger or public workloads.
 
 ## 2026-06-15
 
