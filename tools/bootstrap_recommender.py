@@ -104,6 +104,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=16, help="Embedding batch size.")
     parser.add_argument("--sleep", type=float, default=0.12, help="Delay between TMDB API requests.")
     parser.add_argument("--device", default="auto", help="auto, cpu, cuda, or cuda:0.")
+    parser.add_argument(
+        "--text-mode",
+        choices=("rich", "overview"),
+        default="rich",
+        help="Embedding text mode. Use overview for baseline experiments and rich for LumiTrace.",
+    )
     parser.add_argument("--overwrite", action="store_true", help="Rebuild vectors even if output already exists.")
     return parser.parse_args()
 
@@ -317,7 +323,10 @@ def download_movies(key: str, limit: int, language: str, sleep_seconds: float) -
     return list(movies.values())[:limit]
 
 
-def movie_text(movie: dict[str, Any]) -> str:
+def movie_text(movie: dict[str, Any], mode: str = "rich") -> str:
+    if mode == "overview":
+        return str(movie.get("overview") or "")
+
     genre_ids = [int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()]
     genre_names = [GENRE_NAMES.get(genre_id, str(genre_id)) for genre_id in genre_ids]
     release_year = str(movie.get("release_date") or "")[:4]
@@ -379,6 +388,7 @@ def embed_movies(
     model_name: str,
     device: torch.device,
     batch_size: int,
+    text_mode: str,
 ) -> list[dict[str, Any]]:
     try:
         import torch
@@ -392,7 +402,7 @@ def embed_movies(
 
     for movie in movies:
         existing_item = existing.get(movie["id"])
-        if existing_item:
+        if existing_item and existing_item.get("embedding_text_mode") == text_mode:
             vectors.append(existing_item)
         else:
             pending.append(movie)
@@ -403,6 +413,7 @@ def embed_movies(
 
     print(f"Loading embedding model: {model_name}")
     print(f"Device: {device}")
+    print(f"Text mode: {text_mode}")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name).to(device)
     model.eval()
@@ -410,7 +421,7 @@ def embed_movies(
     print(f"Embedding {len(pending):,} new movies...")
     for start in range(0, len(pending), batch_size):
         batch = pending[start : start + batch_size]
-        texts = [movie_text(movie) for movie in batch]
+        texts = [movie_text(movie, mode=text_mode) for movie in batch]
         encoded = tokenizer(
             texts,
             return_tensors="pt",
@@ -429,7 +440,7 @@ def embed_movies(
         embeddings = F.normalize(pooled, p=2, dim=1).detach().cpu().tolist()
 
         for movie, vector in zip(batch, embeddings):
-            vectors.append({**movie, "vector": vector})
+            vectors.append({**movie, "embedding_text_mode": text_mode, "vector": vector})
 
         completed = min(start + len(batch), len(pending))
         total_completed = len(vectors)
@@ -459,6 +470,7 @@ def main() -> int:
     print(f"Preset: {preset.name} ({preset.note})")
     print(f"Target movies: {limit:,}")
     print(f"Output: {output}")
+    print(f"Text mode: {args.text_mode}")
     print("More movies usually improve coverage, but downloads and embeddings take longer.")
 
     movies = download_movies(key, limit, args.language, args.sleep)
@@ -472,6 +484,7 @@ def main() -> int:
         model_name=args.model,
         device=device,
         batch_size=max(1, args.batch_size),
+        text_mode=args.text_mode,
     )
     save_vectors(output, vectors)
 
