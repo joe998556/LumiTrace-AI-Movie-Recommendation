@@ -66,6 +66,28 @@ GENRE_IDS = [
     37,
 ]
 
+GENRE_NAMES = {
+    28: "Action",
+    12: "Adventure",
+    16: "Animation",
+    35: "Comedy",
+    80: "Crime",
+    99: "Documentary",
+    18: "Drama",
+    10751: "Family",
+    14: "Fantasy",
+    36: "History",
+    27: "Horror",
+    10402: "Music",
+    9648: "Mystery",
+    10749: "Romance",
+    878: "Science Fiction",
+    10770: "TV Movie",
+    53: "Thriller",
+    10752: "War",
+    37: "Western",
+}
+
 LANGUAGES = ["en", "zh", "ja", "ko", "fr", "de", "es", "it", "hi", "th"]
 
 
@@ -212,6 +234,26 @@ def fetch_page(
     return response.json().get("results", [])
 
 
+def clean_string_list(values: Any, limit: int = 5) -> list[str]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[str] = []
+    for value in values[:limit]:
+        if isinstance(value, dict):
+            text = str(value.get("name") or value.get("title") or "").strip()
+        else:
+            text = str(value or "").strip()
+        if text and text not in cleaned:
+            cleaned.append(text)
+    return cleaned
+
+
+def clean_collection_name(value: Any) -> str:
+    if isinstance(value, dict):
+        return str(value.get("name") or "").strip()
+    return str(value or "").strip()
+
+
 def clean_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
     overview = str(movie.get("overview") or "").strip()
     poster_path = movie.get("poster_path")
@@ -221,7 +263,7 @@ def clean_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
         movie_id = int(movie.get("id"))
     except (TypeError, ValueError):
         return None
-    return {
+    cleaned = {
         "id": movie_id,
         "title": movie.get("title") or movie.get("name") or "Untitled",
         "overview": overview,
@@ -232,6 +274,16 @@ def clean_movie(movie: dict[str, Any]) -> dict[str, Any] | None:
         "vote_count": int(movie.get("vote_count") or 0),
         "genre_ids": movie.get("genre_ids") or [],
     }
+    director = str(movie.get("director") or "").strip()
+    cast = clean_string_list(movie.get("cast") or movie.get("actors") or [])
+    collection = clean_collection_name(movie.get("collection_name") or movie.get("belongs_to_collection"))
+    if director:
+        cleaned["director"] = director
+    if cast:
+        cleaned["cast"] = cast
+    if collection:
+        cleaned["collection_name"] = collection
+    return cleaned
 
 
 def download_movies(key: str, limit: int, language: str, sleep_seconds: float) -> list[dict[str, Any]]:
@@ -266,14 +318,28 @@ def download_movies(key: str, limit: int, language: str, sleep_seconds: float) -
 
 
 def movie_text(movie: dict[str, Any]) -> str:
+    genre_ids = [int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()]
+    genre_names = [GENRE_NAMES.get(genre_id, str(genre_id)) for genre_id in genre_ids]
+    release_year = str(movie.get("release_date") or "")[:4]
+    director = str(movie.get("director") or "").strip()
+    cast = clean_string_list(movie.get("cast") or [], limit=4)
+    collection = str(movie.get("collection_name") or "").strip()
+    parts = [
+        f"Title: {movie['title']}",
+        f"Genres: {', '.join(genre_names) if genre_names else 'unknown'}",
+        f"Original language: {movie.get('original_language') or 'unknown'}",
+        f"Release year: {release_year if release_year.isdigit() else 'unknown'}",
+        f"Audience rating: {movie['vote_average']}",
+    ]
+    if director:
+        parts.append(f"Director: {director}")
+    if cast:
+        parts.append(f"Cast: {', '.join(cast)}")
+    if collection:
+        parts.append(f"Series or collection: {collection}")
+    parts.append(f"Plot and atmosphere: {movie['overview']}")
     return "\n".join(
-        [
-            f"Title: {movie['title']}",
-            f"Overview: {movie['overview']}",
-            f"Original language: {movie.get('original_language') or 'unknown'}",
-            f"Rating: {movie['vote_average']}",
-            f"Genres: {', '.join(str(genre) for genre in movie.get('genre_ids', []))}",
-        ]
+        parts
     )
 
 

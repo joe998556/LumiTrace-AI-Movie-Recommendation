@@ -59,6 +59,7 @@ Request body:
   "exclude_ids": [123],
   "user_genre_ids": [[878, 12]],
   "user_vote_counts": [9],
+  "user_release_years": [2014],
   "playlist_genre_ids": [878],
   "preferred_languages": ["en"],
   "top_k": 20
@@ -82,7 +83,7 @@ Response body:
 }
 ```
 
-Ratings are sent as 1-10 preference weights. Higher ratings boost similar semantic and genre signals; lower ratings reduce similar signals.
+Ratings are sent as 1-10 preference weights. Higher ratings boost similar semantic and genre signals; lower ratings reduce similar signals. Release years are optional taste hints used for small final-rank adjustments.
 
 For zero-shot semantic playlists, `overviews` can contain a free-form scene prompt instead of watched movie plots. `playlist_genre_ids` and `preferred_languages` are optional filters used by the BERT gateway when available.
 

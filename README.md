@@ -132,6 +132,12 @@ movie_vectors.json
 
 Generated vector files are intentionally ignored by Git because they can be large and can be regenerated. They are not stored in browser `localStorage`; the optional BERT service loads them server-side as a normalized Torch tensor.
 
+Newly generated indexes use rich-text embeddings instead of overview-only embeddings. The vector input includes title, TMDB genre names, original language, release year, audience rating, optional director/cast fields when present, and the plot overview. If you already have an older `movie_vectors.json`, regenerate it with `--overwrite` to get the richer semantic index:
+
+```powershell
+python tools/bootstrap_recommender.py --preset xlarge --overwrite
+```
+
 ### 4. Advanced Mode: Build A User Taste Query
 
 When a user marks movies as watched, the client can send the BERT service:
@@ -150,6 +156,8 @@ The BERT service embeds the watched movie overviews and uses them as the user's 
 | 6-10 | Boost similar genre/semantic matches |
 
 This means a movie you loved and a movie you disliked do not teach the recommender the same thing. The service does not subtract disliked movie vectors from the taste embedding; low ratings are conservative negative feedback rather than a claim that embedding-space "opposites" are meaningful.
+
+When a user has several positive signals, the service can split taste into multiple lightweight centers before retrieval. This keeps independent tastes from collapsing into one average embedding, so a profile that contains both sci-fi and comedy can still recall good candidates from both regions.
 
 ### 5. Advanced Mode: Zero-Shot Semantic Playlists
 
@@ -195,6 +203,8 @@ The service also applies two defensive tensor safeguards:
 
 - vector indexes are normalized and stored as contiguous 2D tensors at startup
 - user embeddings are forced to 2D before matrix multiplication, so single-vector inputs do not break `torch.mm`
+- positive histories with enough examples can use 2-3 taste centers; candidates are recalled by the best center score
+- final ranking adds small year-affinity and diversity adjustments so the Top-K list is not just a stack of near-duplicates
 
 In rating-weighted mode, semantic matching is combined with metadata preferences so the model can explain recommendations in human terms:
 

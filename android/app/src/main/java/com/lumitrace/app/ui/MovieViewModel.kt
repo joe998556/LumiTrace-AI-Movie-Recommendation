@@ -254,6 +254,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         val overviewsToSend = mutableListOf<String>()
         val genreIdsToSend = mutableListOf<List<Int>>()
         val ratingsToSend = mutableListOf<Double>()
+        val releaseYearsToSend = mutableListOf<Int>()
 
         if (query.isNotBlank()) {
             overviewsToSend.add(query)
@@ -267,6 +268,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             if (semanticText.isBlank()) return@forEach
             overviewsToSend.add(semanticText)
             genreIdsToSend.add(movie.genreIds)
+            movie.releaseYear()?.let { releaseYearsToSend.add(it) }
             ratingsToSend.add(
                 (journalEntry?.rating?.takeIf { it > 0f } ?: NEUTRAL_USER_RATING)
                     .toDouble()
@@ -288,6 +290,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     excludeIds = tasteMovies.map { it.id },
                     userGenreIds = genreIdsToSend,
                     userVoteCounts = ratingsToSend,
+                    userReleaseYears = releaseYearsToSend,
                     playlistGenreIds = inferPlaylistGenres(query),
                     preferredLanguages = inferPreferredLanguages(query),
                     topK = requestedTopK
@@ -322,6 +325,10 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         if (movie.title.isNotBlank() && movie.title != "Untitled") {
             parts.add(movie.title)
         }
+        movie.releaseYear()?.let { parts.add("Release year: $it") }
+        if (movie.originalLanguage.isNotBlank()) {
+            parts.add("Original language: ${movie.originalLanguage}")
+        }
         if (movie.overview.isNotBlank()) {
             parts.add(movie.overview)
         }
@@ -330,6 +337,11 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             parts.add("Viewer note: $note")
         }
         return parts.joinToString(". ")
+    }
+
+    private fun Movie.releaseYear(): Int? {
+        val year = releaseDate.take(4).toIntOrNull() ?: return null
+        return year.takeIf { it in 1888..2100 }
     }
 
     private fun inferPlaylistGenres(prompt: String): List<Int> {

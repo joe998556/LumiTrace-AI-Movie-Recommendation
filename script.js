@@ -664,6 +664,7 @@ async function loadSemanticRecs(favs) {
     exclude_ids: favs.map((movie) => movie.id),
     user_genre_ids: favs.map((movie) => movie.genre_ids || []),
     user_vote_counts: favs.map((movie) => Number(ratings[movie.id]?.score || 5)),
+    user_release_years: favs.map(movieReleaseYear).filter(Boolean),
     top_k: 18,
   };
   if (!payload.overviews.length) return [];
@@ -675,9 +676,17 @@ async function loadSemanticRecs(favs) {
 function semanticTasteText(movie, rating) {
   const parts = [];
   if (movie.title) parts.push(movie.title);
+  const year = movieReleaseYear(movie);
+  if (year) parts.push(`Release year: ${year}`);
+  if (movie.original_language) parts.push(`Original language: ${movie.original_language}`);
   if (movie.overview) parts.push(movie.overview);
   if (rating?.comment) parts.push(`Viewer note: ${rating.comment}`);
   return parts.join(". ");
+}
+
+function movieReleaseYear(movie) {
+  const year = Number(String(movie.release_date || "").slice(0, 4));
+  return Number.isFinite(year) && year >= 1888 && year <= 2100 ? year : null;
 }
 
 function renderRecGrid(movies) {
@@ -925,9 +934,9 @@ function normalizeMovies(movies) {
 
 function normalizeSemantic(movies) {
   const filtered = movies.filter((m) => m?.poster_path);
-  const maxR = Math.max(0.001, ...filtered.map((m) => Number(m.score || m.semantic_score || 0)));
+  const maxR = Math.max(0.001, ...filtered.map((m) => Number(m.diversified_score || m.score || m.semantic_score || 0)));
   return filtered.map((m) => {
-    const raw = Number(m.score || m.semantic_score || 0);
+    const raw = Number(m.diversified_score || m.score || m.semantic_score || 0);
     return { id: m.id, title: m.title || "Untitled", overview: m.overview || "", poster_path: m.poster_path, release_date: m.release_date || "", original_language: m.original_language || "", vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0), genre_ids: m.genre_ids || [], recommendationScore: Math.max(1, Math.min(100, Math.round((raw / maxR) * 70) + 30)) };
   });
 }

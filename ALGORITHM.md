@@ -44,10 +44,10 @@ This public mode is intentionally lightweight so anyone can clone the repo, run 
 
 Each movie is represented as structured metadata plus a semantic text embedding.
 
-The one-command bootstrapper fetches movie data from TMDB and combines useful fields into model input text:
+The one-command bootstrapper fetches movie data from TMDB and combines useful fields into model input text. Newer indexes use rich text enrichment rather than overview-only embeddings:
 
 ```text
-title + overview + vote_average + genre_ids
+title + genre names + original language + release year + audience rating + optional director/cast + overview
 ```
 
 The BERT model used by the project is:
@@ -120,11 +120,20 @@ Defensive tensor handling:
 - `user_embedding` is forced to 2D before `torch.mm`
 - if the embedding dimension does not match the loaded index dimension, the service returns a clear error instead of failing inside matrix multiplication
 
-If multiple watched movies are provided, the service uses a rating-weighted user embedding. Ratings control contribution strength, not vector direction.
+If multiple watched movies are provided, the service uses a rating-weighted taste profile. Ratings control contribution strength, not vector direction.
 
 ```text
 semantic_weight = max(0.1, rating / 5.0)
 ```
+
+For small histories, this is a single weighted taste center. Once the user has enough positive signals, LumiTrace switches to a lightweight multi-center profile:
+
+```text
+positive_movie_embeddings -> 2-3 weighted taste clusters
+semantic_scores = max(movie_vector_tensor @ taste_center_i)
+```
+
+This prevents unrelated preferences from being averaged into a weak middle vector. A user who likes both hard sci-fi and absurd comedy can keep both taste regions alive during retrieval.
 
 Low-rated movies are not included as negative vectors in the taste embedding. Instead, they are used as a shortlist re-ranking penalty:
 
@@ -138,6 +147,14 @@ adjusted_semantic_score = bert_score * penalty_multiplier
 ```
 
 This means a candidate that is very close to a movie the user rated 1-4 is discounted after the normal semantic match is computed. The penalty is calculated only on the shortlist, not the full movie index. The service does not subtract disliked movie embeddings, because negative embedding vectors are not reliable "opposite taste" representations.
+
+The final shortlist also receives small post-ranking adjustments:
+
+- `year_score`: nudges candidates toward the release-year range the user tends to watch when clients send `user_release_years`
+- `context_score`: boosts zero-shot prompt genre/language matches
+- `diversified_score`: applies a small greedy rerank penalty when the top results repeat the same genre/language/collection too aggressively
+
+These are intentionally small compared with semantic similarity. They refine the final Top-K list without drowning out the BERT match.
 
 Cold-start and all-negative cases are handled explicitly:
 

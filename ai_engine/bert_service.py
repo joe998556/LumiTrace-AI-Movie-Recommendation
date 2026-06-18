@@ -27,28 +27,28 @@ DEFAULT_MODEL = "AventIQ-AI/bert-movie-recommendation-system"
 DEFAULT_VECTOR_FILES = ("final_boss_vectors.json", "movie_vectors.json")
 
 GENRE_HINTS = {
-    9648: ("mystery", "suspense", "twist", "whodunit", "detective", "懸疑", "推理", "反轉"),
-    53: ("thriller", "tense", "psychological", "驚悚", "緊張"),
-    80: ("crime", "noir", "heist", "criminal", "犯罪", "黑色電影"),
-    18: ("drama", "melancholy", "slow burn", "slow-burn", "intimate", "劇情", "慢節奏"),
-    10749: ("romance", "romantic", "love", "愛情", "浪漫"),
-    878: ("sci-fi", "science fiction", "space", "future", "科幻", "太空"),
-    27: ("horror", "scary", "haunted", "恐怖", "鬼"),
-    35: ("comedy", "funny", "light", "喜劇", "輕鬆"),
-    16: ("animation", "animated", "動畫"),
-    99: ("documentary", "documentary-style", "紀錄片"),
-    14: ("fantasy", "magical", "myth", "奇幻", "魔法"),
+    9648: ("mystery", "suspense", "twist", "whodunit", "detective", "\u61f8\u7591", "\u63a8\u7406", "\u53cd\u8f49"),
+    53: ("thriller", "tense", "psychological", "\u9a5a\u609a", "\u7dca\u5f35"),
+    80: ("crime", "noir", "heist", "criminal", "\u72af\u7f6a", "\u9ed1\u8272\u96fb\u5f71"),
+    18: ("drama", "melancholy", "slow burn", "slow-burn", "intimate", "\u5287\u60c5", "\u6162\u7bc0\u594f"),
+    10749: ("romance", "romantic", "love", "\u611b\u60c5", "\u6d6a\u6f2b"),
+    878: ("sci-fi", "science fiction", "space", "future", "\u79d1\u5e7b", "\u592a\u7a7a"),
+    27: ("horror", "scary", "haunted", "\u6050\u6016", "\u9b3c"),
+    35: ("comedy", "funny", "light", "\u559c\u5287", "\u8f15\u9b06"),
+    16: ("animation", "animated", "\u52d5\u756b"),
+    99: ("documentary", "documentary-style", "\u7d00\u9304\u7247"),
+    14: ("fantasy", "magical", "myth", "\u5947\u5e7b", "\u9b54\u6cd5"),
 }
 
 LANGUAGE_HINTS = {
-    "fr": ("french", "france", "paris", "法國", "法語"),
-    "de": ("german", "germany", "berlin", "德國", "德語"),
-    "es": ("spanish", "spain", "西班牙", "西語"),
-    "it": ("italian", "italy", "義大利", "義語"),
-    "ja": ("japanese", "japan", "日本", "日語"),
-    "ko": ("korean", "korea", "韓國", "韓語"),
-    "zh": ("chinese", "taiwan", "hong kong", "mandarin", "中文", "華語", "台灣", "香港"),
-    "en": ("english", "british", "american", "英語", "美國", "英國"),
+    "fr": ("french", "france", "paris", "\u6cd5\u570b", "\u6cd5\u8a9e"),
+    "de": ("german", "germany", "berlin", "\u5fb7\u570b", "\u5fb7\u8a9e"),
+    "es": ("spanish", "spain", "\u897f\u73ed\u7259", "\u897f\u8a9e"),
+    "it": ("italian", "italy", "\u7fa9\u5927\u5229", "\u7fa9\u8a9e"),
+    "ja": ("japanese", "japan", "\u65e5\u672c", "\u65e5\u8a9e"),
+    "ko": ("korean", "korea", "\u97d3\u570b", "\u97d3\u8a9e"),
+    "zh": ("chinese", "taiwan", "hong kong", "mandarin", "\u4e2d\u6587", "\u83ef\u8a9e", "\u53f0\u7063", "\u9999\u6e2f"),
+    "en": ("english", "british", "american", "\u82f1\u8a9e", "\u7f8e\u570b", "\u82f1\u570b"),
 }
 
 EUROPEAN_LANGUAGE_CODES = ("fr", "de", "es", "it", "da", "sv", "no", "nl", "pl", "pt", "fi", "is", "tr")
@@ -158,7 +158,7 @@ def vector_from_movie(movie: dict[str, Any]) -> list[float] | None:
 
 
 def clean_movie(movie: dict[str, Any]) -> dict[str, Any]:
-    return {
+    cleaned = {
         "id": int(movie.get("id", 0)),
         "title": movie.get("title") or movie.get("name") or "Untitled",
         "overview": movie.get("overview") or "",
@@ -169,6 +169,10 @@ def clean_movie(movie: dict[str, Any]) -> dict[str, Any]:
         "vote_count": int(movie.get("vote_count") or 0),
         "genre_ids": movie.get("genre_ids") or [],
     }
+    for optional_key in ("director", "cast", "collection_name"):
+        if movie.get(optional_key):
+            cleaned[optional_key] = movie[optional_key]
+    return cleaned
 
 
 def load_vector_index(path: Path) -> bool:
@@ -392,6 +396,87 @@ def ensure_2d_tensor(tensor: Any) -> Any:
     return tensor
 
 
+def build_taste_centers(embeddings: Any, weights: Any, max_centers: int = 3) -> Any:
+    """Build one or more taste centers so mixed tastes do not collapse into one average."""
+    try:
+        import torch
+        import torch.nn.functional as F
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
+
+    embeddings = ensure_2d_tensor(embeddings)
+    if embeddings.size(0) < 5:
+        weighted = embeddings * weights.unsqueeze(1)
+        return ensure_2d_tensor(F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1))
+
+    center_count = min(max_centers, 2 if embeddings.size(0) < 9 else 3, embeddings.size(0))
+    first_index = int(torch.argmax(weights).item())
+    selected = {first_index}
+    centers = [embeddings[first_index]]
+
+    for _ in range(1, center_count):
+        similarities = torch.stack([torch.mv(embeddings, center) for center in centers], dim=1)
+        distance = 1.0 - similarities.max(dim=1).values
+        selection_score = distance * weights
+        for index in selected:
+            selection_score[index] = -1.0
+        next_index = int(torch.argmax(selection_score).item())
+        selected.add(next_index)
+        centers.append(embeddings[next_index])
+
+    centers_tensor = F.normalize(torch.stack(centers), p=2, dim=1)
+    for _ in range(4):
+        assignments = torch.mm(embeddings, centers_tensor.T).argmax(dim=1)
+        next_centers = []
+        for center_index in range(center_count):
+            mask = assignments == center_index
+            if bool(mask.any()):
+                cluster_embeddings = embeddings[mask]
+                cluster_weights = weights[mask]
+                center = (cluster_embeddings * cluster_weights.unsqueeze(1)).sum(dim=0, keepdim=True)
+                next_centers.append(F.normalize(center, p=2, dim=1).squeeze(0))
+            else:
+                next_centers.append(centers_tensor[center_index])
+        centers_tensor = F.normalize(torch.stack(next_centers), p=2, dim=1)
+
+    return centers_tensor
+
+
+def movie_release_year(movie: dict[str, Any]) -> int | None:
+    release = str(movie.get("release_date") or "").strip()
+    if len(release) < 4 or not release[:4].isdigit():
+        return None
+    year = int(release[:4])
+    if year < 1888 or year > 2100:
+        return None
+    return year
+
+
+def clean_year_list(values: Any, limit: int = 100) -> list[int]:
+    if not isinstance(values, list):
+        return []
+    years: list[int] = []
+    for value in values[:limit]:
+        try:
+            year = int(str(value)[:4])
+        except (TypeError, ValueError):
+            continue
+        if 1888 <= year <= 2100:
+            years.append(year)
+    return years
+
+
+def score_year_affinity(movie: dict[str, Any], user_years: list[int]) -> float:
+    if not user_years:
+        return 0.0
+    year = movie_release_year(movie)
+    if year is None:
+        return 0.0
+    center_year = sum(user_years) / len(user_years)
+    distance = abs(year - center_year)
+    return max(0.0, 0.04 * (1.0 - min(distance, 40.0) / 40.0))
+
+
 def movie_quality_score(movie: dict[str, Any]) -> float:
     vote_average = max(0.0, min(10.0, float(movie.get("vote_average") or 0))) / 10.0
     vote_count = max(0, int(movie.get("vote_count") or 0))
@@ -424,6 +509,51 @@ def fallback_recommendations(top_k: int, exclude_ids: set[int]) -> list[dict[str
         )
     candidates.sort(key=lambda m: m["score"], reverse=True)
     return candidates[:top_k]
+
+
+def diversity_rerank(candidates: list[dict[str, Any]], top_k: int) -> list[dict[str, Any]]:
+    """Greedy top-k rerank with small penalties for repeated language, genre, and collection."""
+    selected: list[dict[str, Any]] = []
+    remaining = sorted(candidates, key=lambda movie: movie["score"], reverse=True)
+    genre_counts: dict[int, int] = {}
+    language_counts: dict[str, int] = {}
+    collection_counts: dict[str, int] = {}
+
+    while remaining and len(selected) < top_k:
+        best_index = 0
+        best_score = float("-inf")
+        for index, movie in enumerate(remaining[: max(30, top_k * 4)]):
+            movie_genres = {int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()}
+            language = clean_language_code(movie.get("original_language")) or ""
+            collection = str(movie.get("collection_name") or "").strip().lower()
+            penalty = 0.0
+            penalty += sum(max(0, genre_counts.get(genre, 0) - 1) * 0.025 for genre in movie_genres)
+            if language:
+                penalty += max(0, language_counts.get(language, 0) - 2) * 0.02
+            if collection:
+                penalty += collection_counts.get(collection, 0) * 0.08
+            diversified_score = float(movie["score"]) - min(0.18, penalty)
+            if diversified_score > best_score:
+                best_score = diversified_score
+                best_index = index
+
+        movie = remaining.pop(best_index)
+        movie["diversified_score"] = round(best_score, 4)
+        selected.append(movie)
+        for genre in movie.get("genre_ids", []):
+            try:
+                genre_id = int(genre)
+            except (TypeError, ValueError):
+                continue
+            genre_counts[genre_id] = genre_counts.get(genre_id, 0) + 1
+        language = clean_language_code(movie.get("original_language"))
+        if language:
+            language_counts[language] = language_counts.get(language, 0) + 1
+        collection = str(movie.get("collection_name") or "").strip().lower()
+        if collection:
+            collection_counts[collection] = collection_counts.get(collection, 0) + 1
+
+    return selected
 
 
 @app.route("/status", methods=["GET"])
@@ -524,6 +654,7 @@ def search():
     # Pad to match all taste inputs.
     while len(user_ratings) < max(len(user_genre_ids), len(texts)):
         user_ratings.append(5.0)
+    user_release_years = clean_year_list(data.get("user_release_years"), limit=100)
 
     # Build rating-weighted genre profile
     genre_weights = build_genre_weights(user_genre_ids, user_ratings)
@@ -545,6 +676,8 @@ def search():
     semantic_ratings = user_ratings[:len(texts)]
     positive_indices = [index for index, rating in enumerate(semantic_ratings) if rating >= 5.0]
     negative_indices = [index for index, rating in enumerate(semantic_ratings) if rating < 5.0]
+    taste_profile_mode = "metadata_fallback"
+    taste_center_count = 0
 
     if positive_indices:
         selected_embeddings = ensure_2d_tensor(raw_embeddings[positive_indices])
@@ -553,9 +686,11 @@ def search():
             dtype=torch.float32,
             device=DEVICE,
         )
-        weighted = selected_embeddings * weights.unsqueeze(1)
-        user_embedding = ensure_2d_tensor(F.normalize(weighted.sum(dim=0, keepdim=True), p=2, dim=1))
-        semantic_scores_tensor = torch.mm(VECTOR_TENSOR, user_embedding.T).squeeze(1)
+        taste_centers = ensure_2d_tensor(build_taste_centers(selected_embeddings, weights))
+        taste_center_count = int(taste_centers.size(0))
+        taste_profile_mode = "multi_center" if taste_center_count > 1 else "single_center"
+        center_scores = torch.mm(VECTOR_TENSOR, taste_centers.T)
+        semantic_scores_tensor = center_scores.max(dim=1).values
         shortlist_scores = semantic_scores_tensor
     else:
         logger.info("Only low-rated taste inputs were provided; using metadata shortlist plus negative penalties.")
@@ -615,7 +750,8 @@ def search():
 
         meta_score = score_metadata(movie, genre_weights)
         context_score = score_context_filters(movie, playlist_genre_ids, preferred_languages)
-        final = float(adjusted_scores[shortlist_position]) + meta_score + context_score
+        year_score = score_year_affinity(movie, user_release_years)
+        final = float(adjusted_scores[shortlist_position]) + meta_score + context_score + year_score
         candidates.append(
             {
                 **movie,
@@ -625,6 +761,7 @@ def search():
                 "penalty_multiplier": round(float(multipliers[shortlist_position]), 4),
                 "metadata_score": round(meta_score, 4),
                 "context_score": round(context_score, 4),
+                "year_score": round(year_score, 4),
                 "score": round(final, 4),
                 "playlist_genre_match": sorted(movie_genres.intersection(playlist_genre_ids)),
                 "playlist_language_match": bool(language and language in preferred_languages),
@@ -640,14 +777,20 @@ def search():
             add_candidate(movie_index, position, apply_context_filters=False)
 
     candidates.sort(key=lambda m: m["score"], reverse=True)
+    ranked_candidates = diversity_rerank(candidates, top_k)
     return jsonify(
         {
-            "results": candidates[:top_k],
+            "results": ranked_candidates,
             "playlist": {
                 "mode": "zero_shot_semantic",
                 "genre_ids": sorted(playlist_genre_ids),
                 "preferred_languages": sorted(preferred_languages),
                 "relaxed_context_filters": relaxed_context_filters,
+            },
+            "taste_profile": {
+                "mode": taste_profile_mode,
+                "center_count": taste_center_count,
+                "release_year_count": len(user_release_years),
             },
         }
     )

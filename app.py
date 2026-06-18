@@ -98,6 +98,20 @@ def clean_float_list(values: Any, limit: int = 50) -> list[float]:
     return cleaned
 
 
+def clean_year_list(values: Any, limit: int = 100) -> list[int]:
+    if not isinstance(values, list):
+        return []
+    cleaned: list[int] = []
+    for value in values[:limit]:
+        try:
+            year = int(str(value)[:4])
+        except (TypeError, ValueError):
+            continue
+        if 1888 <= year <= 2100:
+            cleaned.append(year)
+    return cleaned
+
+
 def clean_language_list(values: Any, limit: int = 12) -> list[str]:
     if not isinstance(values, list):
         return []
@@ -192,6 +206,7 @@ def semantic_recommendations():
         "exclude_ids": clean_int_list(data.get("exclude_ids"), limit=100),
         "user_genre_ids": clean_nested_int_list(data.get("user_genre_ids"), limit=100),
         "user_vote_counts": clean_float_list(data.get("user_vote_counts"), limit=100),
+        "user_release_years": clean_year_list(data.get("user_release_years"), limit=100),
         "playlist_genre_ids": clean_int_list(data.get("playlist_genre_ids"), limit=24),
         "preferred_languages": clean_language_list(data.get("preferred_languages"), limit=12),
         "top_k": clamp_int(data.get("top_k"), default=18, low=1, high=30),
