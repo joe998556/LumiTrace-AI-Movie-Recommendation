@@ -8,10 +8,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.lumitrace.app.BuildConfig
 import com.lumitrace.app.data.Movie
 import com.lumitrace.app.data.RecommendationRequest
+import com.lumitrace.app.data.RecommendationResponse
 import com.lumitrace.app.network.ApiClient
 import java.net.URI
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 sealed class UiState {
     object Idle : UiState()
@@ -300,10 +302,11 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     topK = requestedTopK
                 )
 
-                val response = ApiClient.bertService.getSemanticRecommendations(
+                val responseJson = ApiClient.bertService.getSemanticRecommendations(
                     url = endpoint,
                     request = request
-                )
+                ).string()
+                val response = parseRecommendationResponse(responseJson)
 
                 if (response.results.isNotEmpty()) {
                     semanticEndReached = response.results.size < requestedTopK ||
@@ -580,12 +583,100 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         val json = prefs.getString(KEY_WATCHED_MOVIES, null)
         if (json.isNullOrBlank()) return emptySet()
         return try {
-            val type = object : TypeToken<List<Movie>>() {}.type
-            val list: List<Movie> = gson.fromJson(json, type)
-            list.toSet()
+            parseMovieArray(JSONArray(json)).toSet()
         } catch (e: Exception) {
             emptySet()
         }
+    }
+
+    private fun parseRecommendationResponse(json: String): RecommendationResponse {
+        val root = JSONObject(json)
+        return RecommendationResponse(
+            results = parseMovieArray(root.optJSONArray("results")),
+            fallback = root.optNullableString("fallback"),
+            error = root.optNullableString("error")
+        )
+    }
+
+    private fun parseMovieArray(array: JSONArray?): List<Movie> {
+        if (array == null) return emptyList()
+
+        val movies = mutableListOf<Movie>()
+        for (index in 0 until array.length()) {
+            val movieJson = array.optJSONObject(index) ?: continue
+            movies.add(parseMovieObject(movieJson))
+        }
+        return movies
+    }
+
+    private fun parseMovieObject(movieJson: JSONObject): Movie {
+        return Movie(
+            id = movieJson.optIntAny("id"),
+            title = movieJson.optStringAny("title", "name").ifBlank { "Untitled" },
+            overview = movieJson.optStringAny("overview"),
+            posterPath = movieJson.optNullableString("poster_path", "posterPath"),
+            releaseDate = movieJson.optStringAny("release_date", "releaseDate"),
+            voteAverage = movieJson.optDoubleAny("vote_average", "voteAverage"),
+            originalLanguage = movieJson.optStringAny("original_language", "originalLanguage"),
+            genreIds = movieJson.optIntListAny("genre_ids", "genreIds")
+        )
+    }
+
+    private fun JSONObject.optNullableString(vararg names: String): String? {
+        for (name in names) {
+            if (has(name) && !isNull(name)) {
+                return optString(name).takeIf { it.isNotBlank() }
+            }
+        }
+        return null
+    }
+
+    private fun JSONObject.optStringAny(vararg names: String): String {
+        return optNullableString(*names).orEmpty()
+    }
+
+    private fun JSONObject.optIntAny(vararg names: String): Int {
+        for (name in names) {
+            if (has(name) && !isNull(name)) {
+                val value = opt(name)
+                return when (value) {
+                    is Number -> value.toInt()
+                    is String -> value.toIntOrNull() ?: 0
+                    else -> optInt(name, 0)
+                }
+            }
+        }
+        return 0
+    }
+
+    private fun JSONObject.optDoubleAny(vararg names: String): Double {
+        for (name in names) {
+            if (has(name) && !isNull(name)) {
+                val value = opt(name)
+                return when (value) {
+                    is Number -> value.toDouble()
+                    is String -> value.toDoubleOrNull() ?: 0.0
+                    else -> optDouble(name, 0.0)
+                }
+            }
+        }
+        return 0.0
+    }
+
+    private fun JSONObject.optIntListAny(vararg names: String): List<Int> {
+        for (name in names) {
+            val array = optJSONArray(name) ?: continue
+            val ids = mutableListOf<Int>()
+            for (index in 0 until array.length()) {
+                val value = array.opt(index)
+                when (value) {
+                    is Number -> ids.add(value.toInt())
+                    is String -> value.toIntOrNull()?.let { ids.add(it) }
+                }
+            }
+            return ids
+        }
+        return emptyList()
     }
 
     private fun createPrefs(application: Application): SharedPreferences {

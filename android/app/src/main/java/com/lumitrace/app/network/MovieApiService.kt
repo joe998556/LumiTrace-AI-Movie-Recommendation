@@ -2,8 +2,8 @@ package com.lumitrace.app.network
 
 import com.lumitrace.app.data.Movie
 import com.lumitrace.app.data.RecommendationRequest
-import com.lumitrace.app.data.RecommendationResponse
 import com.lumitrace.app.data.TmdbResponse
+import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -29,5 +29,5 @@ interface BertApiService {
     suspend fun getSemanticRecommendations(
         @Url url: String,
         @Body request: RecommendationRequest
-    ): RecommendationResponse
+    ): ResponseBody
 }
