@@ -11,6 +11,8 @@ skills-lock.json
 __pycache__/
 .venv/
 scratch/
+paper/
+research/
 *.pyc
 .pytest_cache/
 .mypy_cache/
