@@ -202,9 +202,9 @@ Signal meanings:
 - `SVD`: pre-trained matrix-factorization item embeddings from MovieLens-style rating patterns.
 - `Genome`: style and tag profile from MovieLens Genome features.
 
-If SVD or Genome vectors are unavailable, the service falls back to the available signals and normalizes the weights.
+If SVD or Genome vectors are unavailable, the service falls back to the available signals and normalizes the weights. When `final_boss_vectors.json` is loaded, the runtime service also reads `svd_vector` and `genome_vector` fields into Torch tensors aligned with the BERT tensor. Watched TMDB IDs and 1-10 ratings are then used to build rating-weighted taste centers in each available vector space.
 
-This is not online personalized collaborative filtering. The public and Android flows do not maintain a central user-item matrix, so they cannot train fresh SVD from private single-user local history. SVD/Genome are optional experiments built from external datasets. A runtime recommender can compare the user's liked movie set with these pre-trained item embeddings, but it should be documented as pre-trained matrix factorization rather than local collaborative training.
+This is not online personalized collaborative filtering. The public and Android flows do not maintain a central user-item matrix, so they cannot train fresh SVD from private single-user local history. SVD/Genome are optional offline signals built from external datasets. At runtime, the recommender compares the user's watched/rated movie set with these pre-trained item embeddings, so it should be documented as pre-trained matrix factorization and tag-profile matching rather than local collaborative training.
 
 ## 5. Filtering And Practical Ranking Rules
 

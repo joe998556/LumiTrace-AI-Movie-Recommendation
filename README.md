@@ -56,7 +56,7 @@ The public flow works without registration or a hosted user database. User taste
 | User signal | Watched movies, ratings, genres, plot overviews, movie IDs |
 | Retrieval | TMDB trending, search, and discover endpoints |
 | Advanced retrieval | Precomputed movie vector index loaded by the optional BERT service |
-| Ranking | Metadata ranking in demo, rating-weighted BERT service in advanced mode; SVD/Genome are offline experimental item-vector builders |
+| Ranking | Metadata ranking in demo, rating-weighted BERT service in advanced mode, optional MovieLens SVD/Genome hybrid scoring |
 | Backend | Flask API for TMDB proxying and static app serving |
 | Demo surface | Web UI for entering a TMDB key, collecting favorites, and showing recommendations |
 | Mobile app | Android Kotlin/Jetpack Compose app with local TMDB key storage, watched movies, ratings, notes, and optional AI gateway |
@@ -232,7 +232,7 @@ If there are no positive taste inputs yet, LumiTrace falls back to a metadata qu
 
 ### 7. Advanced Mode: Hybrid Ranking
 
-The optional `final_boss_engine.py` experiment can blend three offline item-vector signals:
+The optional `final_boss_engine.py` workflow can blend three offline item-vector signals into `final_boss_vectors.json`:
 
 ```text
 final_score =
@@ -247,7 +247,7 @@ final_score =
 | SVD | Offline item vectors trained from external MovieLens-style rating patterns |
 | Genome | MovieLens-style tag and style profile |
 
-If SVD or Genome vectors are missing, the service falls back to the available signals and normalizes the weights. The public and Android flows do not train online collaborative filtering from a private single-user history.
+When `bert_service.py` loads `final_boss_vectors.json`, it uses watched movie IDs plus 1-10 user ratings to compare the user's taste against the MovieLens SVD and Genome item-vector spaces. If SVD or Genome vectors are missing, the service falls back to the available BERT and metadata signals. The public and Android flows do not train online collaborative filtering from a private single-user history; MovieLens is used as a pre-trained offline signal.
 
 For the full breakdown, see [ALGORITHM.md](ALGORITHM.md).
 For current performance and production limits, see [docs/ARCHITECTURE_LIMITS.md](docs/ARCHITECTURE_LIMITS.md).

@@ -102,6 +102,9 @@ MODEL_NAME = DEFAULT_MODEL
 VECTOR_PATH: Path | None = None
 MOVIES: list[dict[str, Any]] = []
 VECTOR_TENSOR: torch.Tensor | None = None
+SVD_TENSOR: torch.Tensor | None = None
+GENOME_TENSOR: torch.Tensor | None = None
+MOVIE_ID_TO_INDEX: dict[int, int] = {}
 
 
 def first_existing_vector_file() -> Path:
@@ -175,6 +178,24 @@ def clean_movie(movie: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
+def optional_vector_from_movie(movie: dict[str, Any], key: str) -> list[float] | None:
+    vector = movie.get(key)
+    if not isinstance(vector, list) or not vector:
+        return None
+    try:
+        return [float(value) for value in vector]
+    except (TypeError, ValueError):
+        return None
+
+
+def pad_or_zero_vector(vector: list[float] | None, size: int) -> list[float]:
+    if not vector:
+        return [0.0] * size
+    if len(vector) >= size:
+        return vector[:size]
+    return vector + ([0.0] * (size - len(vector)))
+
+
 def load_vector_index(path: Path) -> bool:
     try:
         import torch
@@ -182,12 +203,15 @@ def load_vector_index(path: Path) -> bool:
     except ImportError as exc:
         raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
 
-    global VECTOR_PATH, MOVIES, VECTOR_TENSOR
+    global VECTOR_PATH, MOVIES, VECTOR_TENSOR, SVD_TENSOR, GENOME_TENSOR, MOVIE_ID_TO_INDEX
 
     if not path.exists():
         VECTOR_PATH = path
         MOVIES = []
         VECTOR_TENSOR = None
+        SVD_TENSOR = None
+        GENOME_TENSOR = None
+        MOVIE_ID_TO_INDEX = {}
         print(f"Vector file not found: {path}")
         return False
 
@@ -199,6 +223,8 @@ def load_vector_index(path: Path) -> bool:
 
     movies: list[dict[str, Any]] = []
     vectors: list[list[float]] = []
+    svd_vectors: list[list[float] | None] = []
+    genome_vectors: list[list[float] | None] = []
     for item in raw_data:
         if not isinstance(item, dict):
             continue
@@ -210,19 +236,47 @@ def load_vector_index(path: Path) -> bool:
             continue
         movies.append(movie)
         vectors.append(vector)
+        svd_vectors.append(optional_vector_from_movie(item, "svd_vector"))
+        genome_vectors.append(optional_vector_from_movie(item, "genome_vector"))
 
     if not vectors:
         VECTOR_PATH = path
         MOVIES = []
         VECTOR_TENSOR = None
+        SVD_TENSOR = None
+        GENOME_TENSOR = None
+        MOVIE_ID_TO_INDEX = {}
         print(f"No usable vectors found in {path}")
         return False
 
     tensor = torch.tensor(vectors, dtype=torch.float32, device=DEVICE)
     VECTOR_TENSOR = F.normalize(tensor, p=2, dim=1).contiguous()
+    svd_size = max((len(vector) for vector in svd_vectors if vector), default=0)
+    genome_size = max((len(vector) for vector in genome_vectors if vector), default=0)
+    SVD_TENSOR = None
+    GENOME_TENSOR = None
+    if svd_size:
+        svd_tensor = torch.tensor(
+            [pad_or_zero_vector(vector, svd_size) for vector in svd_vectors],
+            dtype=torch.float32,
+            device=DEVICE,
+        )
+        SVD_TENSOR = F.normalize(svd_tensor, p=2, dim=1).contiguous()
+    if genome_size:
+        genome_tensor = torch.tensor(
+            [pad_or_zero_vector(vector, genome_size) for vector in genome_vectors],
+            dtype=torch.float32,
+            device=DEVICE,
+        )
+        GENOME_TENSOR = F.normalize(genome_tensor, p=2, dim=1).contiguous()
     VECTOR_PATH = path
     MOVIES = movies
+    MOVIE_ID_TO_INDEX = {movie["id"]: index for index, movie in enumerate(MOVIES)}
     print(f"Loaded {len(MOVIES):,} movie vectors from {path}")
+    if SVD_TENSOR is not None or GENOME_TENSOR is not None:
+        svd_count = sum(1 for vector in svd_vectors if vector)
+        genome_count = sum(1 for vector in genome_vectors if vector)
+        print(f"Loaded hybrid vectors: SVD {svd_count:,}, Genome {genome_count:,}")
     return True
 
 
@@ -442,6 +496,79 @@ def build_taste_centers(embeddings: Any, weights: Any, max_centers: int = 3) -> 
     return centers_tensor
 
 
+def clean_user_movie_ids(values: Any, limit: int = 200) -> list[int]:
+    if not isinstance(values, list):
+        return []
+    movie_ids: list[int] = []
+    for value in values[:limit]:
+        try:
+            movie_id = int(value)
+        except (TypeError, ValueError):
+            movie_id = 0
+        movie_ids.append(movie_id)
+    return movie_ids
+
+
+def item_vector_scores(
+    item_tensor: Any,
+    user_movie_ids: list[int],
+    user_ratings: list[float],
+) -> tuple[Any, Any, int]:
+    """Return MovieLens-style positive scores and negative penalties.
+
+    The tensor is aligned with MOVIES. User movie IDs point to watched movies in
+    the same index. Ratings >= 5 become positive taste centers; ratings < 5 are
+    conservative post-ranking penalties.
+    """
+    try:
+        import torch
+    except ImportError as exc:
+        raise RuntimeError("Missing dependency: torch. Run `pip install -r requirements.txt` first.") from exc
+
+    zero = torch.zeros(len(MOVIES), dtype=torch.float32, device=DEVICE)
+    if item_tensor is None or not user_movie_ids:
+        return zero, zero, 0
+
+    positive_rows: list[int] = []
+    positive_weights: list[float] = []
+    negative_rows: list[int] = []
+    negative_strengths: list[float] = []
+    for movie_id, rating in zip(user_movie_ids, user_ratings):
+        row = MOVIE_ID_TO_INDEX.get(movie_id)
+        if row is None:
+            continue
+        vector_norm = float(item_tensor[row].abs().sum().detach().cpu().item())
+        if vector_norm <= 0:
+            continue
+        if rating >= 5.0:
+            positive_rows.append(row)
+            positive_weights.append(max(0.1, rating / 5.0))
+        else:
+            negative_rows.append(row)
+            negative_strengths.append((5.0 - rating) / 4.0)
+
+    scores = zero
+    center_count = 0
+    if positive_rows:
+        rows_tensor = torch.tensor(positive_rows, dtype=torch.long, device=DEVICE)
+        positive_vectors = ensure_2d_tensor(item_tensor[rows_tensor])
+        weights = torch.tensor(positive_weights, dtype=torch.float32, device=DEVICE)
+        centers = ensure_2d_tensor(build_taste_centers(positive_vectors, weights))
+        center_count = int(centers.size(0))
+        scores = torch.mm(item_tensor, centers.T).max(dim=1).values.clamp(min=0.0)
+
+    penalty = zero
+    if negative_rows:
+        rows_tensor = torch.tensor(negative_rows, dtype=torch.long, device=DEVICE)
+        negative_vectors = ensure_2d_tensor(item_tensor[rows_tensor])
+        strengths = torch.tensor(negative_strengths, dtype=torch.float32, device=DEVICE).clamp(0.0, 1.0)
+        similarity = torch.mm(item_tensor, negative_vectors.T)
+        penalty_curve = ((similarity - 0.55) / 0.45).clamp(0.0, 1.0)
+        penalty = (penalty_curve * strengths.unsqueeze(0)).max(dim=1).values
+
+    return scores, penalty, center_count
+
+
 def movie_release_year(movie: dict[str, Any]) -> int | None:
     release = str(movie.get("release_date") or "").strip()
     if len(release) < 4 or not release[:4].isdigit():
@@ -565,6 +692,10 @@ def status():
             "device": str(DEVICE),
             "movie_count": len(MOVIES),
             "index_loaded": VECTOR_TENSOR is not None,
+            "hybrid": {
+                "svd_loaded": SVD_TENSOR is not None,
+                "genome_loaded": GENOME_TENSOR is not None,
+            },
         }
     )
 
@@ -614,6 +745,7 @@ def search():
     except (TypeError, ValueError):
         top_k = 10
     exclude_ids = {int(value) for value in data.get("exclude_ids", []) if str(value).isdigit()}
+    user_movie_ids = clean_user_movie_ids(data.get("user_movie_ids", []), limit=200)
     user_genre_ids = data.get("user_genre_ids", [])
     if not isinstance(user_genre_ids, list):
         user_genre_ids = []
@@ -652,54 +784,96 @@ def search():
     for val in raw_ratings:
         user_ratings.append(clamp_rating(val))
     # Pad to match all taste inputs.
-    while len(user_ratings) < max(len(user_genre_ids), len(texts)):
+    while len(user_ratings) < max(len(user_genre_ids), len(texts), len(user_movie_ids)):
         user_ratings.append(5.0)
     user_release_years = clean_year_list(data.get("user_release_years"), limit=100)
 
     # Build rating-weighted genre profile
     genre_weights = build_genre_weights(user_genre_ids, user_ratings)
 
-    if not texts:
-        return jsonify({"results": fallback_recommendations(top_k, exclude_ids), "fallback": "metadata_cold_start"})
+    svd_scores_tensor, svd_penalty_tensor, svd_center_count = item_vector_scores(
+        SVD_TENSOR,
+        user_movie_ids,
+        user_ratings[: len(user_movie_ids)],
+    )
+    genome_scores_tensor, genome_penalty_tensor, genome_center_count = item_vector_scores(
+        GENOME_TENSOR,
+        user_movie_ids,
+        user_ratings[: len(user_movie_ids)],
+    )
+    has_item_signal = bool(svd_center_count or genome_center_count)
 
     # Build rating-weighted user embeddings. Low-rated movies are not
     # subtracted as negative vectors; they are used later as a post-ranking
     # penalty against candidates that are too similar to disliked items.
-    raw_embeddings = ensure_2d_tensor(embed_texts(texts))  # shape: (n_texts, dim)
-    if raw_embeddings.dim() != 2 or raw_embeddings.size(1) != VECTOR_TENSOR.size(1):
-        logger.error(
-            "Embedding dimension mismatch: embedding=%s index=%s",
-            tuple(raw_embeddings.shape),
-            tuple(VECTOR_TENSOR.shape),
-        )
-        return jsonify({"error": "Embedding dimension does not match vector index", "results": []}), 500
+    raw_embeddings = None
     semantic_ratings = user_ratings[:len(texts)]
     positive_indices = [index for index, rating in enumerate(semantic_ratings) if rating >= 5.0]
     negative_indices = [index for index, rating in enumerate(semantic_ratings) if rating < 5.0]
     taste_profile_mode = "metadata_fallback"
     taste_center_count = 0
+    semantic_scores_tensor = torch.zeros(len(MOVIES), dtype=torch.float32, device=DEVICE)
+    semantic_penalty_tensor = torch.zeros(len(MOVIES), dtype=torch.float32, device=DEVICE)
 
-    if positive_indices:
-        selected_embeddings = ensure_2d_tensor(raw_embeddings[positive_indices])
-        weights = torch.tensor(
-            [max(0.1, semantic_ratings[index] / 5.0) for index in positive_indices],
-            dtype=torch.float32,
-            device=DEVICE,
-        )
-        taste_centers = ensure_2d_tensor(build_taste_centers(selected_embeddings, weights))
-        taste_center_count = int(taste_centers.size(0))
-        taste_profile_mode = "multi_center" if taste_center_count > 1 else "single_center"
-        center_scores = torch.mm(VECTOR_TENSOR, taste_centers.T)
-        semantic_scores_tensor = center_scores.max(dim=1).values
-        shortlist_scores = semantic_scores_tensor
+    if texts:
+        raw_embeddings = ensure_2d_tensor(embed_texts(texts))  # shape: (n_texts, dim)
+        if raw_embeddings.dim() != 2 or raw_embeddings.size(1) != VECTOR_TENSOR.size(1):
+            logger.error(
+                "Embedding dimension mismatch: embedding=%s index=%s",
+                tuple(raw_embeddings.shape),
+                tuple(VECTOR_TENSOR.shape),
+            )
+            return jsonify({"error": "Embedding dimension does not match vector index", "results": []}), 500
+
+        if positive_indices:
+            selected_embeddings = ensure_2d_tensor(raw_embeddings[positive_indices])
+            weights = torch.tensor(
+                [max(0.1, semantic_ratings[index] / 5.0) for index in positive_indices],
+                dtype=torch.float32,
+                device=DEVICE,
+            )
+            taste_centers = ensure_2d_tensor(build_taste_centers(selected_embeddings, weights))
+            taste_center_count = int(taste_centers.size(0))
+            taste_profile_mode = "multi_center" if taste_center_count > 1 else "single_center"
+            center_scores = torch.mm(VECTOR_TENSOR, taste_centers.T)
+            semantic_scores_tensor = center_scores.max(dim=1).values.clamp(min=0.0)
+        elif negative_indices:
+            logger.info("Only low-rated semantic taste inputs were provided; using hybrid metadata shortlist plus penalties.")
+
+        if negative_indices:
+            negative_embeddings = ensure_2d_tensor(raw_embeddings[negative_indices])
+            negative_similarity = torch.mm(VECTOR_TENSOR, negative_embeddings.T)
+            dislike_strength = torch.tensor(
+                [(5.0 - semantic_ratings[index]) / 4.0 for index in negative_indices],
+                dtype=torch.float32,
+                device=DEVICE,
+            ).clamp(0.0, 1.0)
+            penalty_curve = ((negative_similarity - 0.55) / 0.45).clamp(0.0, 1.0)
+            semantic_penalty_tensor = (penalty_curve * dislike_strength.unsqueeze(0)).max(dim=1).values
+
+    if not texts and not has_item_signal:
+        return jsonify({"results": fallback_recommendations(top_k, exclude_ids), "fallback": "metadata_cold_start"})
+
+    metadata_scores_tensor = torch.tensor(
+        [movie_quality_score(movie) for movie in MOVIES],
+        dtype=torch.float32,
+        device=DEVICE,
+    )
+    semantic_weight = 0.58 if has_item_signal else 1.0
+    genome_weight = 0.26 if GENOME_TENSOR is not None else 0.0
+    svd_weight = 0.16 if SVD_TENSOR is not None else 0.0
+    active_weight = semantic_weight + (genome_weight if has_item_signal else 0.0) + (svd_weight if has_item_signal else 0.0)
+    if active_weight <= 0:
+        active_weight = 1.0
+    shortlist_scores = (
+        (semantic_scores_tensor * semantic_weight)
+        + (genome_scores_tensor * (genome_weight if has_item_signal else 0.0))
+        + (svd_scores_tensor * (svd_weight if has_item_signal else 0.0))
+    ) / active_weight
+    if not positive_indices and not has_item_signal:
+        shortlist_scores = metadata_scores_tensor
     else:
-        logger.info("Only low-rated taste inputs were provided; using metadata shortlist plus negative penalties.")
-        semantic_scores_tensor = torch.zeros(len(MOVIES), dtype=torch.float32, device=DEVICE)
-        shortlist_scores = torch.tensor(
-            [movie_quality_score(movie) for movie in MOVIES],
-            dtype=torch.float32,
-            device=DEVICE,
-        )
+        shortlist_scores = (shortlist_scores * 0.92) + (metadata_scores_tensor * 0.08)
 
     # First shortlist from the positive taste signal or metadata fallback.
     has_context_filters = bool(playlist_genre_ids or preferred_languages)
@@ -709,23 +883,21 @@ def search():
 
     shortlist_semantic_scores = semantic_scores_tensor[top_indices_tensor]
     shortlist_base_scores = shortlist_scores[top_indices_tensor]
-    shortlist_penalty = torch.zeros_like(shortlist_base_scores)
-    if negative_indices:
-        negative_embeddings = ensure_2d_tensor(raw_embeddings[negative_indices])
-        shortlist_vectors = VECTOR_TENSOR[top_indices_tensor]
-        negative_similarity = torch.mm(shortlist_vectors, negative_embeddings.T)
-        dislike_strength = torch.tensor(
-            [(5.0 - semantic_ratings[index]) / 4.0 for index in negative_indices],
-            dtype=torch.float32,
-            device=DEVICE,
-        ).clamp(0.0, 1.0)
-        penalty_curve = ((negative_similarity - 0.55) / 0.45).clamp(0.0, 1.0)
-        shortlist_penalty = (penalty_curve * dislike_strength.unsqueeze(0)).max(dim=1).values
+    shortlist_penalty = torch.stack(
+        [
+            semantic_penalty_tensor[top_indices_tensor],
+            svd_penalty_tensor[top_indices_tensor],
+            genome_penalty_tensor[top_indices_tensor],
+        ],
+        dim=1,
+    ).max(dim=1).values
 
     shortlist_multiplier = 1.0 - (shortlist_penalty * 0.8)
     shortlist_adjusted_scores = shortlist_base_scores * shortlist_multiplier
 
     semantic_scores = shortlist_semantic_scores.detach().cpu().tolist()
+    svd_scores = svd_scores_tensor[top_indices_tensor].detach().cpu().tolist()
+    genome_scores = genome_scores_tensor[top_indices_tensor].detach().cpu().tolist()
     adjusted_scores = shortlist_adjusted_scores.detach().cpu().tolist()
     penalties = shortlist_penalty.detach().cpu().tolist()
     multipliers = shortlist_multiplier.detach().cpu().tolist()
@@ -756,6 +928,8 @@ def search():
             {
                 **movie,
                 "semantic_score": round(float(semantic_scores[shortlist_position]), 4),
+                "svd_score": round(float(svd_scores[shortlist_position]), 4),
+                "genome_score": round(float(genome_scores[shortlist_position]), 4),
                 "adjusted_semantic_score": round(float(adjusted_scores[shortlist_position]), 4),
                 "negative_penalty": round(float(penalties[shortlist_position]), 4),
                 "penalty_multiplier": round(float(multipliers[shortlist_position]), 4),
@@ -790,6 +964,8 @@ def search():
             "taste_profile": {
                 "mode": taste_profile_mode,
                 "center_count": taste_center_count,
+                "svd_center_count": svd_center_count,
+                "genome_center_count": genome_center_count,
                 "release_year_count": len(user_release_years),
             },
         }

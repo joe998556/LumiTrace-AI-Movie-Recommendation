@@ -6,5 +6,6 @@ werkzeug
 numpy
 pandas
 scikit-learn
+scipy
 torch
 transformers

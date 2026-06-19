@@ -15,6 +15,7 @@ data class Movie(
 
 data class RecommendationRequest(
     val overviews: List<String>,
+    @SerializedName("user_movie_ids") val userMovieIds: List<Int> = emptyList(),
     @SerializedName("exclude_ids") val excludeIds: List<Int> = emptyList(),
     @SerializedName("user_genre_ids") val userGenreIds: List<List<Int>> = emptyList(),
     @SerializedName("user_vote_counts") val userVoteCounts: List<Double> = emptyList(),

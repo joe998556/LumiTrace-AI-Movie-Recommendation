@@ -252,12 +252,14 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         val requestedTopK = if (expand) semanticTopK + SEMANTIC_PAGE_SIZE else SEMANTIC_PAGE_SIZE
 
         val overviewsToSend = mutableListOf<String>()
+        val movieIdsToSend = mutableListOf<Int>()
         val genreIdsToSend = mutableListOf<List<Int>>()
         val ratingsToSend = mutableListOf<Double>()
         val releaseYearsToSend = mutableListOf<Int>()
 
         if (query.isNotBlank()) {
             overviewsToSend.add(query)
+            movieIdsToSend.add(0)
             genreIdsToSend.add(emptyList())
             ratingsToSend.add(EXPLICIT_QUERY_RATING.toDouble())
         }
@@ -267,6 +269,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             val semanticText = buildSemanticTasteText(movie, journalEntry)
             if (semanticText.isBlank()) return@forEach
             overviewsToSend.add(semanticText)
+            movieIdsToSend.add(movie.id)
             genreIdsToSend.add(movie.genreIds)
             movie.releaseYear()?.let { releaseYearsToSend.add(it) }
             ratingsToSend.add(
@@ -287,6 +290,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val request = RecommendationRequest(
                     overviews = overviewsToSend,
+                    userMovieIds = movieIdsToSend,
                     excludeIds = tasteMovies.map { it.id },
                     userGenreIds = genreIdsToSend,
                     userVoteCounts = ratingsToSend,
