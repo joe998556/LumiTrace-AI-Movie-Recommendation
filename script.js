@@ -851,7 +851,13 @@ async function loadMoreRecs() {
       return;
     }
 
-    const gq = profile.genreIds.slice(0, 3).join(",");
+    // Dominant genres joined with | (OR) so one war film doesn't turn the whole
+    // fallback row into war films (comma would AND them).
+    const maxGenreWeight = Math.max(0, ...profile.genreWeights.values());
+    const dominantGenres = profile.genreIds.filter(
+      (id) => (profile.genreWeights.get(id) || 0) >= Math.max(2, maxGenreWeight * 0.5),
+    );
+    const gq = (dominantGenres.length ? dominantGenres : profile.genreIds.slice(0, 1)).slice(0, 3).join("|");
     const data = await tmdb(`discover/movie?language=${TMDB_LANGUAGE}&sort_by=vote_average.desc&vote_count.gte=150&with_genres=${gq}&page=${recPage}`);
     const raw = normalizeMovies(data.results || []).filter((m) => !favIds.has(m.id) && !seenRecIds.has(m.id) && !lowRatedIds.has(m.id));
     raw.forEach((m) => seenRecIds.add(m.id));
@@ -891,24 +897,17 @@ function resetRecScroll() {
 
 async function loadSemanticRecs(favs) {
   const ratings = getRatings();
-  // Build one aligned record per favorite so overviews, watched movie ids,
-  // genres, and 1-10 ratings stay index-aligned for the MovieLens SVD/Genome
-  // taste center. Filtering after the fact would desync user_movie_ids.
-  const tasteItems = favs.map((movie) => ({
-    movie,
-    text: semanticTasteText(movie, ratings[movie.id]),
-    rating: Number(ratings[movie.id]?.score || 5),
-  })).filter((item) => item.text);
-  if (!tasteItems.length) return [];
+  // Collection-based recommendation: send watched movie ids as the primary
+  // signal (the tuned backend ranks from the collection, not plot text).
   const payload = {
-    overviews: tasteItems.map((item) => item.text),
-    user_movie_ids: tasteItems.map((item) => item.movie.id),
+    user_movie_ids: favs.map((movie) => movie.id),
     exclude_ids: favs.map((movie) => movie.id),
-    user_genre_ids: tasteItems.map((item) => item.movie.genre_ids || []),
-    user_vote_counts: tasteItems.map((item) => item.rating),
-    user_release_years: tasteItems.map((item) => movieReleaseYear(item.movie)).filter(Boolean),
+    user_genre_ids: favs.map((movie) => movie.genre_ids || []),
+    user_vote_counts: favs.map((movie) => Number(ratings[movie.id]?.score || 5)),
+    user_release_years: favs.map(movieReleaseYear).filter(Boolean),
     top_k: recPage * 18,
   };
+  if (!payload.user_movie_ids.length) return [];
   const r = await fetch(`${BACKEND_URL}/semantic-recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(withSemanticExtras(payload)) });
   if (!r.ok) return [];
   return normalizeSemantic((await r.json()).results || []);
