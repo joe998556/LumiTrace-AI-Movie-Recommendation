@@ -487,11 +487,13 @@ def score_context_filters(
     movie_genres = {int(genre) for genre in movie.get("genre_ids", []) if str(genre).isdigit()}
     if playlist_genre_ids:
         overlap = len(movie_genres.intersection(playlist_genre_ids))
-        score += min(0.18, overlap * 0.06)
+        # FIX: much stronger genre bonus so genre-matched movies outrank popular generics
+        score += min(0.40, overlap * 0.15)
 
     language = clean_language_code(movie.get("original_language"))
     if language and language in preferred_languages:
-        score += 0.08
+        # FIX: stronger language bonus
+        score += 0.20
 
     return score
 
@@ -1395,7 +1397,10 @@ def search():
     ]
     inferred_genres, inferred_languages = infer_context_filters(texts)
     playlist_genre_ids.update(inferred_genres)
-    preferred_languages.update(inferred_languages)
+    # FIX: only add inferred languages when user didn't specify any explicitly.
+    # Otherwise Chinese overviews would add "en" to explicit "ko", breaking filtering.
+    if not preferred_languages:
+        preferred_languages.update(inferred_languages)
     era_min_year, era_max_year = infer_year_window(texts)
 
     # Parse user ratings (1.0-10.0), default to 5 for missing/invalid.
@@ -1540,18 +1545,20 @@ def search():
     # Text-only queries have no collaborative (SVD/genome) signal to act as a
     # quality prior, so a pure-semantic match lets obscure keyword hits outrank
     # canonical films. Lean harder on the metadata quality prior in that case.
-    metadata_weight = 0.22 if (texts and not has_item_signal) else 0.08
+    # FIX: drastically reduce metadata weight to prevent popularity bias from
+    # drowning out semantic/genre/language signals.
+    metadata_weight = 0.05 if (texts and not has_item_signal) else 0.04
     shortlist_scores = (shortlist_scores * (1.0 - metadata_weight)) + (metadata_scores_tensor * metadata_weight)
 
     # First shortlist from the positive taste signal or metadata fallback.
     has_era_filter = bool(era_min_year or era_max_year)
     has_context_filters = bool(playlist_genre_ids or preferred_languages or has_era_filter)
-    # Release year is invisible to the embedding, so an era query needs the full
-    # catalogue scanned (era-matching films rarely sit in the semantic top pool).
-    if has_era_filter:
+    # FIX: when genre or language filters are active, scan the FULL catalogue.
+    # Otherwise genre-matched but semantically-low movies never enter the pool.
+    if has_context_filters:
         pool_size = len(MOVIES)
     else:
-        pool_size = min(len(MOVIES), max(top_k * 80, 1000 if has_context_filters else 300))
+        pool_size = min(len(MOVIES), max(top_k * 80, 300))
     _, top_indices_tensor = torch.topk(shortlist_scores, k=pool_size)
     top_indices = top_indices_tensor.detach().cpu().tolist()
 
@@ -1613,14 +1620,15 @@ def search():
         # single-genre profile and must not be penalized.
         off_profile_penalty = 0.0 if texts else off_profile_genre_penalty(movie_genres, genre_weights)
         collection_lang_bonus = 0.10 if (language and language in collection_languages) else 0.0
-        final = (
-            float(adjusted_scores[shortlist_position])
-            + meta_score
-            + context_score
-            + year_score
-            + collection_lang_bonus
-            - off_profile_penalty
-        )
+        sem = float(adjusted_scores[shortlist_position])
+        if has_context_filters:
+            # FIX: when genre/language filters are active, context match is the
+            # primary ranking signal. Semantic similarity is secondary refinement.
+            # This prevents popularity-biased semantic scores from burying
+            # genre-matched but less-known movies.
+            final = context_score * 1.5 + sem * 0.3 + year_score + collection_lang_bonus
+        else:
+            final = sem + meta_score + context_score + year_score + collection_lang_bonus - off_profile_penalty
         candidates.append(
             {
                 **movie,

@@ -1,0 +1,7229 @@
+{
+  "round": 1,
+  "timestamp": "2026-06-22T01:02:44.738292",
+  "profile_count": 30,
+  "avg_score": 5.94,
+  "min_profile": {
+    "profile_name": "War Films",
+    "recommendation_count": 10,
+    "avg_total_score": 5.04,
+    "min_total_score": 4.67,
+    "max_total_score": 5.41,
+    "existence_rate": 1.0,
+    "not_collected_rate": 1.0,
+    "avg_genre_relevance": 0.8,
+    "avg_language_match": 1.0,
+    "genre_mismatch_count": 0,
+    "duplicate_count": 0,
+    "recommendations": [
+      {
+        "id": 792,
+        "title": "Platoon",
+        "score": 0.7829,
+        "original_language": "en",
+        "genre_ids": [
+          18,
+          10752,
+          28
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.8291666666666686,
+          "score_strength": 0.7829,
+          "total": 5.41
+        }
+      },
+      {
+        "id": 11778,
+        "title": "The Deer Hunter",
+        "score": 0.7814,
+        "original_language": "en",
+        "genre_ids": [
+          18,
+          10752
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.6291666666666685,
+          "score_strength": 0.7814,
+          "total": 5.21
+        }
+      },
+      {
+        "id": 543580,
+        "title": "They Shall Not Grow Old",
+        "score": 0.764,
+        "original_language": "en",
+        "genre_ids": [
+          99,
+          36,
+          10752
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.37083333333333146,
+          "score_strength": 0.764,
+          "total": 4.93
+        }
+      },
+      {
+        "id": 935,
+        "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+        "score": 0.7619,
+        "original_language": "en",
+        "genre_ids": [
+          35,
+          10752
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.27916666666666856,
+          "score_strength": 0.7619,
+          "total": 4.84
+        }
+      },
+      {
+        "id": 882569,
+        "title": "Guy Ritchie's The Covenant",
+        "score": 0.759,
+        "original_language": "en",
+        "genre_ids": [
+          10752,
+          28,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.24583333333333146,
+          "score_strength": 0.759,
+          "total": 4.8
+        }
+      },
+      {
+        "id": 853,
+        "title": "Enemy at the Gates",
+        "score": 0.7547,
+        "original_language": "en",
+        "genre_ids": [
+          10752,
+          36
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.7958333333333314,
+          "score_strength": 0.7547,
+          "total": 5.35
+        }
+      },
+      {
+        "id": 228150,
+        "title": "Fury",
+        "score": 0.7717,
+        "original_language": "en",
+        "genre_ids": [
+          10752,
+          18,
+          28
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.47083333333333144,
+          "score_strength": 0.7717,
+          "total": 5.04
+        }
+      },
+      {
+        "id": 374720,
+        "title": "Dunkirk",
+        "score": 0.7699,
+        "original_language": "en",
+        "genre_ids": [
+          10752,
+          28,
+          18
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.3958333333333315,
+          "score_strength": 0.7699,
+          "total": 4.97
+        }
+      },
+      {
+        "id": 975,
+        "title": "Paths of Glory",
+        "score": 0.7677,
+        "original_language": "en",
+        "genre_ids": [
+          10752,
+          18
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.10416666666666852,
+          "score_strength": 0.7677,
+          "total": 4.67
+        }
+      },
+      {
+        "id": 12162,
+        "title": "The Hurt Locker",
+        "score": 0.7667,
+        "original_language": "en",
+        "genre_ids": [
+          18,
+          53,
+          10752
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 0.8,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.6208333333333315,
+          "score_strength": 0.7667,
+          "total": 5.19
+        }
+      }
+    ]
+  },
+  "max_profile": {
+    "profile_name": "Villeneuve Fan",
+    "recommendation_count": 10,
+    "avg_total_score": 6.73,
+    "min_total_score": 6.3,
+    "max_total_score": 6.97,
+    "existence_rate": 1.0,
+    "not_collected_rate": 1.0,
+    "avg_genre_relevance": 2.0,
+    "avg_language_match": 1.0,
+    "genre_mismatch_count": 0,
+    "duplicate_count": 0,
+    "recommendations": [
+      {
+        "id": 333371,
+        "title": "10 Cloverfield Lane",
+        "score": 1.135,
+        "original_language": "en",
+        "genre_ids": [
+          53,
+          878,
+          18,
+          27
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.8458333333333314,
+          "score_strength": 1.0,
+          "total": 6.85
+        }
+      },
+      {
+        "id": 14337,
+        "title": "Primer",
+        "score": 1.1302,
+        "original_language": "en",
+        "genre_ids": [
+          878,
+          18,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.8541666666666685,
+          "score_strength": 1.0,
+          "total": 6.85
+        }
+      },
+      {
+        "id": 78,
+        "title": "Blade Runner",
+        "score": 1.1208,
+        "original_language": "en",
+        "genre_ids": [
+          878,
+          18,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.3041666666666686,
+          "score_strength": 1.0,
+          "total": 6.3
+        }
+      },
+      {
+        "id": 281,
+        "title": "Strange Days",
+        "score": 1.1178,
+        "original_language": "en",
+        "genre_ids": [
+          80,
+          18,
+          878,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.6291666666666685,
+          "score_strength": 1.0,
+          "total": 6.63
+        }
+      },
+      {
+        "id": 49047,
+        "title": "Gravity",
+        "score": 1.1174,
+        "original_language": "en",
+        "genre_ids": [
+          878,
+          53,
+          18
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.9208333333333314,
+          "score_strength": 1.0,
+          "total": 6.92
+        }
+      },
+      {
+        "id": 329004,
+        "title": "The Survivalist",
+        "score": 1.1162,
+        "original_language": "en",
+        "genre_ids": [
+          18,
+          878,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.8708333333333315,
+          "score_strength": 1.0,
+          "total": 6.87
+        }
+      },
+      {
+        "id": 39538,
+        "title": "Contagion",
+        "score": 1.1109,
+        "original_language": "en",
+        "genre_ids": [
+          18,
+          53,
+          878
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.9708333333333314,
+          "score_strength": 1.0,
+          "total": 6.97
+        }
+      },
+      {
+        "id": 10176,
+        "title": "The Quiet Earth",
+        "score": 1.1091,
+        "original_language": "en",
+        "genre_ids": [
+          18,
+          878,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.37916666666666854,
+          "score_strength": 1.0,
+          "total": 6.38
+        }
+      },
+      {
+        "id": 86812,
+        "title": "Sound of My Voice",
+        "score": 1.1078,
+        "original_language": "en",
+        "genre_ids": [
+          878,
+          18,
+          9648,
+          53
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.9708333333333314,
+          "score_strength": 1.0,
+          "total": 6.97
+        }
+      },
+      {
+        "id": 15613,
+        "title": "Fire in the Sky",
+        "score": 1.1058,
+        "original_language": "en",
+        "genre_ids": [
+          878,
+          9648,
+          53,
+          18
+        ],
+        "scores": {
+          "exists": 1,
+          "not_collected": 1,
+          "genre_relevance": 2.0,
+          "genre_mismatch": 0.0,
+          "language_match": 1.0,
+          "year_proximity": 0.5791666666666686,
+          "score_strength": 1.0,
+          "total": 6.58
+        }
+      }
+    ]
+  },
+  "total_recommendations": 300,
+  "total_genre_mismatches": 0,
+  "total_duplicates": 0,
+  "profiles": [
+    {
+      "profile_name": "Sci-Fi Lover",
+      "recommendation_count": 10,
+      "avg_total_score": 5.44,
+      "min_total_score": 5.33,
+      "max_total_score": 5.56,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 17431,
+          "title": "Moon",
+          "score": 0.7844,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8375,
+            "score_strength": 0.7844,
+            "total": 5.42
+          }
+        },
+        {
+          "id": 27205,
+          "title": "Inception",
+          "score": 0.7839,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8625,
+            "score_strength": 0.7839,
+            "total": 5.45
+          }
+        },
+        {
+          "id": 220289,
+          "title": "Coherence",
+          "score": 0.7787,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 0.7787,
+            "total": 5.54
+          }
+        },
+        {
+          "id": 438631,
+          "title": "Dune",
+          "score": 0.7777,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8625,
+            "score_strength": 0.7777,
+            "total": 5.44
+          }
+        },
+        {
+          "id": 1272,
+          "title": "Sunshine",
+          "score": 0.7716,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7875,
+            "score_strength": 0.7716,
+            "total": 5.36
+          }
+        },
+        {
+          "id": 1124,
+          "title": "The Prestige",
+          "score": 0.7686,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            9648,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7625,
+            "score_strength": 0.7686,
+            "total": 5.33
+          }
+        },
+        {
+          "id": 545611,
+          "title": "Everything Everywhere All at Once",
+          "score": 0.772,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8375,
+            "score_strength": 0.772,
+            "total": 5.41
+          }
+        },
+        {
+          "id": 9693,
+          "title": "Children of Men",
+          "score": 0.7712,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            53,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7625,
+            "score_strength": 0.7712,
+            "total": 5.33
+          }
+        },
+        {
+          "id": 286217,
+          "title": "The Martian",
+          "score": 0.7707,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9875,
+            "score_strength": 0.7707,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 206487,
+          "title": "Predestination",
+          "score": 0.7681,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 0.7681,
+            "total": 5.53
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Hard Sci-Fi Space",
+      "recommendation_count": 10,
+      "avg_total_score": 6.2,
+      "min_total_score": 5.57,
+      "max_total_score": 6.54,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 27205,
+          "title": "Inception",
+          "score": 0.9984,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9083333333333314,
+            "score_strength": 0.9984,
+            "total": 6.51
+          }
+        },
+        {
+          "id": 438631,
+          "title": "Dune",
+          "score": 0.9961,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6333333333333314,
+            "score_strength": 0.9961,
+            "total": 6.23
+          }
+        },
+        {
+          "id": 2756,
+          "title": "The Abyss",
+          "score": 0.9863,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5666666666666685,
+            "score_strength": 0.9863,
+            "total": 6.15
+          }
+        },
+        {
+          "id": 871,
+          "title": "Planet of the Apes",
+          "score": 0.9799,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            12,
+            18,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.04166666666666852,
+            "score_strength": 0.9799,
+            "total": 5.62
+          }
+        },
+        {
+          "id": 545611,
+          "title": "Everything Everywhere All at Once",
+          "score": 0.9792,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6083333333333314,
+            "score_strength": 0.9792,
+            "total": 6.19
+          }
+        },
+        {
+          "id": 245703,
+          "title": "Midnight Special",
+          "score": 0.9784,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            18,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7583333333333314,
+            "score_strength": 0.9784,
+            "total": 6.34
+          }
+        },
+        {
+          "id": 16320,
+          "title": "Serenity",
+          "score": 0.9767,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            28,
+            12,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9666666666666686,
+            "score_strength": 0.9767,
+            "total": 6.54
+          }
+        },
+        {
+          "id": 76341,
+          "title": "Mad Max: Fury Road",
+          "score": 0.9752,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7833333333333314,
+            "score_strength": 0.9752,
+            "total": 6.36
+          }
+        },
+        {
+          "id": 830,
+          "title": "Forbidden Planet",
+          "score": 0.9747,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 0.9747,
+            "total": 5.57
+          }
+        },
+        {
+          "id": 13475,
+          "title": "Star Trek",
+          "score": 0.974,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            28,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9333333333333315,
+            "score_strength": 0.974,
+            "total": 6.51
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "AI Movies",
+      "recommendation_count": 10,
+      "avg_total_score": 5.38,
+      "min_total_score": 5.1,
+      "max_total_score": 5.56,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 329865,
+          "title": "Arrival",
+          "score": 0.7827,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            878,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6583333333333314,
+            "score_strength": 0.7827,
+            "total": 5.24
+          }
+        },
+        {
+          "id": 17431,
+          "title": "Moon",
+          "score": 0.7824,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8333333333333315,
+            "score_strength": 0.7824,
+            "total": 5.42
+          }
+        },
+        {
+          "id": 1635,
+          "title": "The Island",
+          "score": 0.7734,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9333333333333315,
+            "score_strength": 0.7734,
+            "total": 5.51
+          }
+        },
+        {
+          "id": 605,
+          "title": "The Matrix Revolutions",
+          "score": 0.772,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            28,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9833333333333314,
+            "score_strength": 0.772,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 438631,
+          "title": "Dune",
+          "score": 0.767,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5333333333333314,
+            "score_strength": 0.767,
+            "total": 5.1
+          }
+        },
+        {
+          "id": 24358,
+          "title": "The Second Renaissance Part I",
+          "score": 0.7622,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            16
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9833333333333314,
+            "score_strength": 0.7622,
+            "total": 5.55
+          }
+        },
+        {
+          "id": 335984,
+          "title": "Blade Runner 2049",
+          "score": 0.774,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6333333333333314,
+            "score_strength": 0.774,
+            "total": 5.21
+          }
+        },
+        {
+          "id": 157336,
+          "title": "Interstellar",
+          "score": 0.7721,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            18,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7083333333333315,
+            "score_strength": 0.7721,
+            "total": 5.28
+          }
+        },
+        {
+          "id": 782,
+          "title": "Gattaca",
+          "score": 0.7704,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8666666666666686,
+            "score_strength": 0.7704,
+            "total": 5.44
+          }
+        },
+        {
+          "id": 9693,
+          "title": "Children of Men",
+          "score": 0.7688,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            53,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9083333333333314,
+            "score_strength": 0.7688,
+            "total": 5.48
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Crime Lover",
+      "recommendation_count": 10,
+      "avg_total_score": 5.35,
+      "min_total_score": 5.19,
+      "max_total_score": 5.56,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 500,
+          "title": "Reservoir Dogs",
+          "score": 0.7832,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8166666666666685,
+            "score_strength": 0.7832,
+            "total": 5.4
+          }
+        },
+        {
+          "id": 11524,
+          "title": "Thief",
+          "score": 0.7805,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            53,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9083333333333314,
+            "score_strength": 0.7805,
+            "total": 5.49
+          }
+        },
+        {
+          "id": 311,
+          "title": "Once Upon a Time in America",
+          "score": 0.7782,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9833333333333314,
+            "score_strength": 0.7782,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 107,
+          "title": "Snatch",
+          "score": 0.772,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6166666666666686,
+            "score_strength": 0.772,
+            "total": 5.19
+          }
+        },
+        {
+          "id": 100,
+          "title": "Lock, Stock and Two Smoking Barrels",
+          "score": 0.7657,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6666666666666685,
+            "score_strength": 0.7657,
+            "total": 5.23
+          }
+        },
+        {
+          "id": 319,
+          "title": "True Romance",
+          "score": 0.7638,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            80,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7916666666666685,
+            "score_strength": 0.7638,
+            "total": 5.36
+          }
+        },
+        {
+          "id": 6075,
+          "title": "Carlito's Way",
+          "score": 0.7792,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7916666666666685,
+            "score_strength": 0.7792,
+            "total": 5.37
+          }
+        },
+        {
+          "id": 524,
+          "title": "Casino",
+          "score": 0.7782,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7416666666666686,
+            "score_strength": 0.7782,
+            "total": 5.32
+          }
+        },
+        {
+          "id": 5916,
+          "title": "The Getaway",
+          "score": 0.7776,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            80,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6833333333333315,
+            "score_strength": 0.7776,
+            "total": 5.26
+          }
+        },
+        {
+          "id": 9366,
+          "title": "Donnie Brasco",
+          "score": 0.7763,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6916666666666685,
+            "score_strength": 0.7763,
+            "total": 5.27
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Gangster Films",
+      "recommendation_count": 10,
+      "avg_total_score": 6.0,
+      "min_total_score": 5.6,
+      "max_total_score": 6.59,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 9040,
+          "title": "Serpico",
+          "score": 1.1473,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9899999999999978,
+            "score_strength": 1.0,
+            "total": 6.59
+          }
+        },
+        {
+          "id": 18900,
+          "title": "In Cold Blood",
+          "score": 1.1397,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8600000000000023,
+            "score_strength": 1.0,
+            "total": 6.46
+          }
+        },
+        {
+          "id": 398978,
+          "title": "The Irishman",
+          "score": 1.1361,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 5.6
+          }
+        },
+        {
+          "id": 14729,
+          "title": "The Long Riders",
+          "score": 1.1242,
+          "original_language": "en",
+          "genre_ids": [
+            37,
+            28,
+            80,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8149999999999977,
+            "score_strength": 1.0,
+            "total": 6.41
+          }
+        },
+        {
+          "id": 898,
+          "title": "Birdman of Alcatraz",
+          "score": 1.1225,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            80,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7350000000000023,
+            "score_strength": 1.0,
+            "total": 6.34
+          }
+        },
+        {
+          "id": 3131,
+          "title": "Gangs of New York",
+          "score": 1.1219,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.2649999999999977,
+            "score_strength": 1.0,
+            "total": 5.86
+          }
+        },
+        {
+          "id": 530723,
+          "title": "Bad Education",
+          "score": 1.1157,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            80,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 5.6
+          }
+        },
+        {
+          "id": 842,
+          "title": "The Assassination of Richard Nixon",
+          "score": 1.1067,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            53,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.21499999999999775,
+            "score_strength": 1.0,
+            "total": 5.81
+          }
+        },
+        {
+          "id": 9829,
+          "title": "United 93",
+          "score": 1.1067,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            80,
+            53,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.1649999999999977,
+            "score_strength": 1.0,
+            "total": 5.76
+          }
+        },
+        {
+          "id": 487558,
+          "title": "BlacKkKlansman",
+          "score": 1.1066,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            35,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 5.6
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Thriller Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 5.57,
+      "min_total_score": 5.38,
+      "max_total_score": 5.78,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 395834,
+          "title": "Wind River",
+          "score": 1.0057,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            9648,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5916666666666686,
+            "score_strength": 1.0,
+            "total": 5.39
+          }
+        },
+        {
+          "id": 11324,
+          "title": "Shutter Island",
+          "score": 1.0007,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7666666666666686,
+            "score_strength": 1.0,
+            "total": 5.57
+          }
+        },
+        {
+          "id": 65754,
+          "title": "The Girl with the Dragon Tattoo",
+          "score": 0.9978,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7416666666666686,
+            "score_strength": 0.9978,
+            "total": 5.54
+          }
+        },
+        {
+          "id": 77,
+          "title": "Memento",
+          "score": 0.9921,
+          "original_language": "en",
+          "genre_ids": [
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9833333333333314,
+            "score_strength": 0.9921,
+            "total": 5.78
+          }
+        },
+        {
+          "id": 322,
+          "title": "Mystic River",
+          "score": 0.9976,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9416666666666685,
+            "score_strength": 0.9976,
+            "total": 5.74
+          }
+        },
+        {
+          "id": 11092,
+          "title": "Presumed Innocent",
+          "score": 0.9934,
+          "original_language": "en",
+          "genre_ids": [
+            9648,
+            80,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7333333333333314,
+            "score_strength": 0.9934,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 2118,
+          "title": "L.A. Confidential",
+          "score": 0.993,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9083333333333314,
+            "score_strength": 0.993,
+            "total": 5.7
+          }
+        },
+        {
+          "id": 2252,
+          "title": "Eastern Promises",
+          "score": 0.9926,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8416666666666686,
+            "score_strength": 0.9926,
+            "total": 5.63
+          }
+        },
+        {
+          "id": 328425,
+          "title": "The Gift",
+          "score": 0.9912,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            9648,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6416666666666686,
+            "score_strength": 0.9912,
+            "total": 5.43
+          }
+        },
+        {
+          "id": 419430,
+          "title": "Get Out",
+          "score": 0.9896,
+          "original_language": "en",
+          "genre_ids": [
+            9648,
+            53,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5916666666666686,
+            "score_strength": 0.9896,
+            "total": 5.38
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Psychological Thriller",
+      "recommendation_count": 10,
+      "avg_total_score": 6.37,
+      "min_total_score": 6.14,
+      "max_total_score": 6.57,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 181886,
+          "title": "Enemy",
+          "score": 1.0023,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.75,
+            "score_strength": 1.0,
+            "total": 6.35
+          }
+        },
+        {
+          "id": 210577,
+          "title": "Gone Girl",
+          "score": 1.0014,
+          "original_language": "en",
+          "genre_ids": [
+            9648,
+            53,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.75,
+            "score_strength": 1.0,
+            "total": 6.35
+          }
+        },
+        {
+          "id": 322,
+          "title": "Mystic River",
+          "score": 0.9939,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.975,
+            "score_strength": 0.9939,
+            "total": 6.57
+          }
+        },
+        {
+          "id": 807,
+          "title": "Se7en",
+          "score": 0.9892,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.775,
+            "score_strength": 0.9892,
+            "total": 6.36
+          }
+        },
+        {
+          "id": 638,
+          "title": "Lost Highway",
+          "score": 0.9931,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.825,
+            "score_strength": 0.9931,
+            "total": 6.42
+          }
+        },
+        {
+          "id": 473,
+          "title": "Pi",
+          "score": 0.9916,
+          "original_language": "en",
+          "genre_ids": [
+            9648,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.85,
+            "score_strength": 0.9916,
+            "total": 6.44
+          }
+        },
+        {
+          "id": 493922,
+          "title": "Hereditary",
+          "score": 0.987,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.65,
+            "score_strength": 0.987,
+            "total": 6.24
+          }
+        },
+        {
+          "id": 793,
+          "title": "Blue Velvet",
+          "score": 0.9866,
+          "original_language": "en",
+          "genre_ids": [
+            9648,
+            53,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.55,
+            "score_strength": 0.9866,
+            "total": 6.14
+          }
+        },
+        {
+          "id": 399057,
+          "title": "The Killing of a Sacred Deer",
+          "score": 0.9862,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.675,
+            "score_strength": 0.9862,
+            "total": 6.26
+          }
+        },
+        {
+          "id": 9613,
+          "title": "Spider",
+          "score": 0.9854,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.95,
+            "score_strength": 0.9854,
+            "total": 6.54
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Horror Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 5.49,
+      "min_total_score": 5.4,
+      "max_total_score": 5.57,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 310131,
+          "title": "The Witch",
+          "score": 0.7784,
+          "original_language": "en",
+          "genre_ids": [
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9041666666666686,
+            "score_strength": 0.7784,
+            "total": 5.48
+          }
+        },
+        {
+          "id": 430231,
+          "title": "The Endless",
+          "score": 0.7764,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            27,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8791666666666685,
+            "score_strength": 0.7764,
+            "total": 5.46
+          }
+        },
+        {
+          "id": 530385,
+          "title": "Midsommar",
+          "score": 0.7746,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8291666666666686,
+            "score_strength": 0.7746,
+            "total": 5.4
+          }
+        },
+        {
+          "id": 157547,
+          "title": "Oculus",
+          "score": 0.774,
+          "original_language": "en",
+          "genre_ids": [
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9541666666666686,
+            "score_strength": 0.774,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 300668,
+          "title": "Annihilation",
+          "score": 0.774,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8541666666666685,
+            "score_strength": 0.774,
+            "total": 5.43
+          }
+        },
+        {
+          "id": 82507,
+          "title": "Sinister",
+          "score": 0.7728,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            53,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9958333333333315,
+            "score_strength": 0.7728,
+            "total": 5.57
+          }
+        },
+        {
+          "id": 313922,
+          "title": "Green Room",
+          "score": 0.772,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            80,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9041666666666686,
+            "score_strength": 0.772,
+            "total": 5.48
+          }
+        },
+        {
+          "id": 397243,
+          "title": "The Autopsy of Jane Doe",
+          "score": 0.7716,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9041666666666686,
+            "score_strength": 0.7716,
+            "total": 5.48
+          }
+        },
+        {
+          "id": 64720,
+          "title": "Take Shelter",
+          "score": 0.7711,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            18,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9708333333333314,
+            "score_strength": 0.7711,
+            "total": 5.54
+          }
+        },
+        {
+          "id": 21208,
+          "title": "Orphan",
+          "score": 0.7706,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9208333333333314,
+            "score_strength": 0.7706,
+            "total": 5.49
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Japanese Korean Cinema",
+      "recommendation_count": 10,
+      "avg_total_score": 6.48,
+      "min_total_score": 6.34,
+      "max_total_score": 6.59,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 670,
+          "title": "Oldboy",
+          "score": 1.112,
+          "original_language": "ko",
+          "genre_ids": [
+            53,
+            9648,
+            28,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8875,
+            "score_strength": 1.0,
+            "total": 6.49
+          }
+        },
+        {
+          "id": 4689,
+          "title": "Sympathy for Mr. Vengeance",
+          "score": 1.1049,
+          "original_language": "ko",
+          "genre_ids": [
+            28,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8625,
+            "score_strength": 1.0,
+            "total": 6.46
+          }
+        },
+        {
+          "id": 4550,
+          "title": "Lady Vengeance",
+          "score": 1.1017,
+          "original_language": "ko",
+          "genre_ids": [
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9375,
+            "score_strength": 1.0,
+            "total": 6.54
+          }
+        },
+        {
+          "id": 290098,
+          "title": "The Handmaiden",
+          "score": 1.0951,
+          "original_language": "ko",
+          "genre_ids": [
+            53,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7875,
+            "score_strength": 1.0,
+            "total": 6.39
+          }
+        },
+        {
+          "id": 22536,
+          "title": "Thirst",
+          "score": 1.0918,
+          "original_language": "ko",
+          "genre_ids": [
+            18,
+            27,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 1.0,
+            "total": 6.56
+          }
+        },
+        {
+          "id": 165213,
+          "title": "New World",
+          "score": 1.0918,
+          "original_language": "ko",
+          "genre_ids": [
+            53,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8625,
+            "score_strength": 1.0,
+            "total": 6.46
+          }
+        },
+        {
+          "id": 57361,
+          "title": "The Yellow Sea",
+          "score": 1.0892,
+          "original_language": "ko",
+          "genre_ids": [
+            18,
+            53,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9375,
+            "score_strength": 1.0,
+            "total": 6.54
+          }
+        },
+        {
+          "id": 491584,
+          "title": "Burning",
+          "score": 1.0832,
+          "original_language": "ko",
+          "genre_ids": [
+            9648,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7375,
+            "score_strength": 1.0,
+            "total": 6.34
+          }
+        },
+        {
+          "id": 2440,
+          "title": "Joint Security Area",
+          "score": 1.0765,
+          "original_language": "ko",
+          "genre_ids": [
+            18,
+            53,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8125,
+            "score_strength": 1.0,
+            "total": 6.41
+          }
+        },
+        {
+          "id": 10253,
+          "title": "Dragon Wars: D-War",
+          "score": 1.0635,
+          "original_language": "ko",
+          "genre_ids": [
+            14,
+            18,
+            27,
+            28,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9875,
+            "score_strength": 1.0,
+            "total": 6.59
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "European Art House",
+      "recommendation_count": 10,
+      "avg_total_score": 5.38,
+      "min_total_score": 4.56,
+      "max_total_score": 5.57,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 426426,
+          "title": "Roma",
+          "score": 0.7782,
+          "original_language": "es",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.80625,
+            "score_strength": 0.7782,
+            "total": 5.38
+          }
+        },
+        {
+          "id": 46738,
+          "title": "Incendies",
+          "score": 0.7726,
+          "original_language": "fr",
+          "genre_ids": [
+            18,
+            10752,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.99375,
+            "score_strength": 0.7726,
+            "total": 5.57
+          }
+        },
+        {
+          "id": 63311,
+          "title": "The Skin I Live In",
+          "score": 0.7726,
+          "original_language": "es",
+          "genre_ids": [
+            18,
+            27,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.98125,
+            "score_strength": 0.7726,
+            "total": 5.55
+          }
+        },
+        {
+          "id": 110160,
+          "title": "Laurence Anyways",
+          "score": 0.7707,
+          "original_language": "fr",
+          "genre_ids": [
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.95625,
+            "score_strength": 0.7707,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 64,
+          "title": "Talk to Her",
+          "score": 0.7688,
+          "original_language": "es",
+          "genre_ids": [
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.79375,
+            "score_strength": 0.7688,
+            "total": 5.36
+          }
+        },
+        {
+          "id": 265177,
+          "title": "Mommy",
+          "score": 0.7685,
+          "original_language": "fr",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.90625,
+            "score_strength": 0.7685,
+            "total": 5.47
+          }
+        },
+        {
+          "id": 481432,
+          "title": "Happy as Lazzaro",
+          "score": 0.7676,
+          "original_language": "it",
+          "genre_ids": [
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.80625,
+            "score_strength": 0.7676,
+            "total": 5.37
+          }
+        },
+        {
+          "id": 24188,
+          "title": "Il Sorpasso",
+          "score": 0.7632,
+          "original_language": "it",
+          "genre_ids": [
+            18,
+            35,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 0.7632,
+            "total": 4.56
+          }
+        },
+        {
+          "id": 37903,
+          "title": "The White Ribbon",
+          "score": 0.7693,
+          "original_language": "de",
+          "genre_ids": [
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.96875,
+            "score_strength": 0.7693,
+            "total": 5.54
+          }
+        },
+        {
+          "id": 10886,
+          "title": "The Unknown Woman",
+          "score": 0.7677,
+          "original_language": "it",
+          "genre_ids": [
+            53,
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.89375,
+            "score_strength": 0.7677,
+            "total": 5.46
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Indie Film",
+      "recommendation_count": 10,
+      "avg_total_score": 5.51,
+      "min_total_score": 5.45,
+      "max_total_score": 5.56,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 615643,
+          "title": "Minari",
+          "score": 0.7805,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9041666666666686,
+            "score_strength": 0.7805,
+            "total": 5.48
+          }
+        },
+        {
+          "id": 565310,
+          "title": "The Farewell",
+          "score": 0.7798,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9541666666666686,
+            "score_strength": 0.7798,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 492188,
+          "title": "Marriage Story",
+          "score": 0.7794,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9541666666666686,
+            "score_strength": 0.7794,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 489930,
+          "title": "Blindspotting",
+          "score": 0.778,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9791666666666685,
+            "score_strength": 0.778,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 600354,
+          "title": "The Father",
+          "score": 0.7779,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9291666666666686,
+            "score_strength": 0.7779,
+            "total": 5.51
+          }
+        },
+        {
+          "id": 376867,
+          "title": "Moonlight",
+          "score": 0.7774,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9708333333333314,
+            "score_strength": 0.7774,
+            "total": 5.55
+          }
+        },
+        {
+          "id": 674324,
+          "title": "The Banshees of Inisherin",
+          "score": 0.7764,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8791666666666685,
+            "score_strength": 0.7764,
+            "total": 5.46
+          }
+        },
+        {
+          "id": 965150,
+          "title": "Aftersun",
+          "score": 0.774,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8791666666666685,
+            "score_strength": 0.774,
+            "total": 5.45
+          }
+        },
+        {
+          "id": 264644,
+          "title": "Room",
+          "score": 0.7733,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9458333333333314,
+            "score_strength": 0.7733,
+            "total": 5.52
+          }
+        },
+        {
+          "id": 85350,
+          "title": "Boyhood",
+          "score": 0.772,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9208333333333314,
+            "score_strength": 0.772,
+            "total": 5.49
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Drama Lover",
+      "recommendation_count": 10,
+      "avg_total_score": 5.4,
+      "min_total_score": 5.29,
+      "max_total_score": 5.58,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 489,
+          "title": "Good Will Hunting",
+          "score": 0.7776,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 1.0,
+            "score_strength": 0.7776,
+            "total": 5.58
+          }
+        },
+        {
+          "id": 9475,
+          "title": "Scent of a Woman",
+          "score": 0.7681,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.875,
+            "score_strength": 0.7681,
+            "total": 5.44
+          }
+        },
+        {
+          "id": 12405,
+          "title": "Slumdog Millionaire",
+          "score": 0.7667,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.725,
+            "score_strength": 0.7667,
+            "total": 5.29
+          }
+        },
+        {
+          "id": 70,
+          "title": "Million Dollar Baby",
+          "score": 0.7662,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.825,
+            "score_strength": 0.7662,
+            "total": 5.39
+          }
+        },
+        {
+          "id": 207,
+          "title": "Dead Poets Society",
+          "score": 0.7641,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8,
+            "score_strength": 0.7641,
+            "total": 5.36
+          }
+        },
+        {
+          "id": 921,
+          "title": "Cinderella Man",
+          "score": 0.764,
+          "original_language": "en",
+          "genre_ids": [
+            10749,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8,
+            "score_strength": 0.764,
+            "total": 5.36
+          }
+        },
+        {
+          "id": 380,
+          "title": "Rain Man",
+          "score": 0.7638,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.775,
+            "score_strength": 0.7638,
+            "total": 5.34
+          }
+        },
+        {
+          "id": 640,
+          "title": "Catch Me If You Can",
+          "score": 0.7637,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.875,
+            "score_strength": 0.7637,
+            "total": 5.44
+          }
+        },
+        {
+          "id": 11005,
+          "title": "Awakenings",
+          "score": 0.7633,
+          "original_language": "en",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.825,
+            "score_strength": 0.7633,
+            "total": 5.39
+          }
+        },
+        {
+          "id": 322,
+          "title": "Mystic River",
+          "score": 0.7625,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.85,
+            "score_strength": 0.7625,
+            "total": 5.41
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Romance Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 5.28,
+      "min_total_score": 5.14,
+      "max_total_score": 5.43,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 80,
+          "title": "Before Sunset",
+          "score": 0.7751,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8458333333333314,
+            "score_strength": 0.7751,
+            "total": 5.42
+          }
+        },
+        {
+          "id": 152601,
+          "title": "Her",
+          "score": 0.7709,
+          "original_language": "en",
+          "genre_ids": [
+            10749,
+            878,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6208333333333315,
+            "score_strength": 0.7709,
+            "total": 5.19
+          }
+        },
+        {
+          "id": 59436,
+          "title": "Midnight in Paris",
+          "score": 0.7676,
+          "original_language": "en",
+          "genre_ids": [
+            14,
+            35,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6708333333333314,
+            "score_strength": 0.7676,
+            "total": 5.24
+          }
+        },
+        {
+          "id": 50619,
+          "title": "The Twilight Saga: Breaking Dawn - Part 1",
+          "score": 0.751,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            14,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6708333333333314,
+            "score_strength": 0.751,
+            "total": 5.22
+          }
+        },
+        {
+          "id": 276908,
+          "title": "Comet",
+          "score": 0.7483,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            35,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5958333333333314,
+            "score_strength": 0.7483,
+            "total": 5.14
+          }
+        },
+        {
+          "id": 132344,
+          "title": "Before Midnight",
+          "score": 0.768,
+          "original_language": "en",
+          "genre_ids": [
+            10749,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6208333333333315,
+            "score_strength": 0.768,
+            "total": 5.19
+          }
+        },
+        {
+          "id": 5723,
+          "title": "Once",
+          "score": 0.7635,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10402,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7708333333333315,
+            "score_strength": 0.7635,
+            "total": 5.33
+          }
+        },
+        {
+          "id": 19913,
+          "title": "(500) Days of Summer",
+          "score": 0.7616,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7208333333333314,
+            "score_strength": 0.7616,
+            "total": 5.28
+          }
+        },
+        {
+          "id": 153,
+          "title": "Lost in Translation",
+          "score": 0.7592,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            35,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8708333333333315,
+            "score_strength": 0.7592,
+            "total": 5.43
+          }
+        },
+        {
+          "id": 4347,
+          "title": "Atonement",
+          "score": 0.7586,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7708333333333315,
+            "score_strength": 0.7586,
+            "total": 5.33
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Animation Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 5.4,
+      "min_total_score": 5.19,
+      "max_total_score": 5.55,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 10515,
+          "title": "Castle in the Sky",
+          "score": 0.8875,
+          "original_language": "ja",
+          "genre_ids": [
+            12,
+            14,
+            16,
+            28,
+            10751
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7050000000000012,
+            "score_strength": 0.8875,
+            "total": 5.39
+          }
+        },
+        {
+          "id": 16859,
+          "title": "Kiki's Delivery Service",
+          "score": 0.8797,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            10751,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7800000000000011,
+            "score_strength": 0.8797,
+            "total": 5.46
+          }
+        },
+        {
+          "id": 13398,
+          "title": "Tokyo Godfathers",
+          "score": 0.8756,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            18,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8699999999999989,
+            "score_strength": 0.8756,
+            "total": 5.55
+          }
+        },
+        {
+          "id": 4977,
+          "title": "Paprika",
+          "score": 0.8711,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7949999999999988,
+            "score_strength": 0.8711,
+            "total": 5.47
+          }
+        },
+        {
+          "id": 372058,
+          "title": "Your Name.",
+          "score": 0.8687,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            10749,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5449999999999988,
+            "score_strength": 0.8687,
+            "total": 5.21
+          }
+        },
+        {
+          "id": 15371,
+          "title": "The Castle of Cagliostro",
+          "score": 0.8644,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            12,
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5300000000000011,
+            "score_strength": 0.8644,
+            "total": 5.19
+          }
+        },
+        {
+          "id": 4935,
+          "title": "Howl's Moving Castle",
+          "score": 0.8789,
+          "original_language": "ja",
+          "genre_ids": [
+            14,
+            16,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8449999999999989,
+            "score_strength": 0.8789,
+            "total": 5.52
+          }
+        },
+        {
+          "id": 81,
+          "title": "Warriors of the Wind",
+          "score": 0.8764,
+          "original_language": "ja",
+          "genre_ids": [
+            12,
+            16,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6550000000000011,
+            "score_strength": 0.8764,
+            "total": 5.33
+          }
+        },
+        {
+          "id": 110420,
+          "title": "Wolf Children",
+          "score": 0.8722,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            10751,
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6449999999999989,
+            "score_strength": 0.8722,
+            "total": 5.32
+          }
+        },
+        {
+          "id": 11621,
+          "title": "Porco Rosso",
+          "score": 0.8714,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            12,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8550000000000011,
+            "score_strength": 0.8714,
+            "total": 5.53
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Japanese Animation",
+      "recommendation_count": 10,
+      "avg_total_score": 5.46,
+      "min_total_score": 5.3,
+      "max_total_score": 5.64,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 10515,
+          "title": "Castle in the Sky",
+          "score": 0.8851,
+          "original_language": "ja",
+          "genre_ids": [
+            12,
+            14,
+            16,
+            28,
+            10751
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6149999999999978,
+            "score_strength": 0.8851,
+            "total": 5.3
+          }
+        },
+        {
+          "id": 16859,
+          "title": "Kiki's Delivery Service",
+          "score": 0.8844,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            10751,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6899999999999977,
+            "score_strength": 0.8844,
+            "total": 5.37
+          }
+        },
+        {
+          "id": 13398,
+          "title": "Tokyo Godfathers",
+          "score": 0.8759,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            18,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9600000000000023,
+            "score_strength": 0.8759,
+            "total": 5.64
+          }
+        },
+        {
+          "id": 149870,
+          "title": "The Wind Rises",
+          "score": 0.8713,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            18,
+            36,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7100000000000023,
+            "score_strength": 0.8713,
+            "total": 5.38
+          }
+        },
+        {
+          "id": 4977,
+          "title": "Paprika",
+          "score": 0.8661,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8850000000000022,
+            "score_strength": 0.8661,
+            "total": 5.55
+          }
+        },
+        {
+          "id": 4935,
+          "title": "Howl's Moving Castle",
+          "score": 0.8822,
+          "original_language": "ja",
+          "genre_ids": [
+            14,
+            16,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9350000000000023,
+            "score_strength": 0.8822,
+            "total": 5.62
+          }
+        },
+        {
+          "id": 110420,
+          "title": "Wolf Children",
+          "score": 0.8776,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            10751,
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7350000000000023,
+            "score_strength": 0.8776,
+            "total": 5.41
+          }
+        },
+        {
+          "id": 37797,
+          "title": "Whisper of the Heart",
+          "score": 0.876,
+          "original_language": "ja",
+          "genre_ids": [
+            16,
+            18,
+            10751
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8399999999999977,
+            "score_strength": 0.876,
+            "total": 5.52
+          }
+        },
+        {
+          "id": 51739,
+          "title": "The Secret World of Arrietty",
+          "score": 0.8754,
+          "original_language": "ja",
+          "genre_ids": [
+            14,
+            16,
+            10751
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7850000000000023,
+            "score_strength": 0.8754,
+            "total": 5.46
+          }
+        },
+        {
+          "id": 315465,
+          "title": "The Boy and the Beast",
+          "score": 0.8749,
+          "original_language": "ja",
+          "genre_ids": [
+            28,
+            12,
+            16,
+            18,
+            10751,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6600000000000023,
+            "score_strength": 0.8749,
+            "total": 5.33
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Superhero Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 6.44,
+      "min_total_score": 6.33,
+      "max_total_score": 6.58,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 24428,
+          "title": "The Avengers",
+          "score": 1.0125,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            28,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9541666666666686,
+            "score_strength": 1.0,
+            "total": 6.55
+          }
+        },
+        {
+          "id": 49538,
+          "title": "X-Men: First Class",
+          "score": 1.0104,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            878,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9791666666666685,
+            "score_strength": 1.0,
+            "total": 6.58
+          }
+        },
+        {
+          "id": 557,
+          "title": "Spider-Man",
+          "score": 1.0055,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7958333333333314,
+            "score_strength": 1.0,
+            "total": 6.4
+          }
+        },
+        {
+          "id": 284053,
+          "title": "Thor: Ragnarok",
+          "score": 0.9998,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            878,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8291666666666686,
+            "score_strength": 0.9998,
+            "total": 6.43
+          }
+        },
+        {
+          "id": 127585,
+          "title": "X-Men: Days of Future Past",
+          "score": 1.0092,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9041666666666686,
+            "score_strength": 1.0,
+            "total": 6.5
+          }
+        },
+        {
+          "id": 36657,
+          "title": "X-Men",
+          "score": 1.0084,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            28,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7458333333333315,
+            "score_strength": 1.0,
+            "total": 6.35
+          }
+        },
+        {
+          "id": 271110,
+          "title": "Captain America: Civil War",
+          "score": 1.0071,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            28,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8541666666666685,
+            "score_strength": 1.0,
+            "total": 6.45
+          }
+        },
+        {
+          "id": 634649,
+          "title": "Spider-Man: No Way Home",
+          "score": 1.0054,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7291666666666685,
+            "score_strength": 1.0,
+            "total": 6.33
+          }
+        },
+        {
+          "id": 36658,
+          "title": "X2",
+          "score": 1.005,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            28,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8208333333333314,
+            "score_strength": 1.0,
+            "total": 6.42
+          }
+        },
+        {
+          "id": 299536,
+          "title": "Avengers: Infinity War",
+          "score": 1.0033,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            28,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8041666666666686,
+            "score_strength": 1.0,
+            "total": 6.4
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "War Films",
+      "recommendation_count": 10,
+      "avg_total_score": 5.04,
+      "min_total_score": 4.67,
+      "max_total_score": 5.41,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 792,
+          "title": "Platoon",
+          "score": 0.7829,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10752,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8291666666666686,
+            "score_strength": 0.7829,
+            "total": 5.41
+          }
+        },
+        {
+          "id": 11778,
+          "title": "The Deer Hunter",
+          "score": 0.7814,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6291666666666685,
+            "score_strength": 0.7814,
+            "total": 5.21
+          }
+        },
+        {
+          "id": 543580,
+          "title": "They Shall Not Grow Old",
+          "score": 0.764,
+          "original_language": "en",
+          "genre_ids": [
+            99,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.37083333333333146,
+            "score_strength": 0.764,
+            "total": 4.93
+          }
+        },
+        {
+          "id": 935,
+          "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+          "score": 0.7619,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.27916666666666856,
+            "score_strength": 0.7619,
+            "total": 4.84
+          }
+        },
+        {
+          "id": 882569,
+          "title": "Guy Ritchie's The Covenant",
+          "score": 0.759,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            28,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.24583333333333146,
+            "score_strength": 0.759,
+            "total": 4.8
+          }
+        },
+        {
+          "id": 853,
+          "title": "Enemy at the Gates",
+          "score": 0.7547,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7958333333333314,
+            "score_strength": 0.7547,
+            "total": 5.35
+          }
+        },
+        {
+          "id": 228150,
+          "title": "Fury",
+          "score": 0.7717,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            18,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.47083333333333144,
+            "score_strength": 0.7717,
+            "total": 5.04
+          }
+        },
+        {
+          "id": 374720,
+          "title": "Dunkirk",
+          "score": 0.7699,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            28,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.3958333333333315,
+            "score_strength": 0.7699,
+            "total": 4.97
+          }
+        },
+        {
+          "id": 975,
+          "title": "Paths of Glory",
+          "score": 0.7677,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.10416666666666852,
+            "score_strength": 0.7677,
+            "total": 4.67
+          }
+        },
+        {
+          "id": 12162,
+          "title": "The Hurt Locker",
+          "score": 0.7667,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6208333333333315,
+            "score_strength": 0.7667,
+            "total": 5.19
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Historical Epic",
+      "recommendation_count": 10,
+      "avg_total_score": 6.27,
+      "min_total_score": 5.56,
+      "max_total_score": 6.55,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 20662,
+          "title": "Robin Hood",
+          "score": 0.9913,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            36,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7791666666666686,
+            "score_strength": 0.9913,
+            "total": 6.37
+          }
+        },
+        {
+          "id": 1966,
+          "title": "Alexander",
+          "score": 0.9828,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            36,
+            28,
+            12,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9291666666666686,
+            "score_strength": 0.9828,
+            "total": 6.51
+          }
+        },
+        {
+          "id": 11209,
+          "title": "The Alamo",
+          "score": 0.963,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            12,
+            36,
+            37
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 0.963,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 1911,
+          "title": "The 13th Warrior",
+          "score": 0.9711,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            36,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9458333333333314,
+            "score_strength": 0.9711,
+            "total": 6.52
+          }
+        },
+        {
+          "id": 9664,
+          "title": "Flyboys",
+          "score": 0.9754,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            18,
+            36,
+            10749,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8791666666666685,
+            "score_strength": 0.9754,
+            "total": 6.45
+          }
+        },
+        {
+          "id": 57212,
+          "title": "War Horse",
+          "score": 0.9709,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            36,
+            12,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7541666666666685,
+            "score_strength": 0.9709,
+            "total": 6.33
+          }
+        },
+        {
+          "id": 11362,
+          "title": "The Count of Monte Cristo",
+          "score": 0.9704,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9791666666666685,
+            "score_strength": 0.9704,
+            "total": 6.55
+          }
+        },
+        {
+          "id": 1492,
+          "title": "1492: Conquest of Paradise",
+          "score": 0.9703,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7708333333333315,
+            "score_strength": 0.9703,
+            "total": 6.34
+          }
+        },
+        {
+          "id": 665,
+          "title": "Ben-Hur",
+          "score": 0.9698,
+          "original_language": "en",
+          "genre_ids": [
+            36,
+            18,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 0.9698,
+            "total": 5.57
+          }
+        },
+        {
+          "id": 10047,
+          "title": "The Messenger: The Story of Joan of Arc",
+          "score": 0.9681,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            18,
+            28,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9458333333333314,
+            "score_strength": 0.9681,
+            "total": 6.51
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Comedy Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 5.5,
+      "min_total_score": 5.4,
+      "max_total_score": 5.56,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 11635,
+          "title": "Old School",
+          "score": 0.7779,
+          "original_language": "en",
+          "genre_ids": [
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8833333333333314,
+            "score_strength": 0.7779,
+            "total": 5.46
+          }
+        },
+        {
+          "id": 6957,
+          "title": "The 40 Year Old Virgin",
+          "score": 0.7727,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9333333333333315,
+            "score_strength": 0.7727,
+            "total": 5.51
+          }
+        },
+        {
+          "id": 16538,
+          "title": "I Love You, Man",
+          "score": 0.7717,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9666666666666686,
+            "score_strength": 0.7717,
+            "total": 5.54
+          }
+        },
+        {
+          "id": 11282,
+          "title": "Harold & Kumar Go to White Castle",
+          "score": 0.7676,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            12
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9083333333333314,
+            "score_strength": 0.7676,
+            "total": 5.48
+          }
+        },
+        {
+          "id": 64688,
+          "title": "21 Jump Street",
+          "score": 0.7676,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8916666666666686,
+            "score_strength": 0.7676,
+            "total": 5.46
+          }
+        },
+        {
+          "id": 10189,
+          "title": "Pineapple Express",
+          "score": 0.766,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9916666666666686,
+            "score_strength": 0.766,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 9870,
+          "title": "Forgetting Sarah Marshall",
+          "score": 0.7716,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            10749,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9916666666666686,
+            "score_strength": 0.7716,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 15373,
+          "title": "Role Models",
+          "score": 0.766,
+          "original_language": "en",
+          "genre_ids": [
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9916666666666686,
+            "score_strength": 0.766,
+            "total": 5.56
+          }
+        },
+        {
+          "id": 39939,
+          "title": "Super Troopers",
+          "score": 0.7659,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8333333333333315,
+            "score_strength": 0.7659,
+            "total": 5.4
+          }
+        },
+        {
+          "id": 72105,
+          "title": "Ted",
+          "score": 0.7648,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8916666666666686,
+            "score_strength": 0.7648,
+            "total": 5.46
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Dark Humor",
+      "recommendation_count": 10,
+      "avg_total_score": 6.34,
+      "min_total_score": 6.03,
+      "max_total_score": 6.57,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 86838,
+          "title": "Seven Psychopaths",
+          "score": 0.9956,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5699999999999988,
+            "score_strength": 0.9956,
+            "total": 6.17
+          }
+        },
+        {
+          "id": 100,
+          "title": "Lock, Stock and Two Smoking Barrels",
+          "score": 0.9924,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9199999999999988,
+            "score_strength": 0.9924,
+            "total": 6.51
+          }
+        },
+        {
+          "id": 107,
+          "title": "Snatch",
+          "score": 0.9924,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8699999999999989,
+            "score_strength": 0.9924,
+            "total": 6.46
+          }
+        },
+        {
+          "id": 134,
+          "title": "O Brother, Where Art Thou?",
+          "score": 0.9921,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8699999999999989,
+            "score_strength": 0.9921,
+            "total": 6.46
+          }
+        },
+        {
+          "id": 425591,
+          "title": "I Don't Feel at Home in This World Anymore",
+          "score": 0.9882,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            18,
+            80,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.44499999999999884,
+            "score_strength": 0.9882,
+            "total": 6.03
+          }
+        },
+        {
+          "id": 5236,
+          "title": "Kiss Kiss Bang Bang",
+          "score": 0.9882,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7449999999999989,
+            "score_strength": 0.9882,
+            "total": 6.33
+          }
+        },
+        {
+          "id": 378,
+          "title": "Raising Arizona",
+          "score": 0.988,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8050000000000012,
+            "score_strength": 0.988,
+            "total": 6.39
+          }
+        },
+        {
+          "id": 290250,
+          "title": "The Nice Guys",
+          "score": 0.9878,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.46999999999999886,
+            "score_strength": 0.9878,
+            "total": 6.06
+          }
+        },
+        {
+          "id": 680,
+          "title": "Pulp Fiction",
+          "score": 0.9874,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9800000000000011,
+            "score_strength": 0.9874,
+            "total": 6.57
+          }
+        },
+        {
+          "id": 2757,
+          "title": "Adaptation.",
+          "score": 0.9857,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8199999999999988,
+            "score_strength": 0.9857,
+            "total": 6.41
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Cult Film Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 6.55,
+      "min_total_score": 6.22,
+      "max_total_score": 6.83,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 2.0,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 20981,
+          "title": "The Call of Cthulhu",
+          "score": 1.0843,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            53,
+            14,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5916666666666686,
+            "score_strength": 1.0,
+            "total": 6.59
+          }
+        },
+        {
+          "id": 15301,
+          "title": "Twilight Zone: The Movie",
+          "score": 1.0767,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            14,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8333333333333315,
+            "score_strength": 1.0,
+            "total": 6.83
+          }
+        },
+        {
+          "id": 846867,
+          "title": "Mad God",
+          "score": 1.0717,
+          "original_language": "en",
+          "genre_ids": [
+            16,
+            14,
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.21666666666666856,
+            "score_strength": 1.0,
+            "total": 6.22
+          }
+        },
+        {
+          "id": 354251,
+          "title": "Southbound",
+          "score": 1.0647,
+          "original_language": "en",
+          "genre_ids": [
+            14,
+            53,
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.3666666666666686,
+            "score_strength": 1.0,
+            "total": 6.37
+          }
+        },
+        {
+          "id": 377448,
+          "title": "The Rocky Horror Picture Show: Let's Do the Time Warp Again",
+          "score": 1.0622,
+          "original_language": "en",
+          "genre_ids": [
+            10770,
+            35,
+            878,
+            14,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.34166666666666856,
+            "score_strength": 1.0,
+            "total": 6.34
+          }
+        },
+        {
+          "id": 213110,
+          "title": "The Amazing Screw-On Head",
+          "score": 1.054,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            28,
+            12,
+            16,
+            878,
+            14,
+            27,
+            10770
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5916666666666686,
+            "score_strength": 1.0,
+            "total": 6.59
+          }
+        },
+        {
+          "id": 13204,
+          "title": "Hellboy Animated: Blood and Iron",
+          "score": 1.0525,
+          "original_language": "en",
+          "genre_ids": [
+            16,
+            14,
+            27,
+            28,
+            53,
+            878,
+            10770
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5666666666666685,
+            "score_strength": 1.0,
+            "total": 6.57
+          }
+        },
+        {
+          "id": 10336,
+          "title": "Spawn",
+          "score": 1.0517,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            14,
+            27,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8166666666666685,
+            "score_strength": 1.0,
+            "total": 6.82
+          }
+        },
+        {
+          "id": 16774,
+          "title": "Hellboy Animated: Sword of Storms",
+          "score": 1.0509,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            16,
+            14,
+            28,
+            27,
+            12,
+            53,
+            10770
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5916666666666686,
+            "score_strength": 1.0,
+            "total": 6.59
+          }
+        },
+        {
+          "id": 13025,
+          "title": "Diary of the Dead",
+          "score": 1.0502,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            14,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5666666666666685,
+            "score_strength": 1.0,
+            "total": 6.57
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "A24 Arthouse",
+      "recommendation_count": 10,
+      "avg_total_score": 6.59,
+      "min_total_score": 6.0,
+      "max_total_score": 6.98,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 2.0,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 64720,
+          "title": "Take Shelter",
+          "score": 1.1537,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            18,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8041666666666686,
+            "score_strength": 1.0,
+            "total": 6.8
+          }
+        },
+        {
+          "id": 949423,
+          "title": "Pearl",
+          "score": 1.1475,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9208333333333314,
+            "score_strength": 1.0,
+            "total": 6.92
+          }
+        },
+        {
+          "id": 86825,
+          "title": "Stoker",
+          "score": 1.1427,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            27,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8541666666666685,
+            "score_strength": 1.0,
+            "total": 6.85
+          }
+        },
+        {
+          "id": 44214,
+          "title": "Black Swan",
+          "score": 1.1421,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7791666666666686,
+            "score_strength": 1.0,
+            "total": 6.78
+          }
+        },
+        {
+          "id": 805,
+          "title": "Rosemary's Baby",
+          "score": 1.1345,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            27,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 6.0
+          }
+        },
+        {
+          "id": 398173,
+          "title": "The House That Jack Built",
+          "score": 1.1319,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            27,
+            80,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9791666666666685,
+            "score_strength": 1.0,
+            "total": 6.98
+          }
+        },
+        {
+          "id": 931,
+          "title": "Don't Look Now",
+          "score": 1.1272,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            18,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 6.0
+          }
+        },
+        {
+          "id": 333371,
+          "title": "10 Cloverfield Lane",
+          "score": 1.1251,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            878,
+            18,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9291666666666686,
+            "score_strength": 1.0,
+            "total": 6.93
+          }
+        },
+        {
+          "id": 1730,
+          "title": "Inland Empire",
+          "score": 1.1245,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            53,
+            9648,
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6791666666666686,
+            "score_strength": 1.0,
+            "total": 6.68
+          }
+        },
+        {
+          "id": 10242,
+          "title": "What Ever Happened to Baby Jane?",
+          "score": 1.1236,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            27,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 6.0
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Oscar Favorites",
+      "recommendation_count": 10,
+      "avg_total_score": 6.26,
+      "min_total_score": 5.6,
+      "max_total_score": 6.56,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 530915,
+          "title": "1917",
+          "score": 1.1499,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            36,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 1.0,
+            "total": 6.56
+          }
+        },
+        {
+          "id": 205596,
+          "title": "The Imitation Game",
+          "score": 1.1372,
+          "original_language": "en",
+          "genre_ids": [
+            36,
+            18,
+            53,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9125,
+            "score_strength": 1.0,
+            "total": 6.51
+          }
+        },
+        {
+          "id": 403300,
+          "title": "A Hidden Life",
+          "score": 1.1326,
+          "original_language": "en",
+          "genre_ids": [
+            36,
+            18,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 1.0,
+            "total": 6.56
+          }
+        },
+        {
+          "id": 324786,
+          "title": "Hacksaw Ridge",
+          "score": 1.1275,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 1.0,
+            "total": 6.56
+          }
+        },
+        {
+          "id": 504949,
+          "title": "The King",
+          "score": 1.1274,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9625,
+            "score_strength": 1.0,
+            "total": 6.56
+          }
+        },
+        {
+          "id": 205,
+          "title": "Hotel Rwanda",
+          "score": 1.1255,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6625,
+            "score_strength": 1.0,
+            "total": 6.26
+          }
+        },
+        {
+          "id": 424,
+          "title": "Schindler's List",
+          "score": 1.1169,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.38749999999999996,
+            "score_strength": 1.0,
+            "total": 5.99
+          }
+        },
+        {
+          "id": 9665,
+          "title": "Glory",
+          "score": 1.1107,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            36,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.2875,
+            "score_strength": 1.0,
+            "total": 5.89
+          }
+        },
+        {
+          "id": 3175,
+          "title": "Barry Lyndon",
+          "score": 1.1105,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10749,
+            10752,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.0,
+            "score_strength": 1.0,
+            "total": 5.6
+          }
+        },
+        {
+          "id": 857,
+          "title": "Saving Private Ryan",
+          "score": 1.1087,
+          "original_language": "en",
+          "genre_ids": [
+            10752,
+            18,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5125,
+            "score_strength": 1.0,
+            "total": 6.11
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Classic Cinema",
+      "recommendation_count": 10,
+      "avg_total_score": 6.16,
+      "min_total_score": 5.88,
+      "max_total_score": 6.53,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 37247,
+          "title": "The Graduate",
+          "score": 0.9958,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            10749,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5875,
+            "score_strength": 0.9958,
+            "total": 6.18
+          }
+        },
+        {
+          "id": 962,
+          "title": "The Gold Rush",
+          "score": 0.995,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            35,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.36250000000000004,
+            "score_strength": 0.995,
+            "total": 5.96
+          }
+        },
+        {
+          "id": 632,
+          "title": "Stalag 17",
+          "score": 0.9943,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18,
+            10752
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9375,
+            "score_strength": 0.9943,
+            "total": 6.53
+          }
+        },
+        {
+          "id": 3082,
+          "title": "Modern Times",
+          "score": 0.9943,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6375,
+            "score_strength": 0.9943,
+            "total": 6.23
+          }
+        },
+        {
+          "id": 9277,
+          "title": "The Sting",
+          "score": 0.9936,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.4375,
+            "score_strength": 0.9936,
+            "total": 6.03
+          }
+        },
+        {
+          "id": 901,
+          "title": "City Lights",
+          "score": 0.9934,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5125,
+            "score_strength": 0.9934,
+            "total": 6.11
+          }
+        },
+        {
+          "id": 284,
+          "title": "The Apartment",
+          "score": 0.9925,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7625,
+            "score_strength": 0.9925,
+            "total": 6.36
+          }
+        },
+        {
+          "id": 3083,
+          "title": "Mr. Smith Goes to Washington",
+          "score": 0.9907,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7125,
+            "score_strength": 0.9907,
+            "total": 6.3
+          }
+        },
+        {
+          "id": 11293,
+          "title": "Paper Moon",
+          "score": 0.9906,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.4375,
+            "score_strength": 0.9906,
+            "total": 6.03
+          }
+        },
+        {
+          "id": 10322,
+          "title": "Being There",
+          "score": 0.9893,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.2875,
+            "score_strength": 0.9893,
+            "total": 5.88
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "B-Movie Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 6.28,
+      "min_total_score": 5.94,
+      "max_total_score": 6.52,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.6,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 18502,
+          "title": "The Stuff",
+          "score": 0.9856,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            878,
+            35
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.3550000000000011,
+            "score_strength": 0.9856,
+            "total": 5.94
+          }
+        },
+        {
+          "id": 3980,
+          "title": "Critters",
+          "score": 0.9787,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.3800000000000011,
+            "score_strength": 0.9787,
+            "total": 5.96
+          }
+        },
+        {
+          "id": 10016,
+          "title": "Ghosts of Mars",
+          "score": 0.9738,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7550000000000011,
+            "score_strength": 0.9738,
+            "total": 6.33
+          }
+        },
+        {
+          "id": 12122,
+          "title": "Village of the Damned",
+          "score": 0.9736,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6050000000000011,
+            "score_strength": 0.9736,
+            "total": 6.18
+          }
+        },
+        {
+          "id": 331446,
+          "title": "Sharknado 3: Oh Hell No!",
+          "score": 0.9761,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            35,
+            27,
+            878,
+            10770
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8949999999999989,
+            "score_strength": 0.9761,
+            "total": 6.47
+          }
+        },
+        {
+          "id": 13009,
+          "title": "Zombie Strippers!",
+          "score": 0.9749,
+          "original_language": "en",
+          "genre_ids": [
+            35,
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9300000000000012,
+            "score_strength": 0.9749,
+            "total": 6.5
+          }
+        },
+        {
+          "id": 8991,
+          "title": "Undead",
+          "score": 0.9745,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            28,
+            35,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8050000000000012,
+            "score_strength": 0.9745,
+            "total": 6.38
+          }
+        },
+        {
+          "id": 13613,
+          "title": "Day of the Dead",
+          "score": 0.9714,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            27,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9300000000000012,
+            "score_strength": 0.9714,
+            "total": 6.5
+          }
+        },
+        {
+          "id": 23410,
+          "title": "The Thaw",
+          "score": 0.9694,
+          "original_language": "en",
+          "genre_ids": [
+            27,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9550000000000012,
+            "score_strength": 0.9694,
+            "total": 6.52
+          }
+        },
+        {
+          "id": 14372,
+          "title": "Leviathan",
+          "score": 0.9692,
+          "original_language": "en",
+          "genre_ids": [
+            12,
+            27,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.4550000000000012,
+            "score_strength": 0.9692,
+            "total": 6.02
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Taiwan Cinema",
+      "recommendation_count": 10,
+      "avg_total_score": 5.42,
+      "min_total_score": 5.15,
+      "max_total_score": 5.62,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 0.8,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 25538,
+          "title": "Yi Yi",
+          "score": 0.882,
+          "original_language": "zh",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7,
+            "score_strength": 0.882,
+            "total": 5.38
+          }
+        },
+        {
+          "id": 80243,
+          "title": "Unknown Pleasures",
+          "score": 0.8794,
+          "original_language": "zh",
+          "genre_ids": [
+            35,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.75,
+            "score_strength": 0.8794,
+            "total": 5.43
+          }
+        },
+        {
+          "id": 503235,
+          "title": "Hidden Man",
+          "score": 0.8764,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.85,
+            "score_strength": 0.8764,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 15804,
+          "title": "A Brighter Summer Day",
+          "score": 0.8762,
+          "original_language": "zh",
+          "genre_ids": [
+            80,
+            18,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.475,
+            "score_strength": 0.8762,
+            "total": 5.15
+          }
+        },
+        {
+          "id": 7549,
+          "title": "Fearless",
+          "score": 0.8754,
+          "original_language": "zh",
+          "genre_ids": [
+            18,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.85,
+            "score_strength": 0.8754,
+            "total": 5.53
+          }
+        },
+        {
+          "id": 362178,
+          "title": "Kaili Blues",
+          "score": 0.8753,
+          "original_language": "zh",
+          "genre_ids": [
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9,
+            "score_strength": 0.8753,
+            "total": 5.58
+          }
+        },
+        {
+          "id": 292362,
+          "title": "Deep in the Heart",
+          "score": 0.8753,
+          "original_language": "zh",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.925,
+            "score_strength": 0.8753,
+            "total": 5.6
+          }
+        },
+        {
+          "id": 10997,
+          "title": "Farewell My Concubine",
+          "score": 0.8751,
+          "original_language": "zh",
+          "genre_ids": [
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.525,
+            "score_strength": 0.8751,
+            "total": 5.2
+          }
+        },
+        {
+          "id": 57564,
+          "title": "Rebels of the Neon God",
+          "score": 0.8748,
+          "original_language": "zh",
+          "genre_ids": [
+            18,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.55,
+            "score_strength": 0.8748,
+            "total": 5.22
+          }
+        },
+        {
+          "id": 255756,
+          "title": "Black Coal, Thin Ice",
+          "score": 0.8745,
+          "original_language": "zh",
+          "genre_ids": [
+            18,
+            80,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 0.8,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.95,
+            "score_strength": 0.8745,
+            "total": 5.62
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Hong Kong Cinema",
+      "recommendation_count": 10,
+      "avg_total_score": 6.53,
+      "min_total_score": 6.35,
+      "max_total_score": 6.67,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 1.92,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 219572,
+          "title": "Police Story: Lockdown",
+          "score": 1.0658,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.65,
+            "score_strength": 1.0,
+            "total": 6.65
+          }
+        },
+        {
+          "id": 503235,
+          "title": "Hidden Man",
+          "score": 1.0549,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.525,
+            "score_strength": 1.0,
+            "total": 6.53
+          }
+        },
+        {
+          "id": 1419406,
+          "title": "The Shadow's Edge",
+          "score": 1.0535,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.35,
+            "score_strength": 1.0,
+            "total": 6.35
+          }
+        },
+        {
+          "id": 559937,
+          "title": "S.W.A.T.",
+          "score": 1.0517,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5,
+            "score_strength": 1.0,
+            "total": 6.5
+          }
+        },
+        {
+          "id": 881298,
+          "title": "Fight Against Evil",
+          "score": 1.0476,
+          "original_language": "zh",
+          "genre_ids": [
+            80,
+            18,
+            28
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.44999999999999996,
+            "score_strength": 1.0,
+            "total": 6.45
+          }
+        },
+        {
+          "id": 83706,
+          "title": "The Viral Factor",
+          "score": 1.0457,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            53,
+            18,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.675,
+            "score_strength": 1.0,
+            "total": 6.67
+          }
+        },
+        {
+          "id": 957992,
+          "title": "The Great Arms Robbery",
+          "score": 1.044,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            80,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.42500000000000004,
+            "score_strength": 1.0,
+            "total": 6.42
+          }
+        },
+        {
+          "id": 357940,
+          "title": "Mr. Six",
+          "score": 1.04,
+          "original_language": "zh",
+          "genre_ids": [
+            80,
+            28,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6,
+            "score_strength": 1.0,
+            "total": 6.6
+          }
+        },
+        {
+          "id": 79,
+          "title": "Hero",
+          "score": 0.9902,
+          "original_language": "zh",
+          "genre_ids": [
+            18,
+            12,
+            28,
+            36
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.925,
+            "score_strength": 0.9902,
+            "total": 6.52
+          }
+        },
+        {
+          "id": 146,
+          "title": "Crouching Tiger, Hidden Dragon",
+          "score": 0.9818,
+          "original_language": "zh",
+          "genre_ids": [
+            12,
+            18,
+            28,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 1.6,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.975,
+            "score_strength": 0.9818,
+            "total": 6.56
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Chinese Cinema",
+      "recommendation_count": 10,
+      "avg_total_score": 6.61,
+      "min_total_score": 6.37,
+      "max_total_score": 6.98,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 2.0,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 1494,
+          "title": "Curse of the Golden Flower",
+          "score": 1.2232,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7833333333333314,
+            "score_strength": 1.0,
+            "total": 6.78
+          }
+        },
+        {
+          "id": 2008,
+          "title": "The Promise",
+          "score": 1.1906,
+          "original_language": "zh",
+          "genre_ids": [
+            14,
+            18,
+            28,
+            53,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8083333333333315,
+            "score_strength": 1.0,
+            "total": 6.81
+          }
+        },
+        {
+          "id": 13481,
+          "title": "The Five Venoms",
+          "score": 1.1736,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            18,
+            9648,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5166666666666686,
+            "score_strength": 1.0,
+            "total": 6.52
+          }
+        },
+        {
+          "id": 2137,
+          "title": "The Storm Riders",
+          "score": 1.1489,
+          "original_language": "zh",
+          "genre_ids": [
+            14,
+            28,
+            12,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9833333333333314,
+            "score_strength": 1.0,
+            "total": 6.98
+          }
+        },
+        {
+          "id": 11653,
+          "title": "The Myth",
+          "score": 1.1482,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            12,
+            35,
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8083333333333315,
+            "score_strength": 1.0,
+            "total": 6.81
+          }
+        },
+        {
+          "id": 299824,
+          "title": "Mojin: The Lost Legend",
+          "score": 1.1454,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            12,
+            14,
+            18,
+            27,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5583333333333315,
+            "score_strength": 1.0,
+            "total": 6.56
+          }
+        },
+        {
+          "id": 758902,
+          "title": "The Yin Yang Master",
+          "score": 1.1443,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            12,
+            18,
+            14,
+            10749
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.40833333333333144,
+            "score_strength": 1.0,
+            "total": 6.41
+          }
+        },
+        {
+          "id": 757860,
+          "title": "The Yin-Yang Master: Dream of Eternity",
+          "score": 1.1438,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            18,
+            14,
+            9648,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.43333333333333146,
+            "score_strength": 1.0,
+            "total": 6.43
+          }
+        },
+        {
+          "id": 611698,
+          "title": "A Writer's Odyssey",
+          "score": 1.143,
+          "original_language": "zh",
+          "genre_ids": [
+            14,
+            28,
+            12,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.40833333333333144,
+            "score_strength": 1.0,
+            "total": 6.41
+          }
+        },
+        {
+          "id": 49967,
+          "title": "One-Armed Boxer",
+          "score": 1.143,
+          "original_language": "zh",
+          "genre_ids": [
+            28,
+            12,
+            18,
+            14
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.3666666666666686,
+            "score_strength": 1.0,
+            "total": 6.37
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Mixed Sci-Fi Crime",
+      "recommendation_count": 10,
+      "avg_total_score": 6.72,
+      "min_total_score": 6.5,
+      "max_total_score": 6.92,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 2.0,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 97020,
+          "title": "RoboCop",
+          "score": 1.1466,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            12,
+            80,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6,
+            "score_strength": 1.0,
+            "total": 6.6
+          }
+        },
+        {
+          "id": 31867,
+          "title": "Repo Men",
+          "score": 1.1385,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            878,
+            53,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7,
+            "score_strength": 1.0,
+            "total": 6.7
+          }
+        },
+        {
+          "id": 396806,
+          "title": "Anon",
+          "score": 1.1304,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            80,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5,
+            "score_strength": 1.0,
+            "total": 6.5
+          }
+        },
+        {
+          "id": 281,
+          "title": "Strange Days",
+          "score": 1.1249,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.925,
+            "score_strength": 1.0,
+            "total": 6.92
+          }
+        },
+        {
+          "id": 8831,
+          "title": "Timecop",
+          "score": 1.1234,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            878,
+            28,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9,
+            "score_strength": 1.0,
+            "total": 6.9
+          }
+        },
+        {
+          "id": 406761,
+          "title": "Hotel Artemis",
+          "score": 1.1205,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            80,
+            28,
+            53,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5,
+            "score_strength": 1.0,
+            "total": 6.5
+          }
+        },
+        {
+          "id": 42194,
+          "title": "Tekken",
+          "score": 1.1195,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            28,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.7,
+            "score_strength": 1.0,
+            "total": 6.7
+          }
+        },
+        {
+          "id": 9271,
+          "title": "Virtuosity",
+          "score": 1.1195,
+          "original_language": "en",
+          "genre_ids": [
+            28,
+            80,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.925,
+            "score_strength": 1.0,
+            "total": 6.92
+          }
+        },
+        {
+          "id": 16258,
+          "title": "The Butterfly Effect 3: Revelations",
+          "score": 1.1077,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            53,
+            18,
+            80
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.725,
+            "score_strength": 1.0,
+            "total": 6.72
+          }
+        },
+        {
+          "id": 17532,
+          "title": "S. Darko",
+          "score": 1.1056,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            80,
+            878,
+            9648
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.725,
+            "score_strength": 1.0,
+            "total": 6.72
+          }
+        }
+      ]
+    },
+    {
+      "profile_name": "Villeneuve Fan",
+      "recommendation_count": 10,
+      "avg_total_score": 6.73,
+      "min_total_score": 6.3,
+      "max_total_score": 6.97,
+      "existence_rate": 1.0,
+      "not_collected_rate": 1.0,
+      "avg_genre_relevance": 2.0,
+      "avg_language_match": 1.0,
+      "genre_mismatch_count": 0,
+      "duplicate_count": 0,
+      "recommendations": [
+        {
+          "id": 333371,
+          "title": "10 Cloverfield Lane",
+          "score": 1.135,
+          "original_language": "en",
+          "genre_ids": [
+            53,
+            878,
+            18,
+            27
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8458333333333314,
+            "score_strength": 1.0,
+            "total": 6.85
+          }
+        },
+        {
+          "id": 14337,
+          "title": "Primer",
+          "score": 1.1302,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8541666666666685,
+            "score_strength": 1.0,
+            "total": 6.85
+          }
+        },
+        {
+          "id": 78,
+          "title": "Blade Runner",
+          "score": 1.1208,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.3041666666666686,
+            "score_strength": 1.0,
+            "total": 6.3
+          }
+        },
+        {
+          "id": 281,
+          "title": "Strange Days",
+          "score": 1.1178,
+          "original_language": "en",
+          "genre_ids": [
+            80,
+            18,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.6291666666666685,
+            "score_strength": 1.0,
+            "total": 6.63
+          }
+        },
+        {
+          "id": 49047,
+          "title": "Gravity",
+          "score": 1.1174,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            53,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9208333333333314,
+            "score_strength": 1.0,
+            "total": 6.92
+          }
+        },
+        {
+          "id": 329004,
+          "title": "The Survivalist",
+          "score": 1.1162,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.8708333333333315,
+            "score_strength": 1.0,
+            "total": 6.87
+          }
+        },
+        {
+          "id": 39538,
+          "title": "Contagion",
+          "score": 1.1109,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            53,
+            878
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9708333333333314,
+            "score_strength": 1.0,
+            "total": 6.97
+          }
+        },
+        {
+          "id": 10176,
+          "title": "The Quiet Earth",
+          "score": 1.1091,
+          "original_language": "en",
+          "genre_ids": [
+            18,
+            878,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.37916666666666854,
+            "score_strength": 1.0,
+            "total": 6.38
+          }
+        },
+        {
+          "id": 86812,
+          "title": "Sound of My Voice",
+          "score": 1.1078,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            18,
+            9648,
+            53
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.9708333333333314,
+            "score_strength": 1.0,
+            "total": 6.97
+          }
+        },
+        {
+          "id": 15613,
+          "title": "Fire in the Sky",
+          "score": 1.1058,
+          "original_language": "en",
+          "genre_ids": [
+            878,
+            9648,
+            53,
+            18
+          ],
+          "scores": {
+            "exists": 1,
+            "not_collected": 1,
+            "genre_relevance": 2.0,
+            "genre_mismatch": 0.0,
+            "language_match": 1.0,
+            "year_proximity": 0.5791666666666686,
+            "score_strength": 1.0,
+            "total": 6.58
+          }
+        }
+      ]
+    }
+  ]
+}

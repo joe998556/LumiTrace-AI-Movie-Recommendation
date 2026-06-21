@@ -1,0 +1,662 @@
+[
+  {
+    "name": "Sci-Fi Lover",
+    "description": "High-concept philosophical sci-fi exploring humanity, consciousness, and technology",
+    "overviews": [
+      "今晚想看一些探讨人类本质和科技哲学的科幻片，最好是那种看完会让人思考很久的",
+      "想找几部视觉震撼又有深度的科幻电影，不喜欢纯爆米花式的太空打斗"
+    ],
+    "collected_movie_ids": [335984, 329865, 157336, 264660, 152601],
+    "favorite_genres": [878],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [878, 18],
+      [18, 878, 9648],
+      [12, 18, 878],
+      [18, 878],
+      [10749, 878, 18]
+    ],
+    "favorite_years": [2017, 2016, 2014, 2015, 2013],
+    "avoid_genres": [27, 10770, 16],
+    "expected_directions": ["philosophical sci-fi", "dystopian futures", "AI and consciousness themes", "visually stunning cinematography", "slow-burn atmospheric storytelling"],
+    "unexpected_directions": ["action-heavy blockbusters", "horror sci-fi", "animated sci-fi", "comedies", "superhero films"]
+  },
+  {
+    "name": "Hard Sci-Fi Space Explorer",
+    "description": "Obsessed with realistic space exploration and hard science fiction",
+    "overviews": [
+      "想看硬核太空片，最好是有真实科学依据的那种，像宇航员在太空生存的故事",
+      "今晚想沉浸在宇宙的浩瀚中，喜欢那种孤独感和对未知的探索"
+    ],
+    "collected_movie_ids": [62, 49047, 286217, 419704, 17431],
+    "favorite_genres": [878, 12],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [878, 9648, 12],
+      [878, 53, 18],
+      [878, 18, 12],
+      [878, 18],
+      [878, 18]
+    ],
+    "favorite_years": [1968, 2013, 2015, 2019, 2009],
+    "avoid_genres": [10749, 35, 10751],
+    "expected_directions": ["realistic space scenarios", "isolation and survival", "scientific accuracy", "existential themes", "claustrophobic tension"],
+    "unexpected_directions": ["romance", "family films", "comedy", "fantasy elements", "superhero"]
+  },
+  {
+    "name": "AI Movie Enthusiast",
+    "description": "Fascinated by artificial intelligence, machine consciousness, and human-AI relationships",
+    "overviews": [
+      "对人工智能题材的电影特别感兴趣，想看机器人觉醒意识的故事",
+      "今晚想看关于AI和人类关系的电影，探讨机器能否拥有情感的那种"
+    ],
+    "collected_movie_ids": [264660, 152601, 157353, 198184, 2048],
+    "favorite_genres": [878],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18, 878],
+      [10749, 878, 18],
+      [53, 878, 18, 9648],
+      [80, 28, 878],
+      [28, 878]
+    ],
+    "favorite_years": [2015, 2013, 2014, 2015, 2004],
+    "avoid_genres": [27, 10751, 10770],
+    "expected_directions": ["AI consciousness themes", "human-machine relationships", "ethical dilemmas of technology", "near-future settings", "thought-provoking narratives"],
+    "unexpected_directions": ["horror", "children films", "romantic comedies", "war films", "period dramas"]
+  },
+  {
+    "name": "Crime Film Connoisseur",
+    "description": "Loves gritty crime dramas with complex characters and moral ambiguity",
+    "overviews": [
+      "想看经典的犯罪片，喜欢那种有深度的角色刻画和道德灰色地带的故事",
+      "今晚想沉浸在犯罪世界中，要有精彩的对白和紧张的剧情"
+    ],
+    "collected_movie_ids": [769, 111, 1422, 949, 680],
+    "favorite_genres": [80, 18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18, 80],
+      [28, 80, 18],
+      [18, 53, 80],
+      [80, 18, 28],
+      [53, 80, 35]
+    ],
+    "favorite_years": [1990, 1983, 2006, 1995, 1994],
+    "avoid_genres": [16, 10751, 10749],
+    "expected_directions": ["morally complex characters", "realistic crime depiction", "strong dialogue", "ensemble casts", "urban settings"],
+    "unexpected_directions": ["animation", "family films", "romance", "musicals", "fantasy"]
+  },
+  {
+    "name": "Gangster Film Devotee",
+    "description": "Obsessed with organized crime sagas spanning generations",
+    "overviews": [
+      "喜欢看黑帮史诗，尤其是那种跨越几代人的家族犯罪故事",
+      "今晚想看经典的黑帮片，要有权力斗争和背叛的元素"
+    ],
+    "collected_movie_ids": [238, 240, 524, 4982, 9366],
+    "favorite_genres": [80, 18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18, 80],
+      [18, 80],
+      [80, 18],
+      [18, 80],
+      [80, 18, 53]
+    ],
+    "favorite_years": [1972, 1974, 1995, 2007, 1997],
+    "avoid_genres": [16, 10751, 878],
+    "expected_directions": ["family power dynamics", "rise and fall narratives", "Italian-American culture", "long runtime epics", "iconic performances"],
+    "unexpected_directions": ["animation", "sci-fi", "family films", "romantic comedies", "superhero films"]
+  },
+  {
+    "name": "Thriller Seeker",
+    "description": "Craves tension-filled thrillers with twists and cat-and-mouse dynamics",
+    "overviews": [
+      "今晚想看让人坐立不安的悬疑片，最好有出人意料的反转",
+      "想找那种让人猜不到结局的犯罪悬疑片，要有缜密的推理"
+    ],
+    "collected_movie_ids": [807, 1949, 2649, 1592, 629],
+    "favorite_genres": [53, 9648, 80],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [80, 9648, 53],
+      [80, 9648, 53],
+      [18, 53, 9648],
+      [80, 18, 53],
+      [18, 80, 53]
+    ],
+    "favorite_years": [1995, 2007, 1997, 1996, 1995],
+    "avoid_genres": [35, 10749, 16],
+    "expected_directions": ["unpredictable plot twists", "cat-and-mouse tension", "dark atmosphere", "clever narratives", "morally grey characters"],
+    "unexpected_directions": ["comedies", "romance", "animation", "musicals", "family films"]
+  },
+  {
+    "name": "Psychological Thriller Fan",
+    "description": "Drawn to mind-bending narratives that question reality and perception",
+    "overviews": [
+      "喜欢那种让人分不清现实和幻觉的心理惊悚片，要有复杂的叙事结构",
+      "今晚想看挑战观众认知的电影，最好看完还要去查解析的那种"
+    ],
+    "collected_movie_ids": [44214, 11324, 210577, 77, 550],
+    "favorite_genres": [53, 18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18, 53, 27],
+      [18, 53, 9648],
+      [9648, 53, 18],
+      [9648, 53],
+      [18, 53]
+    ],
+    "favorite_years": [2010, 2010, 2014, 2000, 1999],
+    "avoid_genres": [10751, 35, 10749],
+    "expected_directions": ["unreliable narrators", "reality-bending plots", "psychological tension", "dark character studies", "ambiguous endings"],
+    "unexpected_directions": ["family films", "comedies", "romance", "action blockbusters", "musicals"]
+  },
+  {
+    "name": "Horror Aficionado",
+    "description": "Seeks atmospheric horror with genuine scares and psychological dread",
+    "overviews": [
+      "今晚想被吓到，要看那种有氛围感的恐怖片，不要那种只有jump scare的烂片",
+      "想找高质量的恐怖电影，喜欢那种慢慢渗透到骨子里的恐惧感"
+    ],
+    "collected_movie_ids": [138843, 49018, 493922, 565, 270303],
+    "favorite_genres": [27, 53],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [27, 53],
+      [27, 53],
+      [27, 9648, 53],
+      [27, 9648],
+      [27, 9648]
+    ],
+    "favorite_years": [2013, 2011, 2018, 2002, 2015],
+    "avoid_genres": [10751, 10402, 10749],
+    "expected_directions": ["atmospheric dread", "supernatural elements", "slow-burn tension", "family trauma themes", "artistic horror"],
+    "unexpected_directions": ["family films", "musicals", "romance", "comedies", "action films"]
+  },
+  {
+    "name": "Asian Cinema Explorer",
+    "description": "Passionate about Japanese and Korean films with bold storytelling",
+    "overviews": [
+      "想看日韩的高质量电影，喜欢那种敢于挑战观众底线的大胆叙事",
+      "今晚想沉浸在亚洲电影的独特美学中，要有强烈的视觉风格和深刻的主题"
+    ],
+    "collected_movie_ids": [670, 496243, 11423, 11075, 3176],
+    "favorite_genres": [53, 18],
+    "favorite_languages": ["ko", "ja"],
+    "user_genre_ids": [
+      [53, 9648, 28, 18],
+      [35, 53, 18],
+      [80, 18, 53],
+      [27, 18],
+      [18, 53, 28]
+    ],
+    "favorite_years": [2003, 2019, 2003, 2000, 2000],
+    "avoid_genres": [10751, 10402, 16],
+    "expected_directions": ["social commentary", "revenge narratives", "dark humor", "genre-bending stories", "cultural specificity"],
+    "unexpected_directions": ["Hollywood blockbusters", "family films", "musicals", "romantic comedies", "superhero films"]
+  },
+  {
+    "name": "European Art House Cinephile",
+    "description": "Appreciates European cinema with artistic vision and subtle storytelling",
+    "overviews": [
+      "今晚想看欧洲艺术电影，喜欢那种画面精美、节奏从容的作品",
+      "想找有深度的欧洲电影，不追求快节奏，更注重情感和氛围的营造"
+    ],
+    "collected_movie_ids": [194, 582, 1417, 445, 265189],
+    "favorite_genres": [18, 53],
+    "favorite_languages": ["fr", "de", "es", "sv"],
+    "user_genre_ids": [
+      [35, 10749],
+      [18, 53],
+      [14, 18, 10752],
+      [9648, 18, 53],
+      [18]
+    ],
+    "favorite_years": [2001, 2006, 2006, 2005, 2014],
+    "avoid_genres": [28, 27, 878],
+    "expected_directions": ["artistic cinematography", "subtle character studies", "social commentary", "atmospheric storytelling", "festival circuit favorites"],
+    "unexpected_directions": ["action films", "horror", "sci-fi blockbusters", "superhero films", "slapstick comedy"]
+  },
+  {
+    "name": "Indie Film Enthusiast",
+    "description": "Drawn to authentic independent films with raw emotional power",
+    "overviews": [
+      "想看小成本但有力量的独立电影，喜欢那种真实感人的故事",
+      "今晚想看独立制作的电影，不追求大场面，更看重真实的叙事和表演"
+    ],
+    "collected_movie_ids": [376867, 391713, 394117, 489925, 308084],
+    "favorite_genres": [18, 35],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18],
+      [18, 35],
+      [18],
+      [35, 18],
+      [35, 18]
+    ],
+    "favorite_years": [2016, 2017, 2017, 2018, 2015],
+    "avoid_genres": [28, 878, 10751],
+    "expected_directions": ["coming-of-age stories", "social realism", "underrepresented voices", "naturalistic performances", "festival darlings"],
+    "unexpected_directions": ["action blockbusters", "sci-fi", "family films", "superhero", "big-budget spectacles"]
+  },
+  {
+    "name": "Classic Drama Lover",
+    "description": "Values timeless storytelling and emotionally resonant drama",
+    "overviews": [
+      "今晚想看经典剧情片，那种能触动人心、经得起时间考验的好电影",
+      "想找有深度的人物故事，喜欢那种看完后久久不能忘怀的剧情片"
+    ],
+    "collected_movie_ids": [13, 278, 424, 389, 497],
+    "favorite_genres": [18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [35, 18, 10749],
+      [18, 80],
+      [18, 36, 10752],
+      [18],
+      [14, 18, 80]
+    ],
+    "favorite_years": [1994, 1994, 1993, 1957, 1999],
+    "avoid_genres": [27, 28, 878],
+    "expected_directions": ["strong character development", "emotional depth", "human resilience", "timeless themes", "powerful performances"],
+    "unexpected_directions": ["horror", "action films", "sci-fi", "superhero", "slapstick comedy"]
+  },
+  {
+    "name": "Romance Film Romantic",
+    "description": "Believes in love stories that touch the heart and soul",
+    "overviews": [
+      "今晚想看浪漫爱情片，喜欢那种让人心动又心碎的爱情故事",
+      "想找经典的爱情电影，不管是甜蜜的还是虐心的都行"
+    ],
+    "collected_movie_ids": [11036, 76, 289, 38, 313369],
+    "favorite_genres": [10749, 18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [10749, 18],
+      [18, 10749],
+      [18, 10749],
+      [878, 18, 10749],
+      [35, 18, 10749]
+    ],
+    "favorite_years": [2004, 1995, 1943, 2004, 2016],
+    "avoid_genres": [27, 28, 80],
+    "expected_directions": ["emotional love stories", "bittersweet endings", "beautiful cinematography", "strong chemistry", "timeless romance"],
+    "unexpected_directions": ["horror", "action films", "crime dramas", "war films", "superhero"]
+  },
+  {
+    "name": "Animation Admirer",
+    "description": "Passionate about animation as a serious art form for all ages",
+    "overviews": [
+      "今晚想看高质量的动画电影，喜欢那种画面美到窒息的作品",
+      "想找有深度的动画片，不是给小孩子看的那种，要有成人的主题"
+    ],
+    "collected_movie_ids": [129, 8392, 128, 149, 372058],
+    "favorite_genres": [16, 14],
+    "favorite_languages": ["ja"],
+    "user_genre_ids": [
+      [16, 10751, 14],
+      [14, 16, 10751],
+      [12, 14, 16],
+      [16, 878, 28],
+      [16, 10749, 18]
+    ],
+    "favorite_years": [2001, 1988, 1997, 1988, 2016],
+    "avoid_genres": [27, 80, 53],
+    "expected_directions": ["stunning visual artistry", "imaginative worlds", "emotional depth", "Studio Ghibli quality", "coming-of-age themes"],
+    "unexpected_directions": ["horror", "crime", "thrillers", "war films", "adult dramas"]
+  },
+  {
+    "name": "Japanese Animation Devotee",
+    "description": "Dedicated fan of anime cinema with deep appreciation for Japanese storytelling",
+    "overviews": [
+      "今晚想看日本动画电影，喜欢宫崎骏和新海诚那种风格的",
+      "想找优秀的日本动画片，要有细腻的情感和精美的画面"
+    ],
+    "collected_movie_ids": [129, 8392, 128, 149, 372058],
+    "favorite_genres": [16],
+    "favorite_languages": ["ja"],
+    "user_genre_ids": [
+      [16, 10751, 14],
+      [14, 16, 10751],
+      [12, 14, 16],
+      [16, 878, 28],
+      [16, 10749, 18]
+    ],
+    "favorite_years": [2001, 1988, 1997, 1988, 2016],
+    "avoid_genres": [27, 80, 53],
+    "expected_directions": ["Japanese animation studios", "hand-drawn aesthetics", "magical realism", "nature themes", "youth and nostalgia"],
+    "unexpected_directions": ["live-action films", "horror", "crime dramas", "Western animation", "war films"]
+  },
+  {
+    "name": "Superhero Film Fan",
+    "description": "Loves superhero movies that balance spectacle with substance",
+    "overviews": [
+      "今晚想看超级英雄电影，喜欢那种有深度的漫改作品，不只是打打杀杀",
+      "想找好看的超级英雄片，要有精彩的战斗场面和感人的故事"
+    ],
+    "collected_movie_ids": [155, 1726, 558, 263115, 299534],
+    "favorite_genres": [28, 878],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [28, 80, 53],
+      [28, 878, 12],
+      [28, 12, 878],
+      [28, 18, 878],
+      [12, 878, 28]
+    ],
+    "favorite_years": [2008, 2008, 2004, 2017, 2019],
+    "avoid_genres": [27, 10770, 99],
+    "expected_directions": ["complex villains", "moral dilemmas", "character-driven stories", "epic scale", "iconic performances"],
+    "unexpected_directions": ["horror", "reality TV", "documentaries", "arthouse", "low-budget indie"]
+  },
+  {
+    "name": "War Film Veteran",
+    "description": "Drawn to visceral depictions of war and its human cost",
+    "overviews": [
+      "今晚想看战争片，喜欢那种真实残酷地展现战争面貌的作品",
+      "想找有深度的战争电影，不只是打斗场面，更要有对人性的思考"
+    ],
+    "collected_movie_ids": [857, 28, 600, 530915, 374720],
+    "favorite_genres": [10752, 18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [10752, 18, 36],
+      [18, 10752],
+      [18, 10752],
+      [10752, 36, 18],
+      [10752, 28, 18]
+    ],
+    "favorite_years": [1998, 1979, 1987, 2019, 2017],
+    "avoid_genres": [35, 10749, 16],
+    "expected_directions": ["realistic combat", "moral complexity", "brotherhood themes", "anti-war messages", "historical accuracy"],
+    "unexpected_directions": ["comedies", "romance", "animation", "musicals", "family films"]
+  },
+  {
+    "name": "Historical Epic Fan",
+    "description": "Loves sweeping historical epics with grand battles and political intrigue",
+    "overviews": [
+      "今晚想看历史史诗大片，喜欢那种有宏大战争场面和权力斗争的",
+      "想找古代或中世纪背景的史诗电影，要有壮观的战斗和复杂的人物"
+    ],
+    "collected_movie_ids": [98, 197, 1495, 652, 1966],
+    "favorite_genres": [36, 28, 10752],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [28, 18, 12],
+      [28, 18, 36, 10752],
+      [18, 28, 12, 36, 10752],
+      [10752, 28, 36],
+      [10752, 36, 28, 12, 18, 10749]
+    ],
+    "favorite_years": [2000, 1995, 2005, 2004, 2004],
+    "avoid_genres": [878, 16, 27],
+    "expected_directions": ["epic battle sequences", "political intrigue", "historical figures", "sweeping cinematography", "heroic narratives"],
+    "unexpected_directions": ["sci-fi", "animation", "horror", "modern settings", "small-scale stories"]
+  },
+  {
+    "name": "Comedy Lover",
+    "description": "Enjoys laugh-out-loud comedies with memorable characters and quotable lines",
+    "overviews": [
+      "今晚想看喜剧片，想找那种能让我笑到肚子疼的电影",
+      "想看轻松搞笑的喜剧，最好是那种越看越有趣的"
+    ],
+    "collected_movie_ids": [8363, 18785, 55721, 12133, 8699],
+    "favorite_genres": [35],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [35],
+      [35],
+      [35, 10749],
+      [35],
+      [35]
+    ],
+    "favorite_years": [2007, 2009, 2011, 2008, 2004],
+    "avoid_genres": [27, 18, 10752],
+    "expected_directions": ["raunchy humor", "buddy comedies", "quotable dialogue", "improvised feel", "ensemble casts"],
+    "unexpected_directions": ["horror", "dramas", "war films", "thrillers", "art films"]
+  },
+  {
+    "name": "Dark Humor Enthusiast",
+    "description": "Appreciates comedy that finds humor in the macabre and absurd",
+    "overviews": [
+      "今晚想看黑色幽默的电影，喜欢那种又好笑又有点残酷的故事",
+      "想找有讽刺意味的黑色喜剧，要那种让人笑完又觉得不太对劲的"
+    ],
+    "collected_movie_ids": [8321, 275, 115, 4944, 359940],
+    "favorite_genres": [35, 80, 18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [35, 18, 80],
+      [80, 18, 53],
+      [35, 80],
+      [35, 18],
+      [80, 18]
+    ],
+    "favorite_years": [2008, 1996, 1998, 2008, 2017],
+    "avoid_genres": [10751, 16, 10749],
+    "expected_directions": ["dark subject matter treated with humor", "crime comedies", "quirky characters", "unexpected violence", "social satire"],
+    "unexpected_directions": ["family films", "animation", "romance", "feel-good stories", "superhero"]
+  },
+  {
+    "name": "Cult Film Collector",
+    "description": "Seeks out weird, wonderful, and wonderfully bad cult cinema",
+    "overviews": [
+      "今晚想看邪典电影，越奇怪越好，喜欢那种有独特魅力的怪片",
+      "想找那种影迷圈子里流传的cult经典，不在乎评价好不好，只在乎够不够特别"
+    ],
+    "collected_movie_ids": [17473, 36685, 141, 985, 13041],
+    "favorite_genres": [27, 878, 14],
+    "favorite_languages": ["en", "es"],
+    "user_genre_ids": [
+      [18, 10749],
+      [35, 878, 27],
+      [14, 18, 9648],
+      [27, 878],
+      [12, 18, 37]
+    ],
+    "favorite_years": [2003, 1975, 2001, 1977, 1970],
+    "avoid_genres": [10751, 10402],
+    "expected_directions": ["unconventional storytelling", "midnight movie vibes", "so-bad-it's-good quality", "subversive themes", "visual experimentation"],
+    "unexpected_directions": ["mainstream blockbusters", "family films", "musicals", "Oscar bait", "safe choices"]
+  },
+  {
+    "name": "A24 Arthouse Fan",
+    "description": "Drawn to elevated genre films and boundary-pushing arthouse cinema",
+    "overviews": [
+      "今晚想看A24那种风格的电影，要有艺术感又不失娱乐性",
+      "想找那种既有深度又有视觉冲击力的现代艺术片"
+    ],
+    "collected_movie_ids": [545611, 503919, 530385, 473033, 310131],
+    "favorite_genres": [27, 18, 878],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [28, 12, 878],
+      [18, 14, 53],
+      [27, 18, 9648],
+      [18, 53, 80],
+      [27]
+    ],
+    "favorite_years": [2022, 2019, 2019, 2019, 2016],
+    "avoid_genres": [10751, 10402, 10770],
+    "expected_directions": ["elevated horror", "existential themes", "bold visual style", "genre subversion", "festival acclaim"],
+    "unexpected_directions": ["family films", "musicals", "reality TV", "safe mainstream films", "sequels"]
+  },
+  {
+    "name": "Oscar Favorites Collector",
+    "description": "Tracks Academy Award winners and prestige cinema",
+    "overviews": [
+      "今晚想看奥斯卡获奖或提名的电影，喜欢那种有艺术价值的精品",
+      "想找颁奖季的热门电影，要有出色的表演和精心的制作"
+    ],
+    "collected_movie_ids": [399055, 194662, 314365, 581734, 528761],
+    "favorite_genres": [18],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18, 14, 10749],
+      [18, 35],
+      [18, 36],
+      [18],
+      [10402, 18]
+    ],
+    "favorite_years": [2017, 2014, 2015, 2021, 2020],
+    "avoid_genres": [27, 28, 878],
+    "expected_directions": ["award-winning performances", "social relevance", "artistic craftsmanship", "emotional resonance", "prestige filmmaking"],
+    "unexpected_directions": ["horror", "action blockbusters", "sci-fi", "superhero", "low-budget genre films"]
+  },
+  {
+    "name": "Classic Cinema Purist",
+    "description": "Reveres the golden age of cinema and all-time masterpieces",
+    "overviews": [
+      "今晚想看影史经典，那些被公认为最伟大的电影作品",
+      "想找老电影看，喜欢那种黑白片或老式彩色片的魅力"
+    ],
+    "collected_movie_ids": [15, 289, 426, 238, 947],
+    "favorite_genres": [18, 9648],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [9648, 18],
+      [18, 10749],
+      [9648, 10749, 53],
+      [18, 80],
+      [12, 36, 10752]
+    ],
+    "favorite_years": [1941, 1943, 1958, 1972, 1962],
+    "avoid_genres": [27, 878, 28],
+    "expected_directions": ["sight and sound poll favorites", "auteur directors", "historical significance", "technical innovation", "timeless storytelling"],
+    "unexpected_directions": ["modern blockbusters", "horror", "sci-fi", "superhero", "contemporary indie"]
+  },
+  {
+    "name": "B-Movie Enthusiast",
+    "description": "Loves low-budget genre films with charm, camp, and creative practical effects",
+    "overviews": [
+      "今晚想看那种低成本的怪兽片或恐怖片，特效越假越好笑",
+      "想找B级片看，不在乎制作精不精良，只要够有趣够疯狂就行"
+    ],
+    "collected_movie_ids": [205321, 16296, 338969, 9362, 1694],
+    "favorite_genres": [27, 878, 35],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [28, 35, 27, 878, 10770],
+      [35, 27, 878],
+      [28, 35, 878],
+      [27, 878, 35],
+      [878, 35, 27]
+    ],
+    "favorite_years": [2013, 1988, 2025, 1990, 1985],
+    "avoid_genres": [18, 36, 10749],
+    "expected_directions": ["campy fun", "creative practical effects", "so-bad-it's-good", "creature features", "midnight movie energy"],
+    "unexpected_directions": ["serious dramas", "historical films", "romance", "Oscar contenders", "arthouse"]
+  },
+  {
+    "name": "Taiwan Cinema Advocate",
+    "description": "Passionate about Taiwanese cinema and its unique cultural voice",
+    "overviews": [
+      "今晚想看台湾电影，喜欢那种有台湾味道的本土故事",
+      "想找优秀的台湾片，不管是文艺片还是类型片都行"
+    ],
+    "collected_movie_ids": [622951, 719410, 614017, 78450, 40911],
+    "favorite_genres": [18, 53],
+    "favorite_languages": ["zh"],
+    "user_genre_ids": [
+      [18, 80],
+      [10749, 18],
+      [27, 9648, 53, 18],
+      [18, 80, 9648, 53],
+      [53]
+    ],
+    "favorite_years": [2019, 2020, 2019, 1986, 2010],
+    "avoid_genres": [28, 16, 10751],
+    "expected_directions": ["Taiwanese cultural identity", "social realism", "New Wave influences", "local dialects", "intimate family stories"],
+    "unexpected_directions": ["Hollywood blockbusters", "action films", "animation", "family films", "superhero"]
+  },
+  {
+    "name": "Hong Kong Cinema Fan",
+    "description": "Loves the golden age of Hong Kong cinema from crime thrillers to martial arts",
+    "overviews": [
+      "今晚想看香港电影，喜欢那种有港味的警匪片或动作片",
+      "想找经典的港片，不管是杜琪峰还是王家卫的风格都行"
+    ],
+    "collected_movie_ids": [10775, 11104, 9470, 18747, 25536],
+    "favorite_genres": [28, 80, 18],
+    "favorite_languages": ["cn"],
+    "user_genre_ids": [
+      [18, 28, 53, 80, 9648],
+      [18, 35, 10749],
+      [28, 35, 80, 14],
+      [80, 18, 53],
+      [80, 53]
+    ],
+    "favorite_years": [2002, 1994, 2004, 2005, 2003],
+    "avoid_genres": [16, 10751, 10770],
+    "expected_directions": ["triad underworld", "martial arts choreography", "John Woo style action", "moody cinematography", "Cantonese dialogue"],
+    "unexpected_directions": ["animation", "family films", "reality TV", "Western remakes", "big-budget spectacles"]
+  },
+  {
+    "name": "Chinese Cinema Enthusiast",
+    "description": "Appreciates mainland Chinese cinema from Fifth Generation masters to modern blockbusters",
+    "overviews": [
+      "今晚想看中国电影，喜欢张艺谋那种色彩浓烈的视觉风格",
+      "想找有中国特色的电影，不管是古装武侠还是现代都市都行"
+    ],
+    "collected_movie_ids": [10997, 10404, 79, 9550, 381890],
+    "favorite_genres": [18, 28, 12],
+    "favorite_languages": ["zh"],
+    "user_genre_ids": [
+      [18],
+      [18],
+      [18, 12, 28, 36],
+      [12, 18, 28],
+      [35, 14, 10749]
+    ],
+    "favorite_years": [1993, 1991, 2002, 2004, 2016],
+    "avoid_genres": [878, 27, 10770],
+    "expected_directions": ["Fifth Generation aesthetics", "wuxia martial arts", "historical epics", "cultural commentary", "visual poetry"],
+    "unexpected_directions": ["sci-fi", "horror", "reality TV", "Western culture", "low-budget genre films"]
+  },
+  {
+    "name": "Genre Hybrid Explorer",
+    "description": "Loves films that blend sci-fi, crime, and thriller elements into mind-bending experiences",
+    "overviews": [
+      "今晚想看那种融合了科幻和犯罪元素的电影，要有复杂的剧情和惊人的反转",
+      "想找那种类型混搭的作品，像盗梦空间那种既烧脑又刺激的"
+    ],
+    "collected_movie_ids": [27205, 155, 335984, 807, 603],
+    "favorite_genres": [878, 80, 53],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [28, 878, 12],
+      [28, 80, 53],
+      [878, 18],
+      [80, 9648, 53],
+      [28, 878]
+    ],
+    "favorite_years": [2010, 2008, 2017, 1995, 1999],
+    "avoid_genres": [10751, 10402, 10749],
+    "expected_directions": ["complex world-building", "heist elements", "mind-bending plots", "neo-noir aesthetics", "action with intelligence"],
+    "unexpected_directions": ["family films", "musicals", "romance", "simple plots", "feel-good stories"]
+  },
+  {
+    "name": "Denis Villeneuve Admirer",
+    "description": "Dedicated fan of Denis Villeneuve's atmospheric and visually stunning filmmaking",
+    "overviews": [
+      "今晚想看丹尼斯·维伦纽瓦的电影，喜欢他那种压迫感十足的氛围营造",
+      "想找维伦纽瓦风格的作品，要有宏大的视觉和克制的情感表达"
+    ],
+    "collected_movie_ids": [329865, 335984, 273481, 438631, 146233],
+    "favorite_genres": [878, 53, 28],
+    "favorite_languages": ["en"],
+    "user_genre_ids": [
+      [18, 878, 9648],
+      [878, 18],
+      [28, 80, 53],
+      [878, 12],
+      [18, 53, 80]
+    ],
+    "favorite_years": [2016, 2017, 2015, 2021, 2013],
+    "avoid_genres": [10751, 35, 10770],
+    "expected_directions": ["atmospheric tension", "Roger Deakins cinematography", "slow-burn narratives", "desolate landscapes", "moral ambiguity"],
+    "unexpected_directions": ["family films", "comedies", "reality TV", "musicals", "lighthearted stories"]
+  }
+]
