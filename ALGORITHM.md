@@ -206,6 +206,8 @@ If SVD or Genome vectors are unavailable, the service falls back to the availabl
 
 This is not online personalized collaborative filtering. The public and Android flows do not maintain a central user-item matrix, so they cannot train fresh SVD from private single-user local history. SVD/Genome are optional offline signals built from external datasets. At runtime, the recommender compares the user's watched/rated movie set with these pre-trained item embeddings, so it should be documented as pre-trained matrix factorization and tag-profile matching rather than local collaborative training.
 
+The watched movie set arrives as `user_movie_ids` (TMDB ids), aligned by index with `user_vote_counts` (1-10 ratings). The Web demo and the Android app both send `user_movie_ids` from their local favorites; the browser never reads MovieLens files itself. The SVD and Genome spaces are entirely server-side, loaded only when `bert_service.py` has `final_boss_vectors.json`. A public clone has no built-in lab endpoint, so the Web hybrid is active only when the operator sets `REMOTE_SEARCH_URL` to their own BERT service. Without those ids the service still runs, but the SVD/Genome taste centers stay empty and ranking leans on BERT plus metadata.
+
 ## 5. Filtering And Practical Ranking Rules
 
 After scoring, LumiTrace applies practical filters:
@@ -238,7 +240,8 @@ The advanced model path now has a reproducible local setup:
 - `tools/bootstrap_recommender.py` downloads TMDB movie metadata and creates `movie_vectors.json`.
 - `ai_engine/generate_vectors.py` remains as a compatibility wrapper for the same bootstrapper.
 - `ai_engine/bert_service.py` loads the generated vectors and exposes `/search`, `/embed`, `/reload_db`, and `/status`.
-- `app.py` can forward recommendation requests to the BERT service through `REMOTE_SEARCH_URL`.
+- `app.py` can forward recommendation requests to the BERT service through `REMOTE_SEARCH_URL`, or to a user-supplied target from the browser Settings page (unless locked with `LOCK_REMOTE_SEARCH_URL`).
+- The recommendation reason text is produced by an optional, bring-your-own LLM narrator: the browser stores its own OpenAI-compatible endpoint/key/model on the Settings page and sends them per request as `llm`. No LLM is baked into the clone; retrieval (BERT + MovieLens) is unaffected when it is absent.
 
 ## 8. Future Algorithm Work
 

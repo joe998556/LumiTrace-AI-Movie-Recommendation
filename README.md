@@ -143,9 +143,12 @@ python tools/bootstrap_recommender.py --preset xlarge --overwrite
 When a user marks movies as watched, the client can send the BERT service:
 
 - watched movie overviews
+- watched movie IDs (`user_movie_ids`) to align the MovieLens SVD/Genome taste centers
 - watched movie IDs to exclude from results
 - genre IDs as taste constraints
 - personal ratings as preference weights
+
+Both the Web demo and the Android app send `user_movie_ids` from browser-local / on-device favorites, so both can drive the full BERT + MovieLens SVD + Genome hybrid when the BERT service is configured.
 
 The BERT service embeds the watched movie overviews and uses them as the user's taste query. Ratings change the strength of the signal:
 
@@ -248,6 +251,14 @@ final_score =
 | Genome | MovieLens-style tag and style profile |
 
 When `bert_service.py` loads `final_boss_vectors.json`, it uses watched movie IDs plus 1-10 user ratings to compare the user's taste against the MovieLens SVD and Genome item-vector spaces. If SVD or Genome vectors are missing, the service falls back to the available BERT and metadata signals. The public and Android flows do not train online collaborative filtering from a private single-user history; MovieLens is used as a pre-trained offline signal.
+
+> **MovieLens hybrid on the Web demo.** The browser never reads MovieLens files directly — SVD and Genome are server-side signals. The Web demo reaches the full hybrid only when all of the following hold:
+>
+> - Flask `REMOTE_SEARCH_URL` points to a running BERT service.
+> - That BERT service has loaded `final_boss_vectors.json` (BERT + SVD + Genome vectors).
+> - The request includes `user_movie_ids` from browser-local favorites, which the Web app now sends.
+>
+> A public clone ships no built-in lab endpoint, so you must set your own `REMOTE_SEARCH_URL` in `.env`. Without it, `/api/semantic-recommendations` returns a safe empty fallback and the demo drops back to metadata ranking.
 
 For the full breakdown, see [ALGORITHM.md](ALGORITHM.md).
 For current performance and production limits, see [docs/ARCHITECTURE_LIMITS.md](docs/ARCHITECTURE_LIMITS.md).
@@ -408,7 +419,7 @@ Create a local environment file:
 cp .env.example .env
 ```
 
-This file is optional for the public demo. You can also paste your TMDB API key directly into the web UI after opening the app.
+This file is optional for the public demo. You can also enter your TMDB API key on the in-app **Settings** page after opening the app.
 
 Optional `.env` values:
 
@@ -416,6 +427,7 @@ Optional `.env` values:
 TMDB_API_KEY=your_tmdb_key
 RAPID_API_KEY=your_rapidapi_key
 REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
+LOCK_REMOTE_SEARCH_URL=false
 LUMITRACE_VECTOR_FILE=movie_vectors.json
 LUMITRACE_DEVICE=auto
 SSL_VERIFY=false
@@ -433,9 +445,25 @@ Open:
 http://localhost:8080
 ```
 
-Paste your TMDB API key into the page, click "Save and Load Trending", save movies you like, then click "Show My Recommendations".
+Open **Settings** (top nav), enter your TMDB API key, then go back, browse, save movies you like, and open the recommendations panel.
 
 The public demo UI is English-only. TMDB requests default to `en-US` so movie titles and overviews are also pulled in English when available.
+
+> **Scene prompts must be in English.** The BERT vectors are built from English movie text, so a non-English scene prompt (for the Zero-Shot Semantic Playlist) embeds into a different space and returns poor or empty results. Type prompts in English unless you have swapped in a multilingual embedding model and regenerated the vector index.
+
+### Settings page: bring your own keys
+
+All user-supplied API settings live on the in-app Settings page (`/settings.html`) and are stored only in the browser's `localStorage` — nothing is committed to the repo or persisted on the server. There are three sections:
+
+| Setting | Purpose |
+| --- | --- |
+| **TMDB API Key** | Required to browse movie data. Sent per request as the `X-TMDB-API-Key` header (falls back to the server's `.env` `TMDB_API_KEY`). |
+| **LLM Narrator (bring your own)** | Optional. Any OpenAI-compatible chat endpoint (OpenAI, Ollama `/v1`, vLLM, LM Studio, etc.) plus an optional key and model. When set, the browser sends it as `llm: {api_url, api_key, model}` and the BERT service writes an AI "reason" onto each pick. Recommendations work fine without it. |
+| **BERT Service URL** | Advanced/optional. Overrides the server's `REMOTE_SEARCH_URL` so you can point semantic search at your own BERT service. Sent as `remote_search_url`; the server validates the scheme and never forwards this field to the BERT service. |
+
+The clone ships with no baked-in LLM or BERT endpoint. The browser never talks to those services directly — it only calls the Flask backend, which proxies the request server-side (so API keys and the BERT URL are not exposed cross-origin).
+
+**Security:** the BERT URL override lets the backend forward to a user-supplied host, which is intended for self-hosting. For any public or multi-tenant deployment, set `LOCK_REMOTE_SEARCH_URL=true` in `.env` to ignore the browser override and force the server's `REMOTE_SEARCH_URL`, preventing server-side request forgery.
 
 Check backend readiness:
 

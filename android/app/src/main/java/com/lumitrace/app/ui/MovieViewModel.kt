@@ -25,7 +25,12 @@ import org.json.JSONObject
 sealed class UiState {
     object Idle : UiState()
     object Loading : UiState()
-    data class Success(val movies: List<Movie>, val isSearch: Boolean = false) : UiState()
+    data class Success(
+        val movies: List<Movie>,
+        val isSearch: Boolean = false,
+        val aiTitle: String? = null,
+        val aiSummary: String? = null
+    ) : UiState()
     data class Error(val message: String) : UiState()
 }
 
@@ -114,6 +119,15 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     )
     val remoteSearchUrl: StateFlow<String> = _remoteSearchUrl.asStateFlow()
 
+    private val _llmApiUrl = MutableStateFlow(prefs.getString(KEY_LLM_API_URL, "").orEmpty())
+    val llmApiUrl: StateFlow<String> = _llmApiUrl.asStateFlow()
+
+    private val _llmApiKey = MutableStateFlow(prefs.getString(KEY_LLM_API_KEY, "").orEmpty())
+    val llmApiKey: StateFlow<String> = _llmApiKey.asStateFlow()
+
+    private val _llmModel = MutableStateFlow(prefs.getString(KEY_LLM_MODEL, "").orEmpty())
+    val llmModel: StateFlow<String> = _llmModel.asStateFlow()
+
     private val _watchedMovies = MutableStateFlow<Set<Movie>>(loadWatchedMovies())
     val watchedMovies: StateFlow<Set<Movie>> = _watchedMovies.asStateFlow()
 
@@ -175,6 +189,31 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     fun clearRemoteSearchUrl() {
         prefs.edit().remove(KEY_REMOTE_SEARCH_URL).apply()
         _remoteSearchUrl.value = ""
+    }
+
+    fun saveLlmConfig(apiUrl: String, apiKey: String, model: String) {
+        val cleanUrl = apiUrl.trim()
+        val cleanKey = apiKey.trim()
+        val cleanModel = model.trim()
+        prefs.edit()
+            .putString(KEY_LLM_API_URL, cleanUrl)
+            .putString(KEY_LLM_API_KEY, cleanKey)
+            .putString(KEY_LLM_MODEL, cleanModel)
+            .apply()
+        _llmApiUrl.value = cleanUrl
+        _llmApiKey.value = cleanKey
+        _llmModel.value = cleanModel
+    }
+
+    fun clearLlmConfig() {
+        prefs.edit()
+            .remove(KEY_LLM_API_URL)
+            .remove(KEY_LLM_API_KEY)
+            .remove(KEY_LLM_MODEL)
+            .apply()
+        _llmApiUrl.value = ""
+        _llmApiKey.value = ""
+        _llmModel.value = ""
     }
 
     fun toggleWatched(movie: Movie) {
@@ -299,6 +338,9 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     userReleaseYears = releaseYearsToSend,
                     playlistGenreIds = inferPlaylistGenres(query),
                     preferredLanguages = inferPreferredLanguages(query),
+                    llmApiUrl = _llmApiUrl.value.trim().takeIf { it.isNotBlank() }.orEmpty(),
+                    llmApiKey = _llmApiKey.value.trim().takeIf { it.isNotBlank() }.orEmpty(),
+                    llmModel = _llmModel.value.trim().takeIf { it.isNotBlank() }.orEmpty(),
                     topK = requestedTopK
                 )
 
@@ -312,7 +354,12 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                     semanticEndReached = response.results.size < requestedTopK ||
                         (expand && response.results.size <= currentResults.size)
                     semanticTopK = requestedTopK
-                    _uiState.value = UiState.Success(response.results, isSearch = true)
+                    _uiState.value = UiState.Success(
+                        movies = response.results,
+                        isSearch = true,
+                        aiTitle = response.title,
+                        aiSummary = response.summary
+                    )
                 } else {
                     semanticEndReached = true
                     _uiState.value = UiState.Error(
@@ -593,6 +640,10 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         val root = JSONObject(json)
         return RecommendationResponse(
             results = parseMovieArray(root.optJSONArray("results")),
+            title = root.optJSONObject("llm")?.optNullableString("title")
+                ?: root.optNullableString("title"),
+            summary = root.optJSONObject("llm")?.optNullableString("summary")
+                ?: root.optNullableString("summary"),
             fallback = root.optNullableString("fallback"),
             error = root.optNullableString("error")
         )
@@ -618,7 +669,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             releaseDate = movieJson.optStringAny("release_date", "releaseDate"),
             voteAverage = movieJson.optDoubleAny("vote_average", "voteAverage"),
             originalLanguage = movieJson.optStringAny("original_language", "originalLanguage"),
-            genreIds = movieJson.optIntListAny("genre_ids", "genreIds")
+            genreIds = movieJson.optIntListAny("genre_ids", "genreIds"),
+            reason = movieJson.optNullableString("reason", "recommendation_reason", "why")
         )
     }
 
@@ -700,6 +752,9 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     companion object {
         private const val KEY_TMDB_API = "tmdb_api_key"
         private const val KEY_REMOTE_SEARCH_URL = "remote_search_url"
+        private const val KEY_LLM_API_URL = "llm_api_url"
+        private const val KEY_LLM_API_KEY = "llm_api_key"
+        private const val KEY_LLM_MODEL = "llm_model"
         private const val KEY_WATCHED_MOVIES = "watched_movies"
         private const val KEY_JOURNAL_RATING_PREFIX = "journal_rating_"
         private const val KEY_JOURNAL_NOTE_PREFIX = "journal_note_"

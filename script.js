@@ -3,12 +3,16 @@ const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 const KEY_STORAGE = "lumitrace_tmdb_key";
 const FAVORITES_STORAGE = "lumitrace_favorites";
 const RATINGS_STORAGE = "lumitrace_ratings";
+const LLM_STORAGE = "lumitrace_llm";
+const SEARCH_URL_STORAGE = "lumitrace_search_url";
 const TMDB_LANGUAGE = "en-US";
 
 let backendHasTmdbKey = false;
+let backendHasBert = false;
 let currentCategory = "trending";
 let currentGenre = "";
 let currentSearchQuery = "";
+let currentPersonQuery = "";
 
 // Infinite scroll
 let scrollPage = 1;
@@ -40,16 +44,30 @@ const GENRE_NAMES = {
 // --- Init ---
 document.addEventListener("DOMContentLoaded", async () => {
   bindUi();
-  restoreKey();
+  if (window.enhanceSelect) {
+    window.enhanceSelect(document.getElementById("playlistLanguage"));
+    window.enhanceSelect(document.getElementById("playlistGenre"));
+  }
   updateFabBadge();
   await loadBackendStatus();
+  updateConnections();
   setupInfiniteScroll();
   if (hasTmdbAccess()) {
-    loadCategory(currentCategory);
+    if (!applyDeepLink()) loadCategory(currentCategory);
   } else {
-    setStatus("Enter a TMDB API key, or set TMDB_API_KEY in your local .env file.");
+    setStatus("No TMDB key yet — open Settings to add one, or set TMDB_API_KEY in your local .env file.");
   }
 });
+
+// Deep links from other pages (e.g. favorites.html modal): ?genre / ?cast / ?crew.
+function applyDeepLink() {
+  const p = new URLSearchParams(location.search);
+  const name = p.get("name") || "";
+  if (p.get("genre")) { loadGenre(p.get("genre")); return true; }
+  if (p.get("cast")) { loadPersonMovies("cast", p.get("cast"), name); return true; }
+  if (p.get("crew")) { loadPersonMovies("crew", p.get("crew"), name); return true; }
+  return false;
+}
 
 // --- Panel ---
 let recScrollBound = false;
@@ -100,26 +118,7 @@ function checkRecFill() {
 
 // --- UI Binding ---
 function bindUi() {
-  document.getElementById("saveKeyBtn").addEventListener("click", () => {
-    const key = document.getElementById("apiKeyInput").value.trim();
-    if (!key) { setStatus("Enter a TMDB API key first."); return; }
-    localStorage.setItem(KEY_STORAGE, key);
-    setStatus("API key saved. Loading movies...");
-    loadCategory(currentCategory);
-  });
-
-  document.getElementById("clearKeyBtn").addEventListener("click", () => {
-    localStorage.removeItem(KEY_STORAGE);
-    document.getElementById("apiKeyInput").value = "";
-    if (backendHasTmdbKey) {
-      setStatus("Browser API key cleared. Using the backend .env TMDB key instead.");
-      loadCategory(currentCategory);
-    } else {
-      clearMovieGrid();
-      setStatus("API key cleared.");
-    }
-  });
-
+  // TMDB key entry lives on the Settings page now (settings.html).
   document.getElementById("searchBtn").addEventListener("click", runSearch);
   document.getElementById("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") runSearch(); });
   document.getElementById("playlistBtn").addEventListener("click", runZeroShotPlaylist);
@@ -128,11 +127,19 @@ function bindUi() {
   });
 
   // Panel controls
-  document.getElementById("recommendFab").addEventListener("click", () => panelOpen ? closePanel() : openPanel());
+  document.getElementById("recommendFab").addEventListener("click", () => {
+    if (panelOpen) { closePanel(); return; }
+    // Refresh recommendations from current favorites on every open.
+    resetRecScroll();
+    openPanel();
+  });
   document.getElementById("closePanelBtn").addEventListener("click", closePanel);
   document.getElementById("overlayBackdrop").addEventListener("click", closePanel);
   document.getElementById("closeExplanationBtn").addEventListener("click", closeExplanationModal);
   document.getElementById("explanationBackdrop").addEventListener("click", closeExplanationModal);
+  document.getElementById("closeMovieBtn").addEventListener("click", closeMovieModal);
+  document.getElementById("movieBackdrop").addEventListener("click", closeMovieModal);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && document.getElementById("movieModal").style.display === "flex") closeMovieModal(); });
 
   // Rating modal
   document.getElementById("closeRatingBtn").addEventListener("click", closeRatingModal);
@@ -198,16 +205,52 @@ function bindUi() {
 }
 
 // --- API Helpers ---
-function restoreKey() { const k = getApiKey(); if (k) document.getElementById("apiKeyInput").value = k; }
 function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ""; }
 function hasTmdbAccess() { return Boolean(getApiKey() || backendHasTmdbKey); }
+
+// Bring-your-own settings, configured on settings.html and stored per-browser.
+function getLlmConfig() {
+  try {
+    const c = JSON.parse(localStorage.getItem(LLM_STORAGE) || "{}");
+    if (c && typeof c.api_url === "string" && c.api_url.trim()) {
+      return { api_url: c.api_url.trim(), api_key: String(c.api_key || "").trim(), model: String(c.model || "").trim() };
+    }
+  } catch {}
+  return null;
+}
+function getSearchUrlOverride() { return (localStorage.getItem(SEARCH_URL_STORAGE) || "").trim(); }
+
+// Attach the user's optional LLM narrator + BERT URL override to a semantic payload.
+function withSemanticExtras(payload) {
+  const llm = getLlmConfig();
+  if (llm) payload.llm = llm;
+  const override = getSearchUrlOverride();
+  if (override) payload.remote_search_url = override;
+  return payload;
+}
 
 async function loadBackendStatus() {
   try {
     const r = await fetch(`${BACKEND_URL}/health`);
     const d = await r.json();
     backendHasTmdbKey = Boolean(d.integrations?.tmdb_env_key);
-  } catch { backendHasTmdbKey = false; }
+    backendHasBert = Boolean(d.integrations?.semantic_search);
+  } catch { backendHasTmdbKey = false; backendHasBert = false; }
+}
+
+// Reflect TMDB / BERT / LLM readiness in the home-page Connections card.
+function updateConnections() {
+  const set = (id, on, text) => {
+    const row = document.getElementById(id);
+    if (!row) return;
+    row.classList.toggle("is-on", on);
+    const state = row.querySelector(".conn-state");
+    if (state) state.textContent = text;
+  };
+  const browserKey = Boolean(getApiKey());
+  set("connTmdb", hasTmdbAccess(), browserKey ? "browser key" : backendHasTmdbKey ? "server .env" : "not set");
+  set("connBert", backendHasBert || Boolean(getSearchUrlOverride()), getSearchUrlOverride() ? "custom URL" : backendHasBert ? "server" : "off");
+  set("connLlm", Boolean(getLlmConfig()), getLlmConfig() ? "configured" : "off");
 }
 
 function getFavorites() {
@@ -288,6 +331,151 @@ function closeRatingModal() {
   currentRatingMovie = null;
 }
 
+// --- Movie detail modal (trailer + region streaming via TMDB/JustWatch) ---
+let movieModalRegion = null;
+let movieModalData = null;
+
+function detectRegion() {
+  const langs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ""];
+  for (const l of langs) {
+    const parts = String(l).split("-");
+    if (parts[1] && parts[1].length === 2) return parts[1].toUpperCase();
+  }
+  return "US";
+}
+
+function regionName(code) {
+  try { return new Intl.DisplayNames([navigator.language || "en"], { type: "region" }).of(code) || code; }
+  catch { return code; }
+}
+
+async function openMovieModal(movie) {
+  const modal = document.getElementById("movieModal");
+  const body = document.getElementById("movieModalBody");
+  movieModalData = null;
+  body.innerHTML = `<div class="movie-modal-loading">Loading details…</div>`;
+  modal.style.display = "flex";
+  requestAnimationFrame(() => {
+    modal.style.opacity = "1";
+    modal.querySelector(".movie-modal-card").style.transform = "scale(1)";
+  });
+  try {
+    const data = await tmdb(`movie/${movie.id}?language=${TMDB_LANGUAGE}&append_to_response=videos,watch/providers,credits`);
+    movieModalData = data;
+    // Always show the viewer's own region first (honest empty state if the
+    // title isn't streaming there); the selector lets them explore others.
+    movieModalRegion = detectRegion();
+    renderMovieModal(movie, data);
+  } catch (e) {
+    body.innerHTML = `<div class="movie-modal-loading">Couldn't load details: ${esc(e.message)}</div>`;
+  }
+}
+
+function closeMovieModal() {
+  const modal = document.getElementById("movieModal");
+  modal.style.opacity = "0";
+  modal.querySelector(".movie-modal-card").style.transform = "scale(0.96)";
+  setTimeout(() => { modal.style.display = "none"; document.getElementById("movieModalBody").innerHTML = ""; }, 220);
+  movieModalData = null;
+}
+
+function metaLinkHtml(kind, id, label) {
+  return `<button type="button" class="meta-link" data-kind="${kind}" data-id="${id}" data-label="${esc(label)}">${esc(label)}</button>`;
+}
+
+function movieFactsHtml(data) {
+  const credits = data.credits || {};
+  const directors = (credits.crew || []).filter((c) => c.job === "Director").slice(0, 2);
+  const cast = (credits.cast || []).slice(0, 6);
+  const genres = data.genres || [];
+  const row = (label, html) => html ? `<div class="fact-row"><span class="fact-label">${label}</span><div class="fact-vals">${html}</div></div>` : "";
+  return `<div class="movie-facts">
+    ${row("Director", directors.map((d) => metaLinkHtml("crew", d.id, d.name)).join(""))}
+    ${row("Cast", cast.map((c) => metaLinkHtml("cast", c.id, c.name)).join(""))}
+    ${row("Genres", genres.map((g) => metaLinkHtml("genre", g.id, g.name)).join(""))}
+  </div>`;
+}
+
+function renderMovieModal(movie, data) {
+  const body = document.getElementById("movieModalBody");
+  const year = (data.release_date || "").slice(0, 4);
+  const runtime = data.runtime ? `${data.runtime} min` : "";
+  const vids = (data.videos || {}).results || [];
+  const trailer = vids.find((v) => v.site === "YouTube" && v.type === "Trailer")
+    || vids.find((v) => v.site === "YouTube" && v.type === "Teaser")
+    || vids.find((v) => v.site === "YouTube");
+  const backdrop = data.backdrop_path ? `https://image.tmdb.org/t/p/w780${data.backdrop_path}` : "";
+  body.innerHTML = `
+    ${trailer
+      ? `<div class="movie-trailer"><iframe src="https://www.youtube.com/embed/${trailer.key}" title="${esc(data.title || movie.title)} trailer" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`
+      : backdrop ? `<div class="movie-trailer movie-backdrop" style="background-image:url('${backdrop}')"></div>` : ""}
+    <div class="movie-modal-inner">
+      <h2 class="movie-modal-title">${esc(data.title || movie.title)}</h2>
+      <div class="movie-modal-meta">
+        ${year ? `<span>${year}</span>` : ""}
+        ${runtime ? `<span>${runtime}</span>` : ""}
+        <span>⭐ ${(Number(data.vote_average) || 0).toFixed(1)}</span>
+      </div>
+      ${data.tagline ? `<p class="movie-modal-tagline">${esc(data.tagline)}</p>` : ""}
+      <p class="movie-modal-overview">${esc(data.overview || "No overview available.")}</p>
+      ${movieFactsHtml(data)}
+      <div id="movieProviders" class="movie-providers"></div>
+      <a class="movie-tmdb-link" href="https://www.themoviedb.org/movie/${data.id}" target="_blank" rel="noopener">View full page on TMDB →</a>
+    </div>`;
+  body.querySelectorAll(".meta-link").forEach((el) => el.addEventListener("click", onMetaLinkClick));
+  renderProviders(data);
+}
+
+// In the main app, a director/cast/genre click loads that filter into the
+// browse grid (closing the modal + rec panel) and scrolls up to the results.
+function onMetaLinkClick(e) {
+  const el = e.currentTarget;
+  const kind = el.dataset.kind, id = el.dataset.id, label = el.dataset.label;
+  closeMovieModal();
+  if (panelOpen) closePanel();
+  if (kind === "genre") loadGenre(id);
+  else loadPersonMovies(kind, id, label);
+  document.getElementById("movieGrid")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderProviders(data) {
+  const wrap = document.getElementById("movieProviders");
+  if (!wrap) return;
+  const providers = (data["watch/providers"] || {}).results || {};
+  const regions = Object.keys(providers).sort((a, b) => regionName(a).localeCompare(regionName(b)));
+  const region = movieModalRegion;
+  const options = regions.includes(region) ? regions : [region, ...regions];
+  const selector = `
+    <div class="movie-providers-head">
+      <span class="movie-providers-label">Where to watch</span>
+      <select id="movieRegionSelect" class="movie-region-select" aria-label="Streaming region">
+        ${options.map((r) => `<option value="${r}"${r === region ? " selected" : ""}>${esc(regionName(r))}</option>`).join("")}
+      </select>
+    </div>`;
+  const entry = providers[region] || null;
+  let inner;
+  if (!entry || (!entry.flatrate && !entry.rent && !entry.buy)) {
+    inner = `<p class="movie-providers-empty">No streaming options listed for ${esc(regionName(region))}.</p>`;
+  } else {
+    const link = entry.link || `https://www.themoviedb.org/movie/${data.id}/watch`;
+    const group = (label, arr) => (arr && arr.length) ? `
+      <div class="provider-group">
+        <span class="provider-group-label">${label}</span>
+        <div class="provider-logos">
+          ${arr.map((p) => `<a class="provider-chip" href="${link}" target="_blank" rel="noopener" title="Open ${esc(p.provider_name)} via JustWatch"><img src="https://image.tmdb.org/t/p/w92${p.logo_path}" alt="${esc(p.provider_name)}" loading="lazy"><span>${esc(p.provider_name)}</span></a>`).join("")}
+        </div>
+      </div>` : "";
+    inner = group("Stream", entry.flatrate) + group("Rent", entry.rent) + group("Buy", entry.buy)
+      + `<a class="provider-justwatch" href="${link}" target="_blank" rel="noopener">See all options on TMDB / JustWatch →</a>`;
+  }
+  wrap.innerHTML = selector + inner + `<span class="movie-attribution">Streaming data powered by JustWatch via TMDB.</span>`;
+  const sel = document.getElementById("movieRegionSelect");
+  if (sel) {
+    sel.addEventListener("change", () => { movieModalRegion = sel.value; renderProviders(movieModalData); });
+    if (window.enhanceSelect) window.enhanceSelect(sel);
+  }
+}
+
 function tmdbHeaders() { const k = getApiKey(); return k ? { "X-TMDB-API-Key": k } : {}; }
 
 async function tmdb(path) {
@@ -352,6 +540,29 @@ async function loadGenre(genreId) {
   } catch (err) { setStatus(`Failed: ${err.message}`); }
 }
 
+async function loadPersonMovies(kind, personId, name) {
+  if (!requireKey()) return;
+  // kind: "cast" -> films acted in; "crew" -> films directed/crewed.
+  currentPersonQuery = `${kind === "crew" ? "with_crew" : "with_cast"}=${personId}`;
+  currentGenre = "";
+  currentSearchQuery = "";
+  document.getElementById("searchInput").value = "";
+  document.querySelectorAll(".genre-chip").forEach((g) => g.classList.remove("active"));
+  resetScrollState("person");
+  document.getElementById("categoryTitle").textContent = name || "Filmography";
+  document.getElementById("categoryDesc").textContent = `Movies featuring ${name || "this person"}.`;
+  setStatus(`Loading movies with ${name || "this person"}...`);
+  try {
+    const data = await tmdb(`discover/movie?language=${TMDB_LANGUAGE}&sort_by=popularity.desc&${currentPersonQuery}&page=1`);
+    const movies = normalizeMovies(data.results || []);
+    movies.forEach((m) => seenMovieIds.add(m.id));
+    appendMovieCards(movies);
+    scrollPage = 2;
+    setStatus(`Loaded ${movies.length} movies.`);
+    attachSentinel();
+  } catch (err) { setStatus(`Failed: ${err.message}`); }
+}
+
 async function runSearch() {
   if (!requireKey()) return;
   const query = document.getElementById("searchInput").value.trim();
@@ -381,15 +592,29 @@ async function runZeroShotPlaylist() {
 
   const language = document.getElementById("playlistLanguage").value;
   const genre = document.getElementById("playlistGenre").value;
+  const favs = getFavorites();
+  const ratings = getRatings();
   const payload = {
     overviews: [prompt],
-    exclude_ids: getFavorites().map((movie) => movie.id),
-    user_genre_ids: genre ? [[Number(genre)]] : [],
-    user_vote_counts: [8],
+    exclude_ids: favs.map((movie) => movie.id),
     playlist_genre_ids: genre ? [Number(genre)] : [],
     preferred_languages: language ? [language] : [],
     top_k: 30,
   };
+
+  // Prompt-only mode keeps the scene prompt as the sole semantic query with a
+  // light genre/vote hint. When favorites exist, personalize the prompt with
+  // browser-local watched ids so the server-side MovieLens SVD/Genome center
+  // can align; overviews stays [prompt] either way.
+  if (favs.length) {
+    payload.user_movie_ids = favs.map((movie) => movie.id);
+    payload.user_genre_ids = favs.map((movie) => movie.genre_ids || []);
+    payload.user_vote_counts = favs.map((movie) => Number(ratings[movie.id]?.score || 5));
+    payload.user_release_years = favs.map(movieReleaseYear).filter(Boolean);
+  } else {
+    payload.user_genre_ids = genre ? [[Number(genre)]] : [];
+    payload.user_vote_counts = [8];
+  }
 
   setStatus("Generating zero-shot semantic playlist...");
   resetRecScroll();
@@ -400,7 +625,7 @@ async function runZeroShotPlaylist() {
     const response = await fetch(`${BACKEND_URL}/semantic-recommendations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(withSemanticExtras(payload)),
     });
     const data = await response.json();
     if (!response.ok || data.error) {
@@ -423,8 +648,13 @@ async function runZeroShotPlaylist() {
       filters.preferred_languages?.length ? `languages ${filters.preferred_languages.join(", ")}` : "",
       filters.relaxed_context_filters ? "filters relaxed" : "",
     ].filter(Boolean).join(" / ");
+    // Surface the LLM narrator's playlist title/summary when present; otherwise
+    // fall back to the filter chips. The narrator only writes this text — it
+    // does not change which movies were retrieved.
+    const llm = data.llm || {};
+    const blurb = [llm.title, llm.summary].filter(Boolean).join(" — ");
     document.getElementById("recommendationReason").textContent =
-      `Zero-shot semantic playlist${chips ? ` (${chips})` : ""}.`;
+      `以下是推薦給你的片單${blurb ? ` — ${blurb}` : chips ? `（${chips}）` : ""}`;
     setStatus(`Generated ${movies.length} semantic playlist picks.`);
     openPanel();
   } catch (err) {
@@ -461,6 +691,7 @@ async function loadMore() {
     let ep;
     if (scrollMode === "search") ep = `search/movie?query=${encodeURIComponent(currentSearchQuery)}&language=${TMDB_LANGUAGE}&page=${scrollPage}`;
     else if (scrollMode === "genre") ep = `discover/movie?language=${TMDB_LANGUAGE}&sort_by=vote_average.desc&vote_count.gte=150&with_genres=${currentGenre}&page=${scrollPage}`;
+    else if (scrollMode === "person") ep = `discover/movie?language=${TMDB_LANGUAGE}&sort_by=popularity.desc&${currentPersonQuery}&page=${scrollPage}`;
     else { const m = CATEGORY_META[currentCategory]; ep = `${m.endpoint}?language=${TMDB_LANGUAGE}&page=${scrollPage}`; }
     const data = await tmdb(ep);
     const fresh = normalizeMovies(data.results || []).filter((m) => !seenMovieIds.has(m.id));
@@ -530,6 +761,7 @@ function appendMovieCards(movies) {
         </div>
         <button class="fav-btn${active ? " is-saved" : ""}" data-movie-id="${movie.id}" type="button">${active ? "Saved" : "Save"}</button>
       </div>`;
+    card.querySelector(".poster-link").addEventListener("click", (e) => { if (e.metaKey || e.ctrlKey || e.button === 1) return; e.preventDefault(); openMovieModal(movie); });
     card.querySelector(".fav-btn").addEventListener("click", () => toggleFav(movie, card));
     card.querySelector(".rating-badge").addEventListener("click", (e) => { e.stopPropagation(); openRatingModal(movie); });
     if (sentinel) grid.insertBefore(card, sentinel); else grid.appendChild(card);
@@ -619,7 +851,13 @@ async function loadMoreRecs() {
       return;
     }
 
-    const gq = profile.genreIds.slice(0, 3).join(",");
+    // Dominant genres joined with | (OR) so one war film doesn't turn the whole
+    // fallback row into war films (comma would AND them).
+    const maxGenreWeight = Math.max(0, ...profile.genreWeights.values());
+    const dominantGenres = profile.genreIds.filter(
+      (id) => (profile.genreWeights.get(id) || 0) >= Math.max(2, maxGenreWeight * 0.5),
+    );
+    const gq = (dominantGenres.length ? dominantGenres : profile.genreIds.slice(0, 1)).slice(0, 3).join("|");
     const data = await tmdb(`discover/movie?language=${TMDB_LANGUAGE}&sort_by=vote_average.desc&vote_count.gte=150&with_genres=${gq}&page=${recPage}`);
     const raw = normalizeMovies(data.results || []).filter((m) => !favIds.has(m.id) && !seenRecIds.has(m.id) && !lowRatedIds.has(m.id));
     raw.forEach((m) => seenRecIds.add(m.id));
@@ -659,16 +897,18 @@ function resetRecScroll() {
 
 async function loadSemanticRecs(favs) {
   const ratings = getRatings();
+  // Collection-based recommendation: send watched movie ids as the primary
+  // signal (the tuned backend ranks from the collection, not plot text).
   const payload = {
-    overviews: favs.map((movie) => semanticTasteText(movie, ratings[movie.id])).filter(Boolean),
+    user_movie_ids: favs.map((movie) => movie.id),
     exclude_ids: favs.map((movie) => movie.id),
     user_genre_ids: favs.map((movie) => movie.genre_ids || []),
     user_vote_counts: favs.map((movie) => Number(ratings[movie.id]?.score || 5)),
     user_release_years: favs.map(movieReleaseYear).filter(Boolean),
-    top_k: 18,
+    top_k: recPage * 18,
   };
-  if (!payload.overviews.length) return [];
-  const r = await fetch(`${BACKEND_URL}/semantic-recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  if (!payload.user_movie_ids.length) return [];
+  const r = await fetch(`${BACKEND_URL}/semantic-recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(withSemanticExtras(payload)) });
   if (!r.ok) return [];
   return normalizeSemantic((await r.json()).results || []);
 }
@@ -687,6 +927,28 @@ function semanticTasteText(movie, rating) {
 function movieReleaseYear(movie) {
   const year = Number(String(movie.release_date || "").slice(0, 4));
   return Number.isFinite(year) && year >= 1888 && year <= 2100 ? year : null;
+}
+
+function numOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+// Small, optional "Hybrid" badge for cards that carry MovieLens SVD/Genome
+// signal from the BERT service. Stays compact: the full breakdown lives in the
+// title tooltip and the card dataset so debugging never bloats the layout.
+function hybridBadgeHtml(movie) {
+  const h = movie.hybrid;
+  if (!h) return "";
+  const parts = [];
+  if (h.semantic_score != null) parts.push(`BERT ${h.semantic_score.toFixed(2)}`);
+  if (h.svd_score != null) parts.push(`SVD ${h.svd_score.toFixed(2)}`);
+  if (h.genome_score != null) parts.push(`Genome ${h.genome_score.toFixed(2)}`);
+  const hasItemSignal = (h.svd_score != null && h.svd_score !== 0) || (h.genome_score != null && h.genome_score !== 0);
+  if (!hasItemSignal && h.semantic_score == null) return "";
+  const tip = parts.length ? parts.join(" · ") : "hybrid signal";
+  const label = hasItemSignal ? "Hybrid" : "BERT";
+  return `<span class="hybrid-badge" title="${esc(tip)}">${label}</span>`;
 }
 
 function renderRecGrid(movies) {
@@ -721,6 +983,8 @@ function makeRecCard(movie) {
   const card = document.createElement("article");
   card.className = "poster-card";
   card.dataset.movieId = String(movie.id);
+  if (movie.hybrid) card.dataset.hybrid = JSON.stringify(movie.hybrid);
+  if (movie.reason) card.dataset.reason = movie.reason;
   const active = favSet.has(movie.id);
   const year = movie.release_date ? movie.release_date.slice(0, 4) : "";
   const s = movie.vote_average;
@@ -736,11 +1000,13 @@ function makeRecCard(movie) {
       </div>
       <div class="rec-card-actions">
         ${movie.recommendationScore ? `<span class="match-badge">${Math.round(movie.recommendationScore)}%</span>` : ""}
+        ${hybridBadgeHtml(movie)}
         ${ratingBadgeHtml(movie.id)}
         <button class="why-btn" type="button">why?</button>
       </div>
       <button class="rec-fav-btn${active ? " is-saved" : ""}" data-movie-id="${movie.id}" type="button">${active ? "Saved" : "Save"}</button>
     </div>`;
+  card.querySelector(".poster-link").addEventListener("click", (e) => { if (e.metaKey || e.ctrlKey || e.button === 1) return; e.preventDefault(); openMovieModal(movie); });
   card.querySelector(".rating-badge").addEventListener("click", (e) => { e.stopPropagation(); openRatingModal(movie); });
   card.querySelector(".rec-fav-btn").addEventListener("click", () => {
     const all = getFavorites();
@@ -937,7 +1203,22 @@ function normalizeSemantic(movies) {
   const maxR = Math.max(0.001, ...filtered.map((m) => Number(m.diversified_score || m.score || m.semantic_score || 0)));
   return filtered.map((m) => {
     const raw = Number(m.diversified_score || m.score || m.semantic_score || 0);
-    return { id: m.id, title: m.title || "Untitled", overview: m.overview || "", poster_path: m.poster_path, release_date: m.release_date || "", original_language: m.original_language || "", vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0), genre_ids: m.genre_ids || [], recommendationScore: Math.max(1, Math.min(100, Math.round((raw / maxR) * 70) + 30)) };
+    return {
+      id: m.id, title: m.title || "Untitled", overview: m.overview || "", poster_path: m.poster_path,
+      release_date: m.release_date || "", original_language: m.original_language || "",
+      vote_average: Number(m.vote_average || 0), vote_count: Number(m.vote_count || 0),
+      genre_ids: m.genre_ids || [],
+      recommendationScore: Math.max(1, Math.min(100, Math.round((raw / maxR) * 70) + 30)),
+      // Preserve the optional MovieLens hybrid breakdown for debugging / badges.
+      // These are undefined unless the BERT service ran in final_boss hybrid mode.
+      hybrid: {
+        score: numOrNull(m.score),
+        semantic_score: numOrNull(m.semantic_score),
+        svd_score: numOrNull(m.svd_score),
+        genome_score: numOrNull(m.genome_score),
+      },
+      reason: m.reason || "",
+    };
   });
 }
 

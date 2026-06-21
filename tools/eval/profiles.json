@@ -1,0 +1,78 @@
+[
+  {
+    "key": "heavy_drama",
+    "label": "重劇情 / 沉重人性",
+    "seed_ids": [103663, 334541, 389, 424, 7345],
+    "prompt": "沉重壓抑、探討複雜人性、道德困境、創傷與社會體制的劇情片",
+    "expected_genres": [18, 80, 9648, 53],
+    "red_flag_genres": [10752, 28, 12],
+    "notes": "辛德勒帶入 War/History，不該讓戰爭動作片洗版"
+  },
+  {
+    "key": "action_blockbuster",
+    "label": "動作大片",
+    "seed_ids": [76341, 245891, 353081, 155, 562],
+    "prompt": "腎上腺素飆升的動作爽片，槍戰、追車、爆破、特技",
+    "expected_genres": [28, 12, 53, 878],
+    "red_flag_genres": [99, 10749, 10751],
+    "notes": "不該回慢節奏文藝片或紀錄片"
+  },
+  {
+    "key": "animation",
+    "label": "動畫 / 動漫",
+    "seed_ids": [129, 372058, 128, 12477, 149],
+    "prompt": "動畫電影，吉卜力或日本動漫風格，奇幻冒險與情感",
+    "expected_genres": [16],
+    "red_flag_genres": [],
+    "notes": "必須是動畫，不該混入真人片"
+  },
+  {
+    "key": "korean_thriller",
+    "label": "韓國驚悚",
+    "seed_ids": [496243, 670, 11423, 293670, 396535],
+    "prompt": "韓國犯罪驚悚片，黑暗、暴力、人性、劇情轉折",
+    "expected_genres": [53, 80, 9648, 27],
+    "red_flag_genres": [10751, 35],
+    "lang_hint": "ko",
+    "min_lang_share": 0.4,
+    "notes": "應偏向韓語/亞洲驚悚，不該全是英語動作片"
+  },
+  {
+    "key": "romcom",
+    "label": "愛情喜劇",
+    "seed_ids": [509, 455207, 4348, 313369],
+    "prompt": "輕鬆甜蜜、溫馨好看的愛情喜劇",
+    "expected_genres": [10749, 35],
+    "red_flag_genres": [27, 53, 10752, 80],
+    "notes": "不該出現恐怖/暴力/犯罪"
+  },
+  {
+    "key": "classic",
+    "label": "經典老片 (1970前)",
+    "seed_ids": [289, 567, 599, 15, 426],
+    "prompt": "1970年代以前的經典老電影，黑白與好萊塢黃金年代",
+    "expected_genres": [18, 9648, 10749, 53],
+    "red_flag_genres": [],
+    "max_year": 1970,
+    "min_era_share": 0.4,
+    "notes": "年代一致性是已知弱點，測試是否回現代大片"
+  },
+  {
+    "key": "horror",
+    "label": "恐怖片",
+    "seed_ids": [493922, 138843, 419430, 9552, 377],
+    "prompt": "嚇人的恐怖片，超自然、鬼怪或心理恐怖",
+    "expected_genres": [27, 53, 9648],
+    "red_flag_genres": [35, 10751, 10749],
+    "notes": "不該回闔家/喜劇/愛情"
+  },
+  {
+    "key": "scifi",
+    "label": "科幻",
+    "seed_ids": [78, 157336, 329865, 603, 27205],
+    "prompt": "硬科幻電影，太空、未來世界、人工智慧與哲思",
+    "expected_genres": [878, 12],
+    "red_flag_genres": [36, 10749],
+    "notes": "不該回古裝歷史或愛情劇"
+  }
+]
