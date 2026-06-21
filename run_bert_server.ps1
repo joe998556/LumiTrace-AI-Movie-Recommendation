@@ -11,4 +11,4 @@ Write-Host "Starting LumiTrace BERT service on port 5001..." -ForegroundColor Cy
 Write-Host "Press Ctrl+C to stop." -ForegroundColor Yellow
 Write-Host ""
 
-python ai_engine\bert_service.py --host 0.0.0.0 --port 5001 --device cuda --vectors movie_vectors.json
+.venv\Scripts\python.exe ai_engine\bert_service.py --host 0.0.0.0 --port 5001 --device cuda --vectors final_boss_vectors.json

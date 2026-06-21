@@ -202,6 +202,7 @@ def semantic_recommendations():
 
     data = request.get_json(silent=True) or {}
     payload = {
+        "user_movie_ids": clean_int_list(data.get("user_movie_ids"), limit=200),
         "overviews": clean_text_list(data.get("overviews")),
         "exclude_ids": clean_int_list(data.get("exclude_ids"), limit=100),
         "user_genre_ids": clean_nested_int_list(data.get("user_genre_ids"), limit=100),
@@ -212,8 +213,8 @@ def semantic_recommendations():
         "top_k": clamp_int(data.get("top_k"), default=18, low=1, high=30),
     }
 
-    if not payload["overviews"]:
-        return jsonify({"error": "At least one movie overview is required"}), 400
+    if not payload["overviews"] and not payload["user_movie_ids"]:
+        return jsonify({"error": "At least one movie overview or user_movie_ids is required"}), 400
 
     try:
         response = requests.post(
