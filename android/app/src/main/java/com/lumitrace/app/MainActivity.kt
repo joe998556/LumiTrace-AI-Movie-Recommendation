@@ -136,11 +136,17 @@ fun MovieScreen(viewModel: MovieViewModel) {
     val searchQuery by viewModel.searchQuery.collectAsState()
     val tmdbApiKey by viewModel.tmdbApiKey.collectAsState()
     val remoteSearchUrl by viewModel.remoteSearchUrl.collectAsState()
+    val llmApiUrl by viewModel.llmApiUrl.collectAsState()
+    val llmApiKey by viewModel.llmApiKey.collectAsState()
+    val llmModel by viewModel.llmModel.collectAsState()
     val journalEntries by viewModel.journalEntries.collectAsState()
     var selectedMovie by remember { mutableStateOf<Movie?>(null) }
     val watchedMovies by viewModel.watchedMovies.collectAsState()
     var apiKeyInput by remember { mutableStateOf(tmdbApiKey) }
     var aiEndpointInput by remember { mutableStateOf(remoteSearchUrl) }
+    var llmApiUrlInput by remember { mutableStateOf(llmApiUrl) }
+    var llmApiKeyInput by remember { mutableStateOf(llmApiKey) }
+    var llmModelInput by remember { mutableStateOf(llmModel) }
     var destination by remember { mutableStateOf(AppDestination.Home) }
     var heroIndex by remember { mutableStateOf(0) }
 
@@ -159,6 +165,18 @@ fun MovieScreen(viewModel: MovieViewModel) {
 
     LaunchedEffect(remoteSearchUrl) {
         if (aiEndpointInput != remoteSearchUrl) aiEndpointInput = remoteSearchUrl
+    }
+
+    LaunchedEffect(llmApiUrl) {
+        if (llmApiUrlInput != llmApiUrl) llmApiUrlInput = llmApiUrl
+    }
+
+    LaunchedEffect(llmApiKey) {
+        if (llmApiKeyInput != llmApiKey) llmApiKeyInput = llmApiKey
+    }
+
+    LaunchedEffect(llmModel) {
+        if (llmModelInput != llmModel) llmModelInput = llmModel
     }
 
     LaunchedEffect(heroMovies.size, destination) {
@@ -219,18 +237,32 @@ fun MovieScreen(viewModel: MovieViewModel) {
                             savedApiKey = tmdbApiKey,
                             aiEndpoint = aiEndpointInput,
                             savedAiEndpoint = remoteSearchUrl,
+                            llmApiUrl = llmApiUrlInput,
+                            savedLlmApiUrl = llmApiUrl,
+                            llmApiKey = llmApiKeyInput,
+                            savedLlmApiKey = llmApiKey,
+                            llmModel = llmModelInput,
+                            savedLlmModel = llmModel,
                             onApiKeyChange = { apiKeyInput = it },
                             onAiEndpointChange = { aiEndpointInput = it },
+                            onLlmApiUrlChange = { llmApiUrlInput = it },
+                            onLlmApiKeyChange = { llmApiKeyInput = it },
+                            onLlmModelChange = { llmModelInput = it },
                             onSave = {
                                 viewModel.saveTmdbApiKey(apiKeyInput)
                                 viewModel.saveRemoteSearchUrl(aiEndpointInput)
+                                viewModel.saveLlmConfig(llmApiUrlInput, llmApiKeyInput, llmModelInput)
                                 destination = AppDestination.Home
                             },
                             onClear = {
                                 apiKeyInput = ""
                                 aiEndpointInput = ""
+                                llmApiUrlInput = ""
+                                llmApiKeyInput = ""
+                                llmModelInput = ""
                                 viewModel.clearTmdbApiKey()
                                 viewModel.clearRemoteSearchUrl()
+                                viewModel.clearLlmConfig()
                             }
                         )
                     }
@@ -299,8 +331,8 @@ fun MovieScreen(viewModel: MovieViewModel) {
                             Reveal(index = 2) {
                                 SectionHeader(
                                     eyebrow = if (searchQuery.isBlank()) "Based on watched" else "AI results",
-                                    title = "Recommended for you",
-                                    copy = "Scroll down for more semantic matches."
+                                    title = state.aiTitle ?: "Recommended for you",
+                                    copy = state.aiSummary ?: "Scroll down for more semantic matches."
                                 )
                             }
                         }
@@ -463,8 +495,17 @@ private fun SettingsScreen(
     savedApiKey: String,
     aiEndpoint: String,
     savedAiEndpoint: String,
+    llmApiUrl: String,
+    savedLlmApiUrl: String,
+    llmApiKey: String,
+    savedLlmApiKey: String,
+    llmModel: String,
+    savedLlmModel: String,
     onApiKeyChange: (String) -> Unit,
     onAiEndpointChange: (String) -> Unit,
+    onLlmApiUrlChange: (String) -> Unit,
+    onLlmApiKeyChange: (String) -> Unit,
+    onLlmModelChange: (String) -> Unit,
     onSave: () -> Unit,
     onClear: () -> Unit
 ) {
@@ -486,12 +527,22 @@ private fun SettingsScreen(
             onSave = onSave,
             hasSavedEndpoint = savedAiEndpoint.isNotBlank()
         )
+        LlmApiPanel(
+            apiUrl = llmApiUrl,
+            apiKey = llmApiKey,
+            model = llmModel,
+            onApiUrlChange = onLlmApiUrlChange,
+            onApiKeyChange = onLlmApiKeyChange,
+            onModelChange = onLlmModelChange,
+            onSave = onSave,
+            hasSavedLlm = savedLlmApiUrl.isNotBlank() || savedLlmApiKey.isNotBlank() || savedLlmModel.isNotBlank()
+        )
         DoubleBezel {
             Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 Eyebrow("Connection")
                 Text("Bring your own gateway", color = LumiText, style = MaterialTheme.typography.headlineSmall)
                 Text(
-                    "The public source does not contain the lab server IP, gateway token, or your TMDB key. Add a local PC endpoint or HTTPS gateway only on devices you control.",
+                    "The public source does not contain the lab server IP, gateway token, TMDB key, or LLM key. If LLM is enabled, the key is sent only to the AI gateway you configured.",
                     color = LumiTextSoft,
                     style = MaterialTheme.typography.bodyLarge
                 )
@@ -1083,6 +1134,74 @@ private fun AiEndpointPanel(
 }
 
 @Composable
+private fun LlmApiPanel(
+    apiUrl: String,
+    apiKey: String,
+    model: String,
+    onApiUrlChange: (String) -> Unit,
+    onApiKeyChange: (String) -> Unit,
+    onModelChange: (String) -> Unit,
+    onSave: () -> Unit,
+    hasSavedLlm: Boolean
+) {
+    DoubleBezel {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Eyebrow("Optional narrator")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Connect LLM API", color = LumiText, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp)
+                }
+                StatusDot(active = hasSavedLlm)
+            }
+            Text(
+                "Use an OpenAI-compatible chat completions endpoint to generate playlist titles, summaries, and recommendation reasons. Your key is stored on this phone and sent to your configured BERT gateway only when recommendations run.",
+                color = Muted,
+                fontSize = 12.sp,
+                lineHeight = 18.sp
+            )
+            LumiTextField(
+                value = apiUrl,
+                onValueChange = onApiUrlChange,
+                placeholder = "https://api.openai.com/v1 or custom /chat/completions URL",
+                onSubmit = onSave,
+                trailing = {
+                    RoundIconButton(label = "Save LLM URL", onClick = onSave) {
+                        ThinCheckIcon(color = Ink, modifier = Modifier.size(17.dp))
+                    }
+                }
+            )
+            LumiTextField(
+                value = apiKey,
+                onValueChange = onApiKeyChange,
+                placeholder = "LLM API key, optional for local servers",
+                secret = true,
+                trailing = {
+                    RoundIconButton(label = "Save LLM key", onClick = onSave) {
+                        ThinCheckIcon(color = Ink, modifier = Modifier.size(17.dp))
+                    }
+                }
+            )
+            LumiTextField(
+                value = model,
+                onValueChange = onModelChange,
+                placeholder = "Model, e.g. gpt-4.1-mini or local-model",
+                onSubmit = onSave,
+                trailing = {
+                    RoundIconButton(label = "Save LLM model", onClick = onSave) {
+                        ThinCheckIcon(color = Ink, modifier = Modifier.size(17.dp))
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
 private fun SearchPanel(
     query: String,
     onQueryChange: (String) -> Unit,
@@ -1278,6 +1397,16 @@ private fun MovieCard(
                         RatingPill(movie.voteAverage)
                         WatchedButton(isWatched = isWatched, onClick = onToggleWatched)
                     }
+                    movie.reason?.takeIf { it.isNotBlank() }?.let { reason ->
+                        Text(
+                            text = reason,
+                            color = LumiTextSoft,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
         }
@@ -1335,6 +1464,14 @@ private fun MovieDetailDialog(
                     }
                 }
                 RatingPill(movie.voteAverage)
+                movie.reason?.takeIf { it.isNotBlank() }?.let { reason ->
+                    DoubleBezel(radius = 24.dp, innerRadius = 18.dp, outerPadding = 4.dp) {
+                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Eyebrow("Why this")
+                            Text(reason, color = LumiTextSoft, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
                 Text(movie.overview, color = LumiTextSoft, style = MaterialTheme.typography.bodyLarge)
                 DetailWatchedButton(
                     isWatched = isWatched,

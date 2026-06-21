@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css?v=teal-v1">
+  <script src="dropdown.js?v=teal-v1" defer></script>
   <script src="script.js?v=atelier-v1" defer></script>
 </head>
 <body>
@@ -29,6 +30,7 @@
       <div class="nav-links">
         <a class="nav-link" href="ALGORITHM.md">Algorithm</a>
         <a class="nav-link" href="/favorites.html" target="_blank" rel="noopener">Collection</a>
+        <a class="nav-link" href="/settings.html">Settings</a>
         <a class="nav-link" href="README.md">Docs</a>
       </div>
     </nav>
@@ -40,7 +42,7 @@
             <div>
               <span class="eyebrow">AI movie recommendation</span>
               <h1 class="hero-title">Trace your taste.</h1>
-              <p class="hero-copy">Paste a TMDB API key, browse live movie data, save films that feel right, then let LumiTrace build a recommendation profile from metadata and optional BERT vectors.</p>
+              <p class="hero-copy">Add your TMDB key in Settings, browse live movie data, save films that feel right, then let LumiTrace build a recommendation profile from metadata and optional BERT vectors.</p>
             </div>
             <div class="hero-metrics" aria-label="Project capabilities">
               <div class="metric">
@@ -59,25 +61,25 @@
           </div>
         </div>
 
-        <aside class="bezel reveal" aria-label="TMDB setup">
+        <aside class="bezel reveal" aria-label="Connection status">
           <div class="bezel-core control-core">
             <div>
               <p class="section-kicker">Start here</p>
-              <h2 class="panel-title">Connect TMDB</h2>
-              <p class="panel-copy">The key stays in your browser localStorage unless you set one in the backend environment.</p>
+              <h2 class="panel-title">Connections</h2>
+              <p class="panel-copy">API keys live on the Settings page and stay in your browser localStorage. Bring your own TMDB key and, optionally, your own LLM.</p>
             </div>
 
-            <label class="field-label" for="apiKeyInput">
-              TMDB API Key
-              <input id="apiKeyInput" type="password" autocomplete="off" class="input" placeholder="Paste your TMDB API key">
-            </label>
+            <ul id="connList" class="conn-list" aria-live="polite">
+              <li id="connTmdb" class="conn-row"><span class="conn-dot"></span><span class="conn-label">TMDB</span><span class="conn-state">checking...</span></li>
+              <li id="connBert" class="conn-row"><span class="conn-dot"></span><span class="conn-label">BERT semantic</span><span class="conn-state">checking...</span></li>
+              <li id="connLlm" class="conn-row"><span class="conn-dot"></span><span class="conn-label">LLM narrator</span><span class="conn-state">checking...</span></li>
+            </ul>
 
             <div class="button-row">
-              <button id="saveKeyBtn" class="btn btn-primary" type="button">
-                Save and load
+              <a id="openSettingsBtn" class="btn btn-primary" href="/settings.html">
+                Open Settings
                 <span class="btn-icon">-&gt;</span>
-              </button>
-              <button id="clearKeyBtn" class="btn btn-ghost" type="button">Clear key</button>
+              </a>
             </div>
 
             <p id="keyStatus" class="status-line" aria-live="polite"></p>
@@ -208,6 +210,14 @@
           <button id="deleteRatingBtn" class="btn btn-ghost" type="button" style="display:none;">Delete</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="movieModal" class="modal" style="display:none; opacity:0;">
+    <div id="movieBackdrop" class="modal-backdrop"></div>
+    <div class="movie-modal-card">
+      <button id="closeMovieBtn" class="icon-button movie-close" type="button" aria-label="Close details">x</button>
+      <div id="movieModalBody" class="movie-modal-body"></div>
     </div>
   </div>
 

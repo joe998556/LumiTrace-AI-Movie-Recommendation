@@ -32,6 +32,11 @@ TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 OMDB_API_KEY = os.getenv("OMDB_API_KEY", "")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY", "")
 REMOTE_SEARCH_URL = os.getenv("REMOTE_SEARCH_URL", "")
+# When true, ignore any browser-provided BERT URL override and force the .env
+# REMOTE_SEARCH_URL. Leave false for self-hosting (the open-source default lets
+# users point at their own BERT service from the Settings page); set true for
+# any public/multi-tenant deployment to avoid server-side request forgery.
+LOCK_REMOTE_SEARCH_URL = os.getenv("LOCK_REMOTE_SEARCH_URL", "false").lower() == "true"
 SSL_VERIFY = os.getenv("SSL_VERIFY", "false").lower() == "true"
 
 logging.basicConfig(
@@ -133,6 +138,44 @@ def clean_text_list(values: Any, limit: int = 20, max_len: int = 2000) -> list[s
     return cleaned
 
 
+def clean_llm_config(data: Any) -> dict[str, str] | None:
+    """Extract a user-provided, bring-your-own LLM narrator config.
+
+    The browser stores its own OpenAI-compatible endpoint/key/model so the
+    open-source clone never ships a baked-in LLM. We only forward it when an
+    api_url is present; the BERT service ignores it otherwise.
+    """
+    if not isinstance(data, dict):
+        return None
+    config = data.get("llm") if isinstance(data.get("llm"), dict) else {}
+    api_url = str(config.get("api_url") or "").strip()
+    if not api_url.lower().startswith(("http://", "https://")):
+        return None
+    cleaned = {
+        "api_url": api_url[:300],
+        "api_key": str(config.get("api_key") or "").strip()[:400],
+        "model": str(config.get("model") or "").strip()[:120],
+    }
+    return cleaned
+
+
+def resolve_search_target(data: Any) -> str:
+    """Pick the BERT search target: a validated browser override or the .env value.
+
+    The override is opt-in for self-hosting; LOCK_REMOTE_SEARCH_URL forces the
+    .env value so a public deployment cannot be coerced into forwarding requests
+    to arbitrary hosts.
+    """
+    if LOCK_REMOTE_SEARCH_URL:
+        return REMOTE_SEARCH_URL
+    override = ""
+    if isinstance(data, dict):
+        override = str(data.get("remote_search_url") or "").strip()
+    if override.lower().startswith(("http://", "https://")):
+        return override[:400]
+    return REMOTE_SEARCH_URL
+
+
 @app.route("/api/health")
 def health_check():
     """Return public-safe backend readiness information."""
@@ -197,13 +240,20 @@ def omdb_proxy(imdb_id):
 @app.route("/api/semantic-recommendations", methods=["POST"])
 def semantic_recommendations():
     """Forward a sanitized recommendation request to the optional BERT service."""
-    if not REMOTE_SEARCH_URL:
+    data = request.get_json(silent=True) or {}
+
+    # Target can come from the browser Settings page (self-host) or fall back to
+    # the operator's .env. The override field is never forwarded to the service.
+    search_target = resolve_search_target(data)
+    if not search_target:
         return jsonify({"results": [], "fallback": "semantic service is not configured"})
 
-    data = request.get_json(silent=True) or {}
     payload = {
         "overviews": clean_text_list(data.get("overviews")),
         "exclude_ids": clean_int_list(data.get("exclude_ids"), limit=100),
+        # Watched TMDB ids align the browser-local favorites with the optional
+        # BERT service's MovieLens SVD/Genome item-vector taste centers.
+        "user_movie_ids": clean_int_list(data.get("user_movie_ids"), limit=200),
         "user_genre_ids": clean_nested_int_list(data.get("user_genre_ids"), limit=100),
         "user_vote_counts": clean_float_list(data.get("user_vote_counts"), limit=100),
         "user_release_years": clean_year_list(data.get("user_release_years"), limit=100),
@@ -212,12 +262,17 @@ def semantic_recommendations():
         "top_k": clamp_int(data.get("top_k"), default=18, low=1, high=30),
     }
 
+    # Optional bring-your-own LLM narrator config from the browser Settings page.
+    llm_config = clean_llm_config(data)
+    if llm_config:
+        payload["llm"] = llm_config
+
     if not payload["overviews"]:
         return jsonify({"error": "At least one movie overview is required"}), 400
 
     try:
         response = requests.post(
-            REMOTE_SEARCH_URL,
+            search_target,
             json=payload,
             timeout=30,
             verify=SSL_VERIFY,

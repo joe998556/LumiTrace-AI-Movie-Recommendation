@@ -21,6 +21,7 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = "AventIQ-AI/bert-movie-recommendation-system"
@@ -72,6 +73,7 @@ try:
     from dotenv import load_dotenv
     from flask import Flask, jsonify, request
     from flask_cors import CORS
+    import requests
 except ImportError as exc:
     raise SystemExit("Missing web dependencies. Run `pip install -r requirements.txt` first.") from exc
 
@@ -683,6 +685,169 @@ def diversity_rerank(candidates: list[dict[str, Any]], top_k: int) -> list[dict[
     return selected
 
 
+def clean_llm_config(data: dict[str, Any]) -> dict[str, str]:
+    llm_data = data.get("llm") if isinstance(data.get("llm"), dict) else {}
+    api_url = str(data.get("llm_api_url") or llm_data.get("api_url") or "").strip()
+    api_key = str(data.get("llm_api_key") or llm_data.get("api_key") or "").strip()
+    model = str(data.get("llm_model") or llm_data.get("model") or os.getenv("LUMITRACE_LLM_MODEL", "")).strip()
+    if not model:
+        model = "gpt-4.1-mini"
+    return {"api_url": api_url, "api_key": api_key, "model": model}
+
+
+def normalize_chat_completions_url(api_url: str) -> str | None:
+    cleaned = api_url.strip().rstrip("/")
+    if not cleaned:
+        return None
+    if "://" not in cleaned:
+        cleaned = f"https://{cleaned}"
+
+    parsed = urlparse(cleaned)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    if parsed.scheme == "http":
+        host = parsed.hostname or ""
+        is_private = (
+            host in {"localhost", "127.0.0.1"}
+            or host.startswith("10.")
+            or host.startswith("192.168.")
+            or (host.startswith("172.") and len(host.split(".")) > 1 and host.split(".")[1].isdigit() and 16 <= int(host.split(".")[1]) <= 31)
+        )
+        if not is_private:
+            return None
+
+    if cleaned.endswith("/chat/completions"):
+        return cleaned
+    if cleaned.endswith("/v1"):
+        return f"{cleaned}/chat/completions"
+    return f"{cleaned}/v1/chat/completions"
+
+
+def extract_json_object(text: str) -> dict[str, Any] | None:
+    content = text.strip()
+    if not content:
+        return None
+    try:
+        parsed = json.loads(content)
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        pass
+
+    start = content.find("{")
+    end = content.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        return None
+    try:
+        parsed = json.loads(content[start : end + 1])
+        return parsed if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        return None
+
+
+def call_llm_narrator(
+    llm_config: dict[str, str],
+    texts: list[str],
+    movies: list[dict[str, Any]],
+    taste_profile: dict[str, Any],
+    playlist: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Use an OpenAI-compatible chat endpoint to explain already-ranked recommendations."""
+    chat_url = normalize_chat_completions_url(llm_config.get("api_url", ""))
+    if not chat_url:
+        return None
+
+    candidate_payload = []
+    for movie in movies[: min(12, len(movies))]:
+        candidate_payload.append(
+            {
+                "id": movie.get("id"),
+                "title": movie.get("title"),
+                "overview": str(movie.get("overview") or "")[:420],
+                "genre_ids": movie.get("genre_ids") or [],
+                "release_date": movie.get("release_date") or "",
+                "original_language": movie.get("original_language") or "",
+                "score": movie.get("score"),
+                "semantic_score": movie.get("semantic_score"),
+                "svd_score": movie.get("svd_score"),
+                "genome_score": movie.get("genome_score"),
+                "context_score": movie.get("context_score"),
+            }
+        )
+
+    prompt_payload = {
+        "user_prompt": texts[:5],
+        "taste_profile": taste_profile,
+        "playlist": playlist,
+        "recommendations": candidate_payload,
+    }
+    system_prompt = (
+        "You are LumiTrace's movie recommendation narrator. "
+        "The ranking has already been computed by a hybrid BERT, MovieLens SVD, and Tag Genome engine. "
+        "Do not invent movies, streaming availability, or facts not present in the payload. "
+        "Return compact JSON only with keys: title, summary, reasons. "
+        "reasons must be an array of objects: {id, reason}. "
+        "Each reason should be one natural sentence under 22 words."
+    )
+    user_prompt = (
+        "Explain these ranked movie recommendations for a mobile app. "
+        "Make the title short and the summary one sentence.\n\n"
+        f"{json.dumps(prompt_payload, ensure_ascii=False)}"
+    )
+    headers = {"Content-Type": "application/json"}
+    if llm_config.get("api_key"):
+        headers["Authorization"] = f"Bearer {llm_config['api_key']}"
+    payload = {
+        "model": llm_config.get("model") or "gpt-4.1-mini",
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        "temperature": 0.35,
+        "max_tokens": 900,
+    }
+
+    try:
+        response = requests.post(chat_url, headers=headers, json=payload, timeout=24)
+        response.raise_for_status()
+        body = response.json()
+        content = (
+            body.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "")
+        )
+        parsed = extract_json_object(content)
+        if not parsed:
+            raise ValueError("LLM response was not valid JSON")
+        reasons_by_id: dict[int, str] = {}
+        raw_reasons = parsed.get("reasons") if isinstance(parsed.get("reasons"), list) else []
+        for item in raw_reasons:
+            if not isinstance(item, dict):
+                continue
+            try:
+                movie_id = int(item.get("id"))
+            except (TypeError, ValueError):
+                continue
+            reason = str(item.get("reason") or "").strip()
+            if reason:
+                reasons_by_id[movie_id] = reason[:240]
+
+        return {
+            "enabled": True,
+            "model": llm_config.get("model") or "gpt-4.1-mini",
+            "title": str(parsed.get("title") or "").strip()[:80],
+            "summary": str(parsed.get("summary") or "").strip()[:240],
+            "reasons": reasons_by_id,
+        }
+    except Exception as exc:
+        logger.warning("LLM narrator failed: %s", exc)
+        return {
+            "enabled": True,
+            "model": llm_config.get("model") or "gpt-4.1-mini",
+            "error": str(exc)[:180],
+            "reasons": {},
+        }
+
+
 @app.route("/status", methods=["GET"])
 def status():
     return jsonify(
@@ -952,24 +1117,45 @@ def search():
 
     candidates.sort(key=lambda m: m["score"], reverse=True)
     ranked_candidates = diversity_rerank(candidates, top_k)
-    return jsonify(
-        {
-            "results": ranked_candidates,
-            "playlist": {
-                "mode": "zero_shot_semantic",
-                "genre_ids": sorted(playlist_genre_ids),
-                "preferred_languages": sorted(preferred_languages),
-                "relaxed_context_filters": relaxed_context_filters,
-            },
-            "taste_profile": {
-                "mode": taste_profile_mode,
-                "center_count": taste_center_count,
-                "svd_center_count": svd_center_count,
-                "genome_center_count": genome_center_count,
-                "release_year_count": len(user_release_years),
-            },
-        }
-    )
+    playlist_payload = {
+        "mode": "zero_shot_semantic",
+        "genre_ids": sorted(playlist_genre_ids),
+        "preferred_languages": sorted(preferred_languages),
+        "relaxed_context_filters": relaxed_context_filters,
+    }
+    taste_profile_payload = {
+        "mode": taste_profile_mode,
+        "center_count": taste_center_count,
+        "svd_center_count": svd_center_count,
+        "genome_center_count": genome_center_count,
+        "release_year_count": len(user_release_years),
+    }
+    llm_payload = None
+    llm_config = clean_llm_config(data)
+    if llm_config["api_url"]:
+        llm_payload = call_llm_narrator(
+            llm_config=llm_config,
+            texts=texts,
+            movies=ranked_candidates,
+            taste_profile=taste_profile_payload,
+            playlist=playlist_payload,
+        )
+        if llm_payload:
+            reasons = llm_payload.get("reasons") if isinstance(llm_payload.get("reasons"), dict) else {}
+            for movie in ranked_candidates:
+                reason = reasons.get(movie.get("id"))
+                if reason:
+                    movie["reason"] = reason
+            llm_payload = {key: value for key, value in llm_payload.items() if key != "reasons"}
+
+    response_payload = {
+        "results": ranked_candidates,
+        "playlist": playlist_payload,
+        "taste_profile": taste_profile_payload,
+    }
+    if llm_payload:
+        response_payload["llm"] = llm_payload
+    return jsonify(response_payload)
 
 
 def parse_args() -> argparse.Namespace:

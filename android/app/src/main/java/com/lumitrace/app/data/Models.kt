@@ -10,7 +10,8 @@ data class Movie(
     @SerializedName("release_date") val releaseDate: String = "",
     @SerializedName("vote_average") val voteAverage: Double = 0.0,
     @SerializedName("original_language") val originalLanguage: String = "",
-    @SerializedName("genre_ids") val genreIds: List<Int> = emptyList()
+    @SerializedName("genre_ids") val genreIds: List<Int> = emptyList(),
+    val reason: String? = null
 )
 
 data class RecommendationRequest(
@@ -22,11 +23,16 @@ data class RecommendationRequest(
     @SerializedName("user_release_years") val userReleaseYears: List<Int> = emptyList(),
     @SerializedName("playlist_genre_ids") val playlistGenreIds: List<Int> = emptyList(),
     @SerializedName("preferred_languages") val preferredLanguages: List<String> = emptyList(),
+    @SerializedName("llm_api_url") val llmApiUrl: String = "",
+    @SerializedName("llm_api_key") val llmApiKey: String = "",
+    @SerializedName("llm_model") val llmModel: String = "",
     @SerializedName("top_k") val topK: Int = 18
 )
 
 data class RecommendationResponse(
     val results: List<Movie>,
+    val title: String? = null,
+    val summary: String? = null,
     val fallback: String? = null,
     val error: String? = null
 )
