@@ -267,8 +267,8 @@ def semantic_recommendations():
     if llm_config:
         payload["llm"] = llm_config
 
-    if not payload["overviews"]:
-        return jsonify({"error": "At least one movie overview is required"}), 400
+    if not payload["overviews"] and not payload["user_movie_ids"]:
+        return jsonify({"error": "At least one movie overview or user_movie_ids is required"}), 400
 
     try:
         response = requests.post(

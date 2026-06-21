@@ -30,3 +30,7 @@ LumiTrace-phone-endpoint.txt
 *.npz
 android_app/
 android/release-artifacts/
+
+# Generated eval artifacts (catalog + per-run outputs/logs)
+tools/eval/catalog.json
+tools/eval/out/
