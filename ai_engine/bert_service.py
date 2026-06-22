@@ -1530,10 +1530,17 @@ def search():
         dtype=torch.float32,
         device=DEVICE,
     )
-    # Scoring weights: BERT semantic gets 58% when available, SVD 16%, Genome 26%.
-    semantic_weight = 0.58 if (texts or has_bert_item_signal) else 0.0
-    genome_weight = 0.26 if (has_item_signal or has_bert_item_signal) else 0.0
-    svd_weight = 0.16 if (has_item_signal or has_bert_item_signal) else 0.0
+    # Scoring weights: when collaborative signals are available, boost SVD/Genome
+    # because they capture thematic similarity better than pure BERT semantics.
+    # Text-only: semantic dominates. With user history: collaborative dominates.
+    if has_item_signal:
+        semantic_weight = 0.35 if texts else 0.0
+        genome_weight = 0.38
+        svd_weight = 0.27
+    else:
+        semantic_weight = 0.80 if texts else 0.0
+        genome_weight = 0.0
+        svd_weight = 0.0
     active_weight = semantic_weight + genome_weight + svd_weight
     if active_weight <= 0:
         active_weight = 1.0

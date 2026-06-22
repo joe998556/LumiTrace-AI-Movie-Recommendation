@@ -66,10 +66,16 @@ def score_recommendation(
     # 2. Not already collected (0 or 1)
     scores["not_collected"] = 0 if rec_id in collected_ids else 1
 
-    # 3. Genre relevance (0-2)
+    # 3. Genre relevance (0-2) — normalized so single-genre profiles aren't penalized
     if fav_genres and rec_genres:
         overlap = len(rec_genres & fav_genres)
-        scores["genre_relevance"] = min(2.0, overlap * 0.8)
+        # Normalize: divide by expected overlap (min of fav_genres count and 2)
+        # so single-genre profiles get full credit for matching their one genre
+        expected = min(len(fav_genres), 2)
+        if expected > 0:
+            scores["genre_relevance"] = min(2.0, (overlap / expected) * 2.0)
+        else:
+            scores["genre_relevance"] = 0.0
     elif not fav_genres:
         scores["genre_relevance"] = 1.0
     else:
