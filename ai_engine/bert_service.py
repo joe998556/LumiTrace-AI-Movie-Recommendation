@@ -1534,11 +1534,11 @@ def search():
     # because they capture thematic similarity better than pure BERT semantics.
     # Text-only: semantic dominates. With user history: collaborative dominates.
     if has_item_signal:
-        semantic_weight = 0.35 if texts else 0.0
+        semantic_weight = 0.35 if (texts or has_bert_item_signal) else 0.0
         genome_weight = 0.38
         svd_weight = 0.27
     else:
-        semantic_weight = 0.80 if texts else 0.0
+        semantic_weight = 0.80 if (texts or has_bert_item_signal) else 0.0
         genome_weight = 0.0
         svd_weight = 0.0
     active_weight = semantic_weight + genome_weight + svd_weight
