@@ -34,3 +34,6 @@ android/release-artifacts/
 # Generated eval artifacts (catalog + per-run outputs/logs)
 tools/eval/catalog.json
 tools/eval/out/
+
+# Downloaded datasets (MovieLens for held-out validation)
+movielens/
