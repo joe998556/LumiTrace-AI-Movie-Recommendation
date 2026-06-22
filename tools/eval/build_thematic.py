@@ -9,14 +9,23 @@ with open('tools/eval/recommendation_profiles.json', 'r', encoding='utf-8') as f
     profiles = json.load(f)
 
 by_title = {}
+import re
+def normalize(title):
+    return re.sub(r'[^a-z0-9]', '', title.lower())
+
+by_title = {}
+by_title_norm = {}
 for m in movies:
     if isinstance(m, dict):
         by_title[m.get('title', '').lower()] = m
+        by_title_norm[normalize(m.get('title', ''))] = m
 
 def find_ids(titles):
     ids = []
     for t in titles:
         m = by_title.get(t.lower())
+        if not m:
+            m = by_title_norm.get(normalize(t))
         if m:
             ids.append(m['id'])
     return ids
