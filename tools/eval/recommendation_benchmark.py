@@ -93,11 +93,11 @@ def score_recommendation(
     else:
         scores["language_match"] = 0.5
 
-    # 6. Year proximity (0-1)
+    # 6. Year proximity (0-1) — wider window for classic/art house films
     if fav_years and rec_year:
         avg_year = sum(fav_years) / len(fav_years)
         distance = abs(rec_year - avg_year)
-        scores["year_proximity"] = max(0.0, 1.0 - min(distance, 40) / 40)
+        scores["year_proximity"] = max(0.0, 1.0 - min(distance, 60) / 60)
     else:
         scores["year_proximity"] = 0.5
 
