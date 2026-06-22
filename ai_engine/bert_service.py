@@ -744,10 +744,12 @@ def diversity_rerank(candidates: list[dict[str, Any]], top_k: int) -> list[dict[
             penalty = 0.0
             penalty += sum(max(0, genre_counts.get(genre, 0) - 1) * 0.025 for genre in movie_genres)
             if language:
-                penalty += max(0, language_counts.get(language, 0) - 2) * 0.02
+                # Stronger language diversity: penalize after 1st movie in same language
+                # to encourage multilingual recommendations for international profiles
+                penalty += max(0, language_counts.get(language, 0) - 1) * 0.08
             if collection:
                 penalty += collection_counts.get(collection, 0) * 0.08
-            diversified_score = float(movie["score"]) - min(0.18, penalty)
+            diversified_score = float(movie["score"]) - min(0.40, penalty)
             if diversified_score > best_score:
                 best_score = diversified_score
                 best_index = index
