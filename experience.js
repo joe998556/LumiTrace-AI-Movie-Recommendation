@@ -71,8 +71,8 @@
     if (typeof window.openPanel === "function") window.openPanel();
   }
 
-  async function runSemantic({ prompt = "", sourceFavorites = favorites(), topK = 18, diversity = window.__lumiDiversity ?? 0.55, language = "", genre = "" } = {}) {
-    const payload = core().buildPayload({ favorites: sourceFavorites, ratings: ratings(), prompt, topK, diversity, language, genre });
+  async function runSemantic({ prompt = "", sourceFavorites = favorites(), sourceRatings = ratings(), topK = 18, diversity = window.__lumiDiversity ?? 0.55, language = "", genre = "" } = {}) {
+    const payload = core().buildPayload({ favorites: sourceFavorites, ratings: sourceRatings, prompt, topK, diversity, language, genre });
     if (!payload.user_movie_ids.length && !payload.overviews.length) {
       showToast("Choose a few films first, or describe the mood you want.");
       return [];
@@ -236,8 +236,9 @@
       if (!idsA.length || !idsB.length) { showToast("Choose at least one film for each person."); return; }
       const lookup = new Map(pool.map((movie) => [movie.id, movie]));
       const combined = [...new Set([...idsA, ...idsB])].map((id) => lookup.get(id)).filter(Boolean);
+      const sharedRatings = Object.fromEntries(combined.map((movie) => [movie.id, { score: 8 }]));
       try {
-        const movies = await runSemantic({ sourceFavorites: combined, topK: 12, diversity: 0.8 });
+        const movies = await runSemantic({ sourceFavorites: combined, sourceRatings: sharedRatings, topK: 12, diversity: 0.8 });
         setRecommendationResults(movies, `Shared taste trace from ${idsA.length} + ${idsB.length} films.`);
         closeModal();
       } catch (error) { showToast(error.message); }

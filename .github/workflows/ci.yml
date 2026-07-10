@@ -18,5 +18,5 @@ jobs:
           node-version: "20"
       - run: python -m pip install flask flask-cors python-dotenv requests werkzeug pytest
       - run: python -m py_compile app.py ai_engine/bert_service.py tools/bootstrap_recommender.py
-      - run: node --check script.js && node --check recommendation-core.js && node --check experience.js && node tests/test_recommendation_core.js
+      - run: node --check script.js && node --check recommendation-core.js && node --check experience.js && node tests/test_recommendation_core.js && node tests/test_experience_contract.js
       - run: python -m pytest -q
