@@ -9,14 +9,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: "20"
-      - run: python -m pip install flask flask-cors python-dotenv requests werkzeug pytest
-      - run: python -m py_compile app.py ai_engine/bert_service.py tools/bootstrap_recommender.py
-      - run: node --check script.js && node --check recommendation-core.js && node --check experience.js && node tests/test_recommendation_core.js && node tests/test_experience_contract.js
+      - run: python -m pip install flask flask-cors numpy python-dotenv requests werkzeug pytest
+      - run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
+      - run: python -m py_compile app.py ai_engine/bert_service.py ai_engine/index_format.py tools/bootstrap_recommender.py tools/check_public_tree.py tools/convert_vector_index.py tools/fetch_index.py tools/start_demo.py
+      - run: python tools/check_public_tree.py
+      - run: node --check config.js && node --check script.js && node --check recommendation-core.js && node --check experience.js && node tests/test_inline_scripts.js && node tests/test_recommendation_core.js && node tests/test_experience_contract.js
+      - run: docker compose config --quiet
       - run: python -m pytest -q

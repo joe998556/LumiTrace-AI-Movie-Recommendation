@@ -166,7 +166,7 @@
   </div>
 
   <script src="dropdown.js?v=teal-v1"></script>
-  <script src="sync.js?v=teal-v1"></script>
+  <script src="config.js?v=public-v1"></script>
   <script src="recommendation-core.js?v=lite-1"></script>
   <script>
     // Starfield
@@ -243,7 +243,7 @@
     })();
 
     // App
-    const API = "http://localhost:8080/api";
+    const API = window.LumiTraceConfig?.apiBase || "/api";
     const IMG = "https://image.tmdb.org/t/p/w500";
     const KEY = "lumitrace_tmdb_key";
     const FAV = "lumitrace_favorites";
@@ -307,9 +307,7 @@
       currentRatingMovie = null;
     }
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      // Restore favorites synced under this TMDB key before first render.
-      await window.lumitraceSync?.pullFavorites();
+    document.addEventListener("DOMContentLoaded", () => {
       renderFavs();
       setupScroll();
       // Rating modal events
@@ -331,14 +329,23 @@
     });
 
     const getFavs = () => { try { return JSON.parse(localStorage.getItem(FAV) || "[]"); } catch { return []; } };
-    const saveFavs = (f) => { localStorage.setItem(FAV, JSON.stringify(f)); window.lumitraceSync?.schedulePush(); };
+    const saveFavs = (f) => { localStorage.setItem(FAV, JSON.stringify(f)); };
     const getRatings = () => { try { return JSON.parse(localStorage.getItem(RATINGS) || "{}"); } catch { return {}; } };
-    const saveRatingToStorage = (id, score, comment) => { const r = getRatings(); r[id] = { score, comment: comment || "", updatedAt: Date.now() }; localStorage.setItem(RATINGS, JSON.stringify(r)); window.lumitraceSync?.schedulePush(); };
-    const deleteRatingFromStorage = (id) => { const r = getRatings(); delete r[id]; localStorage.setItem(RATINGS, JSON.stringify(r)); window.lumitraceSync?.schedulePush(); };
+    const saveRatingToStorage = (id, score, comment) => { const r = getRatings(); r[id] = { score, comment: comment || "", updatedAt: Date.now() }; localStorage.setItem(RATINGS, JSON.stringify(r)); };
+    const deleteRatingFromStorage = (id) => { const r = getRatings(); delete r[id]; localStorage.setItem(RATINGS, JSON.stringify(r)); };
     const getMovieRating = (id) => getRatings()[id] || null;
     const getKey = () => localStorage.getItem(KEY) || "";
     async function tmdb(path) {
-      const r = await fetch(`${API}/tmdb/${path}`, { headers: getKey() ? { "X-TMDB-API-Key": getKey() } : {} });
+      const key = getKey();
+      let url = `${API}/tmdb/${path}`;
+      const headers = {};
+      if (key) {
+        const direct = new URL(`https://api.themoviedb.org/3/${path}`);
+        if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`;
+        else direct.searchParams.set("api_key", key);
+        url = direct.toString();
+      }
+      const r = await fetch(url, { headers });
       const d = await r.json(); if (!r.ok) throw new Error(d.error || "TMDB failed"); return d;
     }
 

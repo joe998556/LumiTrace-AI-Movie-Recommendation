@@ -1,101 +1,205 @@
 # LumiTrace
 
-LumiTrace is a local-first movie taste engine for the Web. It turns watched films, 1-10 ratings, immediate feedback, and optional free-text prompts into an explainable recommendation list without bundling an API key, a private endpoint, or a user account system.
+[![CI](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml/badge.svg)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-14b8a6.svg)](LICENSE)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-5eead4.svg)](https://www.python.org/)
 
-## What You Can Do
+**A local-first semantic movie taste engine built around what you watched and how you rated it.**
 
-- **First Signal**: on first use, rate ten familiar films with Like, Not for me, or Not seen to create a starting taste profile.
-- **Semantic recommendations**: retrieve candidates from a self-hosted BERT vector index, then balance familiar matches and surprising discoveries.
-- **Grounded reasons**: show the saved films, genres, rating signals, and low-rated similarities behind each recommendation. An optional LLM only narrates that supplied evidence.
-- **Taste tools**: use Tonight, Two people, Taste map, Journal, comparison, More/Less like this, and a one-redraw roulette pick.
-- **Private taste data**: keep favorites, ratings, notes, and feedback in the browser; export or import a portable JSON taste file without exporting API keys.
+LumiTrace combines precomputed BERT movie embeddings, transparent rating signals, metadata re-ranking, and a polished Web client. It requires no LumiTrace account, keeps the taste profile in the browser, and can run its main recommendation path on an ordinary CPU.
 
-## Run Locally
+## Why This Architecture
 
-Create a TMDB API key at <https://www.themoviedb.org/settings/api>, then:
+Most visitors should not have to download or run a Transformer model. LumiTrace separates expensive preparation from inexpensive recommendation:
+
+```text
+Offline, once                           Online, per recommendation
+TMDB metadata -> BERT -> vector index   TMDB IDs + ratings -> vector lookup
+                                        -> one matrix multiply -> re-rank
+```
+
+For the normal **watched + 1-10 rating** flow, the server never runs BERT at request time. BERT has already encoded the catalog. The online service only looks up saved movie vectors, forms a taste profile, retrieves candidates, applies low-rating penalties to the shortlist, and returns movie IDs with evidence.
+
+This gives the project three useful modes:
+
+| Mode | Setup | Runtime | Best for |
+|---|---|---|---|
+| Metadata | No vector index | Browser + TMDB | Immediate clone-and-run preview |
+| CPU vector | Precomputed compact index | CPU, no Transformer loaded | Public demo and everyday recommendations |
+| Full semantic | Same index + matching encoder | CPU/GPU encoder loaded on demand | Optional free-text scene playlists |
+
+## Product Experience
+
+- First Signal onboarding for a quick initial taste profile
+- Saved films, 1-10 ratings, notes, and More/Less feedback
+- Explainable recommendations with source films and rating evidence
+- Familiar-to-Surprise diversity control and one-redraw roulette
+- Tonight, Two People, Taste Map, Journal, and comparison tools
+- Portable JSON export/import without API keys
+- Optional OpenAI-compatible narration on trusted self-hosts
+
+## Five-Minute Local Preview
+
+Create a free TMDB API key at <https://www.themoviedb.org/settings/api>.
 
 ```powershell
+git clone https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation.git
+cd LumiTrace-AI-Movie-Recommendation
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-demo.txt
 Copy-Item .env.example .env
 python app.py
 ```
 
-Open <http://localhost:8080>, then add your TMDB key in **Settings**.
+Open <http://localhost:8080>, enter the TMDB key in **Settings**, and start saving and rating movies. Browser requests made with your key go directly to TMDB; the LumiTrace backend does not receive it.
 
-The metadata path works immediately. It ranks TMDB discovery results from your saved films and ratings even when the optional semantic service is not running.
+Without a vector index, LumiTrace remains usable and clearly labels its metadata fallback.
 
-## Enable Semantic Retrieval
+## Enable CPU Vector Recommendations
 
-Build a local movie-vector index. The presets trade setup time and disk use for catalog coverage:
+Generate a small index first:
 
 ```powershell
+python -m pip install -r requirements.txt
 python tools\bootstrap_recommender.py --preset demo --tmdb-key YOUR_TMDB_KEY
-python ai_engine\bert_service.py --host 127.0.0.1 --port 5001 --vectors movie_vectors.json
+python app.py
 ```
 
-Then add this to your untracked `.env` and restart the Web backend:
+`bootstrap_recommender.py` now writes `movie_index/`:
 
 ```text
-REMOTE_SEARCH_URL=http://127.0.0.1:5001/search
-LOCK_REMOTE_SEARCH_URL=true
+movie_index/
+  manifest.json    model, dimensions, count, checks
+  movies.json      display and re-ranking metadata
+  vectors.npy      normalized float16 vectors
 ```
 
-`movie_vectors.json` is generated locally and ignored by Git. `demo` is suitable for a smoke test; `small`, `medium`, `large`, and `xlarge` build progressively broader catalogs.
-The vector builder and service must use the same embedding model. LumiTrace validates the vector dimension at startup and gives a rebuild message instead of failing during a recommendation request.
+The compact format avoids parsing a 500 MB float-filled JSON document. For BGE-M3, a 30,000 x 1,024 float16 matrix uses about 61 MB before metadata; 768-dimensional legacy indexes are smaller. The server expands it to float32 in memory for fast CPU matrix multiplication.
 
-## Optional LLM Narration
+Public mode defaults to at least 100 TMDB votes per candidate to avoid unstable, unrated catalog entries. Self-hosts focused on niche cinema can lower `LUMITRACE_MIN_VOTE_COUNT`.
 
-Settings accepts an OpenAI-compatible URL, API key, and model name. The key lives in `sessionStorage` by default and disappears when the browser session ends. A user can explicitly choose **Remember this key on this device** to store it locally.
+Presets are `demo` (200), `small` (1,000), `medium` (5,000), `large` (15,000), and `xlarge` (30,000). More movies improve catalog coverage but take longer to download and encode.
 
-The LLM receives only the already-computed recommendation evidence and is asked for a short spoiler-free explanation. It never chooses, filters, or reorders films.
+### Migrate an Existing JSON Index
 
-For public deployments, private and loopback LLM targets are rejected by default. A local self-host may deliberately enable its own Ollama or LM Studio endpoint with:
+```powershell
+python tools\convert_vector_index.py movie_vectors.json --output movie_index --model YOUR_ORIGINAL_MODEL
+```
+
+Legacy JSON does not record its encoder reliably, so conversion requires the original model name. Legacy JSON remains directly readable, so migration does not have to happen immediately.
+
+## Docker
+
+After `movie_index/` exists:
+
+```powershell
+docker compose up --build
+```
+
+Open <http://localhost:8080>. The image runs one Web process with the vector engine in-process, uses one worker to avoid duplicating the index in RAM, and disables live text encoding by default.
+
+If the index directory is absent, the same container still starts in metadata mode.
+
+### Optional LLM Narration
+
+Recommendation ranking never depends on an LLM. A trusted self-host may let its own users supply an OpenAI-compatible narrator by setting:
 
 ```text
-LUMITRACE_ALLOW_PRIVATE_LLM=true
+LUMITRACE_ALLOW_CLIENT_LLM=true
 ```
 
-## How Recommendations Work
+Local Ollama or LM Studio targets additionally require `LUMITRACE_ALLOW_PRIVATE_LLM=true`. Do not enable either option on an anonymous public demo that should never receive visitor API keys.
 
-1. The browser collects saved films, 1-10 ratings, and direct More/Less feedback.
-2. The optional semantic service loads one normalized BERT movie-vector matrix at startup.
-3. Positive signals (`6-10`) form a weighted taste center; `5` stays neutral.
-4. The service uses one vectorized Torch matrix multiplication and a short candidate list.
-5. Low ratings (`1-4`) are handled as a post-ranking similarity penalty, never as a negative semantic vector.
-6. A diversity pass reduces repeated genres, languages, and franchises according to the Familiar-to-Surprise control.
+## Publish a Safe Live Demo
 
-See [ALGORITHM.md](ALGORITHM.md) for the precise ranking and evidence rules.
+The recommended public setup is a [Docker-based Hugging Face Space](https://huggingface.co/docs/hub/en/spaces-sdks-docker) or another small CPU container host. The repository supplies one container for both the UI and API.
 
-## Security Defaults
+1. Package an existing compact index:
 
-- `.env`, vector indexes, local databases, and generated downloads are ignored by Git.
-- The public backend locks `REMOTE_SEARCH_URL` by default, so a browser cannot turn it into an arbitrary request proxy.
-- When the BERT gateway requires a header, set `REMOTE_SEARCH_TOKEN` only in `.env`; the browser never receives it.
-- The health endpoint reports configuration booleans only, never keys, tokens, or host secrets.
+   ```powershell
+   python tools\convert_vector_index.py movie_index --output movie_index --archive lumitrace-index-v1.zip
+   ```
 
-## Validate
+2. Upload the archive only to storage whose terms permit your dataset. Keep it private if redistribution is not appropriate.
+3. Configure the container:
+
+   ```text
+   LUMITRACE_INDEX_URL=https://storage.example/lumitrace-index-v1.zip
+   LUMITRACE_INDEX_SHA256=<checksum printed by the packaging command>
+   LUMITRACE_VECTOR_FILE=movie_index
+   LUMITRACE_TEXT_SEARCH=disabled
+   LUMITRACE_MIN_VOTE_COUNT=100
+   LOCK_REMOTE_SEARCH_URL=true
+   ```
+
+The container verifies the archive checksum and validates its manifest before serving it. Hugging Face Docker Spaces support custom FastAPI/Flask containers and optional hardware upgrades; free hardware may sleep when idle.
+
+For a separate static frontend, set `DEPLOYED_API_BASE` in `config.js` (or define `window.LUMITRACE_API_BASE` before it loads) and allow only that origin through `LUMITRACE_ALLOWED_ORIGINS`. A same-origin deployment needs no override.
+
+For an Internet-facing service, place [Cloudflare rate limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) or an equivalent gateway in front of the container. LumiTrace also enforces a defensive local request limit, but edge rate limiting should remain the primary protection.
+
+## Recommendation API
+
+The stable endpoint accepts aligned records instead of fragile parallel arrays:
+
+```http
+POST /api/recommendations
+Content-Type: application/json
+
+{
+  "items": [
+    { "tmdb_id": 329865, "rating": 9, "genre_ids": [18, 878] },
+    { "tmdb_id": 157336, "rating": 8.5, "genre_ids": [12, 18, 878] }
+  ],
+  "exclude_ids": [329865, 157336],
+  "top_k": 12,
+  "diversity": 0.55
+}
+```
+
+See [openapi.yaml](openapi.yaml) for the complete contract. The old `/api/semantic-recommendations` and standalone `/search` routes remain available for existing clients.
+
+## Privacy and Security Defaults
+
+- Favorites, ratings, notes, and feedback remain in browser storage.
+- There is no account system or server-side taste-profile synchronization.
+- TMDB keys are sent directly from the browser to TMDB when supplied by a user.
+- `.env`, vector indexes, databases, generated archives, and model files are ignored by Git.
+- Public deployments lock browser-selected proxy targets by default.
+- Public deployments reject client-supplied LLM credentials by default.
+- API bodies are capped at 64 KiB; IDs, ratings, languages, list sizes, and `top_k` are bounded.
+- Gateway tokens stay server-side and are compared in constant time.
+- Remote index archives require SHA-256 verification and safe ZIP extraction.
+
+## Validation
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
-python -m py_compile app.py ai_engine\bert_service.py tools\bootstrap_recommender.py
-node --check script.js
-node --check recommendation-core.js
-node --check experience.js
+python -m py_compile app.py ai_engine\bert_service.py ai_engine\index_format.py
+node tests\test_recommendation_core.js
+node tests\test_experience_contract.js
+node tests\test_inline_scripts.js
 ```
+
+The tests include a deterministic miniature vector index, an ID-and-rating recommendation check, API sanitization, rate limiting, privacy boundaries, and frontend contracts.
 
 ## Project Map
 
 ```text
-app.py                         Flask Web and proxy backend
-ai_engine/bert_service.py      Lite semantic retrieval and evidence API
-tools/bootstrap_recommender.py TMDB downloader and vector builder
-recommendation-core.js         Shared browser taste and recommendation helpers
-experience.js                  Onboarding, taste tools, import/export, and modes
-index.html                     Main Web workspace
-favorites.html                 Saved-film collection
-settings.html                  TMDB, BERT, and optional LLM settings
+app.py                          Web app, public API, rate limits, local/remote engine
+ai_engine/bert_service.py       Vector retrieval, feedback penalty, evidence, text option
+ai_engine/index_format.py       Safe compact index reader/writer
+tools/bootstrap_recommender.py  TMDB downloader and offline BERT index builder
+tools/convert_vector_index.py   JSON migration and deployable archive packaging
+Dockerfile / compose.yaml       One-container public demo and self-hosting
+recommendation-core.js          Browser taste state and API contract
+experience.js                   Onboarding, taste tools, and portable data controls
+openapi.yaml                    Public recommendation API specification
 ```
 
+Contributions are welcome; start with [CONTRIBUTING.md](CONTRIBUTING.md). Security concerns belong in [SECURITY.md](SECURITY.md).
+
 Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.
+
+Released under the [MIT License](LICENSE).

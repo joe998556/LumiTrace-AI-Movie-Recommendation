@@ -17,7 +17,7 @@
 
   function favorites() { return typeof window.getFavorites === "function" ? window.getFavorites() : []; }
   function ratings() { return typeof window.getRatings === "function" ? window.getRatings() : {}; }
-  function apiBase() { return window.BACKEND_URL || "/api"; }
+  function apiBase() { return window.LumiTraceConfig?.apiBase || "/api"; }
 
   function showToast(message) {
     let toast = document.getElementById("experienceToast");

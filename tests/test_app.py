@@ -8,7 +8,11 @@ from ai_engine import bert_service as bert_service_module
 
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
-    monkeypatch.setattr(app_module, "FAVORITES_DB", str(tmp_path / "favorites.db"))
+    app_module.RATE_BUCKETS.clear()
+    monkeypatch.setattr(app_module, "LOCAL_VECTOR_FILE", "")
+    monkeypatch.setattr(app_module, "LOCAL_ENGINE", None)
+    monkeypatch.setattr(app_module, "LOCAL_ENGINE_ERROR", "")
+    monkeypatch.setattr(app_module, "REMOTE_SEARCH_TOKEN", "")
     app_module.app.config.update(TESTING=True)
     return app_module.app.test_client()
 
@@ -29,27 +33,8 @@ def test_static_route_does_not_serve_private_files(client):
     assert client.get("/lumitrace_favorites.db").status_code == 404
 
 
-def test_favorites_sync_round_trip(client):
-    sync_id = "a" * 64
-    payload = {
-        "favorites": [
-            {"id": 329865, "title": "Arrival", "rating": 9.0},
-        ],
-        "updated_at": 123,
-    }
-
-    write = client.post("/api/favorites", headers={"X-Sync-Id": sync_id}, json=payload)
-    assert write.status_code == 200
-    assert write.get_json()["ok"] is True
-
-    read = client.get("/api/favorites", headers={"X-Sync-Id": sync_id})
-    assert read.status_code == 200
-    assert read.get_json()["payload"] == payload
-
-
-def test_favorites_rejects_invalid_sync_id(client):
-    response = client.get("/api/favorites", headers={"X-Sync-Id": "not-a-sha"})
-    assert response.status_code == 400
+def test_public_backend_does_not_store_taste_profiles(client):
+    assert client.get("/api/favorites").status_code == 404
 
 
 def test_tiny_semantic_proxy_sanitizes_payload(client, monkeypatch):
@@ -73,9 +58,15 @@ def test_tiny_semantic_proxy_sanitizes_payload(client, monkeypatch):
     monkeypatch.setattr(app_module.requests, "post", fake_post)
     monkeypatch.setattr(app_module, "LOCK_REMOTE_SEARCH_URL", False)
     monkeypatch.setattr(app_module, "REMOTE_SEARCH_URL", "")
+    monkeypatch.setattr(app_module, "ALLOW_CLIENT_LLM", True)
 
     payload = {
         "remote_search_url": "http://127.0.0.1:5001/search",
+        "items": [
+            {"tmdb_id": "329865", "rating": 12, "genre_ids": [18, "878", "bad"]},
+            {"id": 157336, "rating": 0, "genre_ids": [12]},
+            {"tmdb_id": "bad", "rating": 9},
+        ],
         "overviews": ["Quiet philosophical science fiction."],
         "exclude_ids": ["329865", "bad"],
         "user_movie_ids": ["329865", 157336, "oops"],
@@ -92,12 +83,16 @@ def test_tiny_semantic_proxy_sanitizes_payload(client, monkeypatch):
         "top_k": 999,
     }
 
-    response = client.post("/api/semantic-recommendations", json=payload)
+    response = client.post("/api/recommendations", json=payload)
     assert response.status_code == 200
     assert response.get_json()["results"][0]["title"] == "Synthetic Match"
 
     forwarded = captured["json"]
     assert captured["url"] == "http://127.0.0.1:5001/search"
+    assert forwarded["items"] == [
+        {"tmdb_id": 329865, "rating": 10.0, "genre_ids": [18, 878]},
+        {"tmdb_id": 157336, "rating": 1.0, "genre_ids": [12]},
+    ]
     assert forwarded["exclude_ids"] == [329865]
     assert forwarded["user_movie_ids"] == [329865, 157336]
     assert forwarded["user_genre_ids"] == [[878, 18], []]
@@ -149,6 +144,27 @@ def test_semantic_proxy_requires_signal(client, monkeypatch):
         json={"remote_search_url": "http://127.0.0.1:5001/search"},
     )
     assert response.status_code == 400
+
+
+def test_recommendation_rate_limit_returns_429(client, monkeypatch):
+    monkeypatch.setattr(app_module, "RECOMMEND_RATE_LIMIT", 1)
+    monkeypatch.setattr(app_module, "LOCK_REMOTE_SEARCH_URL", True)
+    monkeypatch.setattr(app_module, "REMOTE_SEARCH_URL", "https://configured.example/search")
+
+    class FakeResponse:
+        ok = True
+        status_code = 200
+
+        @staticmethod
+        def json():
+            return {"results": []}
+
+    monkeypatch.setattr(app_module.requests, "post", lambda *args, **kwargs: FakeResponse())
+    payload = {"items": [{"tmdb_id": 329865, "rating": 9}]}
+    assert client.post("/api/recommendations", json=payload).status_code == 200
+    limited = client.post("/api/recommendations", json=payload)
+    assert limited.status_code == 429
+    assert int(limited.headers["Retry-After"]) >= 1
 
 
 def test_neutral_rating_does_not_add_genre_weight():

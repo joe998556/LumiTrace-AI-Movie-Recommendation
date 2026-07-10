@@ -120,6 +120,12 @@
   function buildPayload({ favorites = [], ratings = {}, prompt = "", topK = 18, diversity = 0.55, language = "", genre = "" } = {}) {
     const items = tasteItems(favorites, ratings);
     const payload = {
+      items: items.map((item) => ({
+        tmdb_id: item.movie.id,
+        rating: item.rating,
+        genre_ids: item.movie.genre_ids || [],
+      })),
+      // Legacy parallel arrays keep older self-hosted gateways compatible.
       user_movie_ids: items.map((item) => item.movie.id),
       exclude_ids: items.map((item) => item.movie.id),
       user_genre_ids: items.map((item) => item.movie.genre_ids || []),
@@ -137,7 +143,7 @@
   function withRequestExtras(payload) {
     const next = { ...payload };
     const llm = getLlmConfig();
-    if (llm.api_url && llm.model) next.llm = llm;
+    if (window.__lumitraceClientLlm === true && llm.api_url && llm.model) next.llm = llm;
     const override = String(localStorage.getItem(KEYS.searchUrl) || "").trim();
     const locked = Boolean(window.__lumitraceRemoteLocked || window.__lumitraceSearchLocked);
     if (override && !locked) next.remote_search_url = override;
@@ -145,7 +151,7 @@
   }
 
   async function requestRecommendations(apiBase, payload) {
-    const response = await fetch(`${apiBase}/semantic-recommendations`, {
+    const response = await fetch(`${apiBase}/recommendations`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

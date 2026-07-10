@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:8080/api";
+const BACKEND_URL = window.LumiTraceConfig?.apiBase || "/api";
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 const KEY_STORAGE = "lumitrace_tmdb_key";
 const FAVORITES_STORAGE = "lumitrace_favorites";
@@ -52,8 +52,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   updateConnections();
   setupInfiniteScroll();
   if (hasTmdbAccess()) {
-    // Restore favorites previously synced under this TMDB key, then reflect it.
-    await window.lumitraceSync?.pullFavorites();
     updateFabBadge();
     if (!applyDeepLink()) loadCategory(currentCategory);
   } else {
@@ -223,6 +221,7 @@ async function loadBackendStatus() {
     backendHasTmdbKey = Boolean(d.integrations?.tmdb_env_key);
     backendHasBert = Boolean(d.integrations?.semantic_search);
     window.__lumitraceRemoteLocked = Boolean(d.integrations?.remote_search_locked);
+    window.__lumitraceClientLlm = Boolean(d.integrations?.client_llm);
   } catch { backendHasTmdbKey = false; backendHasBert = false; }
 }
 
@@ -247,7 +246,7 @@ function getFavorites() {
   catch { return []; }
 }
 
-function saveFavorites(f) { localStorage.setItem(FAVORITES_STORAGE, JSON.stringify(f)); window.lumitraceSync?.schedulePush(); }
+function saveFavorites(f) { localStorage.setItem(FAVORITES_STORAGE, JSON.stringify(f)); }
 
 // --- Ratings ---
 function getRatings() {
@@ -259,14 +258,12 @@ function saveRating(movieId, score, comment) {
   const ratings = getRatings();
   ratings[movieId] = { score, comment: comment || "", updatedAt: Date.now() };
   localStorage.setItem(RATINGS_STORAGE, JSON.stringify(ratings));
-  window.lumitraceSync?.schedulePush();
 }
 
 function deleteRating(movieId) {
   const ratings = getRatings();
   delete ratings[movieId];
   localStorage.setItem(RATINGS_STORAGE, JSON.stringify(ratings));
-  window.lumitraceSync?.schedulePush();
 }
 
 function getMovieRating(movieId) {
@@ -467,10 +464,17 @@ function renderProviders(data) {
   }
 }
 
-function tmdbHeaders() { const k = getApiKey(); return k ? { "X-TMDB-API-Key": k } : {}; }
-
 async function tmdb(path) {
-  const r = await fetch(`${BACKEND_URL}/tmdb/${path}`, { headers: tmdbHeaders() });
+  const key = getApiKey();
+  let url = `${BACKEND_URL}/tmdb/${path}`;
+  const headers = {};
+  if (key) {
+    const direct = new URL(`https://api.themoviedb.org/3/${path}`);
+    if (key.startsWith("eyJ")) headers.Authorization = `Bearer ${key}`;
+    else direct.searchParams.set("api_key", key);
+    url = direct.toString();
+  }
+  const r = await fetch(url, { headers });
   const d = await r.json();
   if (!r.ok) throw new Error(d.status_message || d.error || "TMDB request failed");
   return d;

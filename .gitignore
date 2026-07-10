@@ -6,6 +6,8 @@ __pycache__/
 *.db
 *.sqlite*
 movie_vectors*.json
+movie_index*/
+lumitrace-index*.zip
 *.pt
 *.pth
 *.pkl

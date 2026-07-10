@@ -47,6 +47,10 @@ const payload = core.buildPayload({
 });
 assert.deepEqual(payload.user_movie_ids, [1, 2]);
 assert.deepEqual(payload.user_vote_counts, [9, 2]);
+assert.deepEqual(payload.items, [
+  { tmdb_id: 1, rating: 9, genre_ids: [18] },
+  { tmdb_id: 2, rating: 2, genre_ids: [28] },
+]);
 assert.equal(payload.top_k, 30);
 assert.deepEqual(payload.overviews, ["A quiet evening"]);
 

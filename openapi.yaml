@@ -1,0 +1,117 @@
+openapi: 3.1.0
+info:
+  title: LumiTrace Recommendation API
+  version: 1.1.0
+  description: >-
+    Privacy-minimal movie recommendations from TMDB movie IDs and 1-10 ratings.
+    The service does not require a user account or persistent taste profile.
+servers:
+  - url: http://localhost:8080/api
+    description: Local Docker or Python server
+paths:
+  /health:
+    get:
+      summary: Check public service readiness
+      responses:
+        "200":
+          description: Public-safe service status
+          content:
+            application/json:
+              schema:
+                type: object
+  /recommendations:
+    post:
+      summary: Recommend movies from rated TMDB items
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationRequest"
+            examples:
+              watchedAndRated:
+                value:
+                  items:
+                    - tmdb_id: 329865
+                      rating: 9
+                      genre_ids: [18, 878]
+                    - tmdb_id: 157336
+                      rating: 8.5
+                      genre_ids: [12, 18, 878]
+                  exclude_ids: [329865, 157336]
+                  top_k: 12
+                  diversity: 0.55
+      responses:
+        "200":
+          description: Ranked recommendations or an explicit metadata fallback
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationResponse"
+        "400":
+          description: No usable taste signal was supplied
+        "409":
+          description: Free-text search is disabled on this deployment
+        "413":
+          description: Request body exceeds 64 KiB
+        "429":
+          description: Per-client recommendation limit exceeded
+components:
+  schemas:
+    RatedMovie:
+      type: object
+      required: [tmdb_id, rating]
+      properties:
+        tmdb_id:
+          type: integer
+          minimum: 1
+        rating:
+          type: number
+          minimum: 1
+          maximum: 10
+        genre_ids:
+          type: array
+          maxItems: 20
+          items:
+            type: integer
+    RecommendationRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/RatedMovie"
+        exclude_ids:
+          type: array
+          maxItems: 100
+          items:
+            type: integer
+        overviews:
+          description: Optional free text when the matching encoder is enabled.
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 2000
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 18
+        diversity:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.55
+    RecommendationResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+        taste_profile:
+          type: object
+        fallback:
+          type: string

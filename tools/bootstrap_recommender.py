@@ -11,6 +11,7 @@ import getpass
 import json
 import math
 import os
+import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -24,12 +25,18 @@ from urllib3.util.retry import Retry
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from ai_engine.index_format import load_index, records_from_index, write_index  # noqa: E402
+
+
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 # Must match ai_engine/bert_service.py DEFAULT_MODEL: the query and corpus
 # embeddings have to come from the same model (bge-m3 is 1024-dim; the old
 # AventIQ model was 768-dim, which made text search fail on a dimension check).
 DEFAULT_MODEL = "BAAI/bge-m3"
-DEFAULT_OUTPUT = ROOT / "movie_vectors.json"
+DEFAULT_OUTPUT = ROOT / "movie_index"
 
 
 @dataclass(frozen=True)
@@ -101,7 +108,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--preset", choices=sorted(PRESETS), help="Data size preset.")
     parser.add_argument("--limit", type=int, help="Override the target number of unique movies.")
     parser.add_argument("--tmdb-key", help="TMDB API key. If omitted, TMDB_API_KEY or interactive input is used.")
-    parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output JSON file.")
+    parser.add_argument("--output", default=str(DEFAULT_OUTPUT), help="Output index directory or legacy JSON file.")
+    parser.add_argument(
+        "--output-format",
+        choices=("binary", "legacy-json"),
+        default="binary",
+        help="Compact binary is recommended for serving; legacy JSON is kept for migration.",
+    )
     parser.add_argument("--model", default=DEFAULT_MODEL, help="Hugging Face embedding model.")
     parser.add_argument("--language", default="en-US", help="TMDB response language.")
     parser.add_argument("--batch-size", type=int, default=16, help="Embedding batch size.")
@@ -359,11 +372,8 @@ def load_existing_vectors(path: Path) -> dict[int, dict[str, Any]]:
     if not path.exists():
         return {}
     try:
-        with path.open("r", encoding="utf-8") as file:
-            data = json.load(file)
-    except (OSError, json.JSONDecodeError):
-        return {}
-    if not isinstance(data, list):
+        data = records_from_index(load_index(path))
+    except (OSError, ValueError, json.JSONDecodeError):
         return {}
     existing: dict[int, dict[str, Any]] = {}
     for item in data:
@@ -376,7 +386,16 @@ def load_existing_vectors(path: Path) -> dict[int, dict[str, Any]]:
     return existing
 
 
-def save_vectors(path: Path, vectors: list[dict[str, Any]]) -> None:
+def save_vectors(
+    path: Path,
+    vectors: list[dict[str, Any]],
+    *,
+    model_name: str,
+    output_format: str,
+) -> None:
+    if output_format == "binary":
+        write_index(vectors, path, model=model_name, dtype="float16")
+        return
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = path.with_suffix(path.suffix + ".tmp")
     with tmp_path.open("w", encoding="utf-8") as file:
@@ -392,6 +411,7 @@ def embed_movies(
     device: torch.device,
     batch_size: int,
     text_mode: str,
+    output_format: str,
 ) -> list[dict[str, Any]]:
     try:
         import torch
@@ -449,8 +469,13 @@ def embed_movies(
         total_completed = len(vectors)
         print(f"[embed] {completed:,}/{len(pending):,} new movies embedded; {total_completed:,} total vectors")
 
-        if total_completed % max(batch_size * 10, 100) == 0:
-            save_vectors(output, vectors)
+        if total_completed % max(batch_size * 50, 1000) == 0:
+            save_vectors(
+                output,
+                vectors,
+                model_name=model_name,
+                output_format=output_format,
+            )
 
     return vectors
 
@@ -463,6 +488,8 @@ def main() -> int:
     output = Path(args.output)
     if not output.is_absolute():
         output = ROOT / output
+    if args.output_format == "legacy-json" and output.suffix.lower() != ".json":
+        raise SystemExit("--output-format legacy-json requires an --output path ending in .json")
 
     key = resolve_tmdb_key(args.tmdb_key)
     device = resolve_device(args.device)
@@ -473,6 +500,7 @@ def main() -> int:
     print(f"Preset: {preset.name} ({preset.note})")
     print(f"Target movies: {limit:,}")
     print(f"Output: {output}")
+    print(f"Output format: {args.output_format}")
     print(f"Text mode: {args.text_mode}")
     print("More movies usually improve coverage, but downloads and embeddings take longer.")
 
@@ -488,15 +516,25 @@ def main() -> int:
         device=device,
         batch_size=max(1, args.batch_size),
         text_mode=args.text_mode,
+        output_format=args.output_format,
     )
-    save_vectors(output, vectors)
+    save_vectors(
+        output,
+        vectors,
+        model_name=args.model,
+        output_format=args.output_format,
+    )
 
-    size_mb = output.stat().st_size / (1024 * 1024)
+    if output.is_dir():
+        output_bytes = sum(item.stat().st_size for item in output.rglob("*") if item.is_file())
+    else:
+        output_bytes = output.stat().st_size
+    size_mb = output_bytes / (1024 * 1024)
     print("=" * 34)
     print(f"Done: {len(vectors):,} vectors saved")
-    print(f"File size: {size_mb:.1f} MB")
+    print(f"Index size: {size_mb:.1f} MB")
     print("Next:")
-    print("  python ai_engine/bert_service.py")
+    print(f"  python ai_engine/bert_service.py --vectors \"{output}\"")
     print("  set REMOTE_SEARCH_URL=http://127.0.0.1:5001/search in .env to let the web app use BERT")
     return 0
 

@@ -14,10 +14,9 @@ localStorage. Generated vector indexes stay local and are ignored by Git.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
-import sqlite3
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -31,6 +30,15 @@ from flask_cors import CORS
 load_dotenv()
 
 ROOT = Path(__file__).resolve().parent
+
+
+def env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+
 TMDB_API_KEY = os.getenv("TMDB_API_KEY", "")
 OMDB_API_KEY = os.getenv("OMDB_API_KEY", "")
 RAPID_API_KEY = os.getenv("RAPID_API_KEY", "")
@@ -40,12 +48,32 @@ REMOTE_SEARCH_TOKEN = os.getenv("REMOTE_SEARCH_TOKEN", "")
 # configured service locked by default; a private self-host can opt out.
 LOCK_REMOTE_SEARCH_URL = os.getenv("LOCK_REMOTE_SEARCH_URL", "true").lower() == "true"
 SSL_VERIFY = os.getenv("SSL_VERIFY", "true").lower() == "true"
-
-# Cross-reinstall favorites sync. Keyed by a client-computed SHA-256 of the
-# user's TMDB key (the raw key is never sent here or stored). Local-first demo
-# storage; a single SQLite file is plenty at this scale.
-FAVORITES_DB = os.getenv("FAVORITES_DB", str(Path(__file__).resolve().parent / "lumitrace_favorites.db"))
-MAX_FAVORITES_BYTES = 512 * 1024
+LOCAL_VECTOR_FILE = os.getenv("LUMITRACE_VECTOR_FILE", "").strip()
+if not LOCAL_VECTOR_FILE:
+    if (ROOT / "movie_index").exists():
+        LOCAL_VECTOR_FILE = "movie_index"
+    elif (ROOT / "movie_vectors.json").exists():
+        LOCAL_VECTOR_FILE = "movie_vectors.json"
+if LOCAL_VECTOR_FILE:
+    configured_index = Path(LOCAL_VECTOR_FILE)
+    if not configured_index.is_absolute():
+        configured_index = ROOT / configured_index
+    if not configured_index.exists() or (configured_index.is_dir() and not (configured_index / "manifest.json").exists()):
+        LOCAL_VECTOR_FILE = ""
+LOCAL_DEVICE = os.getenv("LUMITRACE_DEVICE", "auto")
+LOCAL_TEXT_SEARCH = os.getenv("LUMITRACE_TEXT_SEARCH", "auto").lower()
+LOCAL_MODEL = os.getenv("LUMITRACE_MODEL", "")
+PRELOAD_LOCAL_INDEX = os.getenv("LUMITRACE_PRELOAD_INDEX", "false").lower() == "true"
+PREFER_LOCAL_INDEX = os.getenv("LUMITRACE_PREFER_LOCAL_INDEX", "false").lower() == "true"
+ALLOW_CLIENT_LLM = os.getenv("LUMITRACE_ALLOW_CLIENT_LLM", "false").lower() == "true"
+ALLOWED_ORIGINS = [
+    value.strip()
+    for value in os.getenv("LUMITRACE_ALLOWED_ORIGINS", "").split(",")
+    if value.strip()
+]
+TRUST_PROXY_HEADERS = os.getenv("LUMITRACE_TRUST_PROXY_HEADERS", "false").lower() == "true"
+RECOMMEND_RATE_LIMIT = max(0, env_int("LUMITRACE_RECOMMEND_PER_MINUTE", 30))
+TMDB_RATE_LIMIT = max(0, env_int("LUMITRACE_TMDB_PER_MINUTE", 120))
 
 logging.basicConfig(
     level=logging.INFO,
@@ -55,7 +83,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
+if ALLOWED_ORIGINS:
+    CORS(app, resources={r"/api/*": {"origins": ALLOWED_ORIGINS}})
+
+RATE_BUCKETS: dict[tuple[str, str], list[float]] = {}
+RATE_LOCK = threading.Lock()
+LOCAL_ENGINE_LOCK = threading.Lock()
+LOCAL_ENGINE: Any = None
+LOCAL_ENGINE_ERROR = ""
 
 if not SSL_VERIFY:
     import urllib3
@@ -63,11 +99,84 @@ if not SSL_VERIFY:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def client_address() -> str:
+    if TRUST_PROXY_HEADERS:
+        forwarded = request.headers.get("CF-Connecting-IP") or request.headers.get("X-Forwarded-For", "").split(",", 1)[0]
+        if forwarded.strip():
+            return forwarded.strip()[:64]
+    return str(request.remote_addr or "unknown")[:64]
+
+
+def enforce_rate_limit(scope: str, limit: int):
+    if limit <= 0:
+        return None
+    now = time.monotonic()
+    key = (scope, client_address())
+    with RATE_LOCK:
+        recent = [timestamp for timestamp in RATE_BUCKETS.get(key, []) if now - timestamp < 60.0]
+        if len(recent) >= limit:
+            retry_after = max(1, int(60 - (now - recent[0])))
+            response = jsonify({"error": "rate limit exceeded", "retry_after": retry_after})
+            response.status_code = 429
+            response.headers["Retry-After"] = str(retry_after)
+            RATE_BUCKETS[key] = recent
+            return response
+        recent.append(now)
+        RATE_BUCKETS[key] = recent
+        if len(RATE_BUCKETS) > 10000:
+            stale = [bucket_key for bucket_key, values in RATE_BUCKETS.items() if not values or now - values[-1] >= 60.0]
+            for bucket_key in stale:
+                RATE_BUCKETS.pop(bucket_key, None)
+    return None
+
+
+def get_local_engine():
+    """Lazy-load the in-process vector engine for a one-container deployment."""
+    global LOCAL_ENGINE, LOCAL_ENGINE_ERROR
+    if LOCAL_ENGINE is not None:
+        return LOCAL_ENGINE
+    if not LOCAL_VECTOR_FILE:
+        return None
+    with LOCAL_ENGINE_LOCK:
+        if LOCAL_ENGINE is not None:
+            return LOCAL_ENGINE
+        try:
+            from ai_engine import bert_service
+
+            bert_service.initialize(
+                LOCAL_VECTOR_FILE,
+                device_name=LOCAL_DEVICE,
+                model_name=LOCAL_MODEL,
+                text_search=LOCAL_TEXT_SEARCH,
+            )
+            LOCAL_ENGINE = bert_service
+            LOCAL_ENGINE_ERROR = ""
+        except (OSError, RuntimeError, ValueError) as exc:
+            LOCAL_ENGINE_ERROR = str(exc)[:240]
+            logger.error("Local recommendation index failed to initialize: %s", exc)
+            return None
+    return LOCAL_ENGINE
+
+
+@app.after_request
+def public_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    if request.path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store")
+    return response
+
+
+@app.errorhandler(413)
+def payload_too_large(_error):
+    return jsonify({"error": "request body too large"}), 413
+
+
 def get_tmdb_key() -> str:
     """Resolve a TMDB key without exposing it in logs or responses."""
     return (
         request.headers.get("X-TMDB-API-Key")
-        or request.args.get("tmdb_api_key")
         or TMDB_API_KEY
     )
 
@@ -104,6 +213,31 @@ def clean_nested_int_list(values: Any, limit: int = 50) -> list[list[int]]:
     if not isinstance(values, list):
         return []
     return [clean_int_list(item, limit=20) for item in values[:limit]]
+
+
+def clean_items(values: Any, limit: int = 100) -> list[dict[str, Any]]:
+    if not isinstance(values, list):
+        return []
+    result: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    for value in values[:limit]:
+        if not isinstance(value, dict):
+            continue
+        try:
+            movie_id = int(value.get("tmdb_id", value.get("id")))
+        except (TypeError, ValueError):
+            continue
+        if movie_id <= 0 or movie_id in seen:
+            continue
+        seen.add(movie_id)
+        result.append(
+            {
+                "tmdb_id": movie_id,
+                "rating": clamp_float(value.get("rating"), default=5.0, low=1.0, high=10.0),
+                "genre_ids": clean_int_list(value.get("genre_ids"), limit=20),
+            }
+        )
+    return result
 
 
 def clean_float_list(values: Any, limit: int = 50) -> list[float]:
@@ -161,7 +295,7 @@ def clean_llm_config(data: Any) -> dict[str, str] | None:
     open-source clone never ships a baked-in LLM. We only forward it when an
     api_url is present; the BERT service ignores it otherwise.
     """
-    if not isinstance(data, dict):
+    if not ALLOW_CLIENT_LLM or not isinstance(data, dict):
         return None
     config = data.get("llm") if isinstance(data.get("llm"), dict) else {}
     api_url = str(config.get("api_url") or "").strip()
@@ -203,7 +337,16 @@ def health_check():
                 "tmdb_env_key": bool(TMDB_API_KEY),
                 "tmdb_user_key_header": bool(request.headers.get("X-TMDB-API-Key")),
                 "omdb_key": bool(OMDB_API_KEY),
-                "semantic_search": bool(REMOTE_SEARCH_URL),
+                "semantic_search": bool(REMOTE_SEARCH_URL or LOCAL_VECTOR_FILE),
+                "semantic_mode": (
+                    "local-index"
+                    if LOCAL_VECTOR_FILE and (PREFER_LOCAL_INDEX or not REMOTE_SEARCH_URL)
+                    else ("remote" if REMOTE_SEARCH_URL else "metadata-only")
+                ),
+                "local_index_loaded": LOCAL_ENGINE is not None,
+                "local_index_error": bool(LOCAL_ENGINE_ERROR),
+                "text_search": LOCAL_TEXT_SEARCH if LOCAL_VECTOR_FILE else "unavailable",
+                "client_llm": ALLOW_CLIENT_LLM,
                 "remote_search_locked": LOCK_REMOTE_SEARCH_URL,
                 "semantic_search_auth": bool(REMOTE_SEARCH_TOKEN),
                 "rapidapi_streaming": bool(RAPID_API_KEY),
@@ -215,12 +358,14 @@ def health_check():
 @app.route("/api/tmdb/<path:endpoint>", methods=["GET"])
 def tmdb_proxy(endpoint):
     """Proxy TMDB requests with a user-provided key or .env fallback."""
+    limited = enforce_rate_limit("tmdb", TMDB_RATE_LIMIT)
+    if limited:
+        return limited
     tmdb_key = get_tmdb_key()
     if not tmdb_key:
         return jsonify({"error": "TMDB API key is required"}), 400
 
     params = dict(request.args)
-    params.pop("tmdb_api_key", None)
     params["api_key"] = tmdb_key
 
     try:
@@ -254,18 +399,17 @@ def omdb_proxy(imdb_id):
         return jsonify({"error": "OMDB request failed"}), 502
 
 
+@app.route("/api/recommendations", methods=["POST"])
 @app.route("/api/semantic-recommendations", methods=["POST"])
 def semantic_recommendations():
-    """Forward a sanitized recommendation request to the optional BERT service."""
+    """Run or forward a sanitized recommendation request."""
+    limited = enforce_rate_limit("recommend", RECOMMEND_RATE_LIMIT)
+    if limited:
+        return limited
     data = request.get_json(silent=True) or {}
 
-    # Target can come from the browser Settings page (self-host) or fall back to
-    # the operator's .env. The override field is never forwarded to the service.
-    search_target = resolve_search_target(data)
-    if not search_target:
-        return jsonify({"results": [], "fallback": "semantic service is not configured"})
-
     payload = {
+        "items": clean_items(data.get("items"), limit=100),
         "overviews": clean_text_list(data.get("overviews")),
         "exclude_ids": clean_int_list(data.get("exclude_ids"), limit=100),
         # Watched IDs align browser taste records with the local BERT index.
@@ -284,8 +428,39 @@ def semantic_recommendations():
     if llm_config:
         payload["llm"] = llm_config
 
-    if not payload["overviews"] and not payload["user_movie_ids"]:
-        return jsonify({"error": "At least one movie overview or user_movie_ids is required"}), 400
+    if not payload["overviews"] and not payload["user_movie_ids"] and not payload["items"]:
+        return jsonify({"error": "At least one rated movie item, user_movie_ids, or overview is required"}), 400
+
+    # A one-container demo can use its local index directly. Existing remote
+    # gateways remain supported, with an explicit preference switch when both
+    # are configured.
+    search_target = resolve_search_target(data)
+    use_local_engine = bool(LOCAL_VECTOR_FILE) and (PREFER_LOCAL_INDEX or not search_target)
+    if use_local_engine:
+        engine = get_local_engine()
+        if engine is None:
+            fallback = "semantic service is not configured"
+            if LOCAL_VECTOR_FILE and LOCAL_ENGINE_ERROR:
+                fallback = "local recommendation index could not be loaded"
+            if not search_target:
+                return jsonify({"results": [], "fallback": fallback})
+            logger.info("%s; falling back to the configured remote service.", fallback)
+        else:
+            if payload["overviews"] and LOCAL_TEXT_SEARCH == "disabled" and not payload["items"] and not payload["user_movie_ids"]:
+                return jsonify({"error": "free-text search is disabled; rate at least one movie"}), 409
+            try:
+                results, profile = engine.recommend(payload)
+            except engine.TextSearchDisabled as exc:
+                return jsonify({"error": str(exc)}), 409
+            return jsonify(
+                {
+                    "results": results,
+                    "taste_profile": profile,
+                    "llm": {"enabled": bool(payload.get("llm"))},
+                }
+            )
+    if not search_target:
+        return jsonify({"results": [], "fallback": "semantic service is not configured"})
 
     try:
         request_options: dict[str, Any] = {}
@@ -323,77 +498,6 @@ def streaming_proxy(show_id):
         return jsonify({"error": "Streaming API request failed"}), 502
 
 
-def favorites_db() -> sqlite3.Connection:
-    conn = sqlite3.connect(FAVORITES_DB)
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS favorites ("
-        "sync_id TEXT PRIMARY KEY, payload TEXT NOT NULL, updated_at INTEGER NOT NULL)"
-    )
-    return conn
-
-
-def valid_sync_id(value: Any) -> bool:
-    """A sync id must look like a SHA-256 hex digest (64 lowercase hex chars)."""
-    if not isinstance(value, str) or len(value) != 64:
-        return False
-    try:
-        int(value, 16)
-    except ValueError:
-        return False
-    return True
-
-
-@app.route("/api/favorites", methods=["GET", "POST"])
-def favorites_sync():
-    """Store/retrieve a user's favorites blob keyed by hash(TMDB key).
-
-    The client sends X-Sync-Id = SHA-256(tmdb_key); the raw key never reaches
-    this endpoint. The payload is an opaque JSON blob (favorites + ratings).
-    """
-    sync_id = (request.headers.get("X-Sync-Id") or "").strip().lower()
-    if not valid_sync_id(sync_id):
-        return jsonify({"error": "A valid X-Sync-Id (sha-256 hex) is required"}), 400
-
-    if request.method == "GET":
-        try:
-            conn = favorites_db()
-            row = conn.execute(
-                "SELECT payload, updated_at FROM favorites WHERE sync_id = ?", (sync_id,)
-            ).fetchone()
-            conn.close()
-        except sqlite3.Error as exc:
-            logger.warning("favorites read failed: %s", exc)
-            return jsonify({"error": "favorites store unavailable"}), 503
-        if not row:
-            return jsonify({"payload": None})
-        try:
-            payload = json.loads(row[0])
-        except json.JSONDecodeError:
-            payload = None
-        return jsonify({"payload": payload, "updated_at": row[1]})
-
-    body = request.get_json(silent=True)
-    if not isinstance(body, dict):
-        return jsonify({"error": "A JSON object body is required"}), 400
-    payload_text = json.dumps(body, separators=(",", ":"), ensure_ascii=False)
-    if len(payload_text.encode("utf-8")) > MAX_FAVORITES_BYTES:
-        return jsonify({"error": "favorites payload too large"}), 413
-    now = int(time.time())
-    try:
-        conn = favorites_db()
-        conn.execute(
-            "INSERT INTO favorites (sync_id, payload, updated_at) VALUES (?, ?, ?) "
-            "ON CONFLICT(sync_id) DO UPDATE SET payload = excluded.payload, updated_at = excluded.updated_at",
-            (sync_id, payload_text, now),
-        )
-        conn.commit()
-        conn.close()
-    except sqlite3.Error as exc:
-        logger.warning("favorites write failed: %s", exc)
-        return jsonify({"error": "favorites store unavailable"}), 503
-    return jsonify({"ok": True, "updated_at": now})
-
-
 @app.route("/")
 def index():
     return send_from_directory(ROOT, "index.html")
@@ -409,10 +513,20 @@ def serve_static(path):
     return send_from_directory(ROOT, path)
 
 
+if PRELOAD_LOCAL_INDEX and LOCAL_VECTOR_FILE and (PREFER_LOCAL_INDEX or not REMOTE_SEARCH_URL):
+    get_local_engine()
+
+
 if __name__ == "__main__":
     logger.info("Starting LumiTrace public demo backend...")
     logger.info("TMDB env key configured: %s", bool(TMDB_API_KEY))
     logger.info("Semantic search configured: %s", bool(REMOTE_SEARCH_URL))
+    logger.info("Local vector index configured: %s", bool(LOCAL_VECTOR_FILE))
     logger.info("RapidAPI streaming configured: %s", bool(RAPID_API_KEY))
     logger.info("SSL verify: %s", SSL_VERIFY)
-    app.run(host="0.0.0.0", port=8080, debug=False, use_reloader=False)
+    app.run(
+        host=os.getenv("LUMITRACE_HOST", "0.0.0.0"),
+        port=env_int("PORT", env_int("LUMITRACE_PORT", 8080)),
+        debug=False,
+        use_reloader=False,
+    )

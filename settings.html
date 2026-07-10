@@ -127,7 +127,7 @@
         <button id="llmClear" class="btn btn-ghost" type="button">Clear</button>
       </div>
       <p id="llmStatus" class="status muted" aria-live="polite"></p>
-      <p class="note">Your key is sent per-request to your configured BERT gateway and is not stored on the server. Public deployments reject local/private LLM URLs; enable <code>LUMITRACE_ALLOW_PRIVATE_LLM=true</code> only for a self-hosted BERT process.</p>
+      <p class="note">For safety, public demos disable client-supplied LLM credentials. A trusted self-host can enable this feature with <code>LUMITRACE_ALLOW_CLIENT_LLM=true</code>. The key is then forwarded for that request and is not persisted by LumiTrace.</p>
     </section>
 
     <!-- BERT override -->
@@ -158,10 +158,10 @@
     </section>
   </div>
 
-  <script src="sync.js?v=teal-v1"></script>
+  <script src="config.js?v=public-v1"></script>
   <script src="recommendation-core.js?v=lite-1"></script>
   <script>
-    const API = "http://localhost:8080/api";
+    const API = window.LumiTraceConfig?.apiBase || "/api";
     const TMDB_KEY = "lumitrace_tmdb_key";
     const LLM_KEY = "lumitrace_llm";
     const SEARCH_KEY = "lumitrace_search_url";
@@ -181,14 +181,7 @@
       if (!v) { setStatus($("tmdbStatus"), "Enter a key first.", "err"); return; }
       localStorage.setItem(TMDB_KEY, v);
       loadTmdb();
-      // Restore any favorites previously synced under this TMDB key.
-      setStatus($("tmdbStatus"), "Saved. Checking for synced favorites…", "muted");
-      const restored = await window.lumitraceSync?.pullFavorites();
-      setStatus(
-        $("tmdbStatus"),
-        restored ? "Saved. Your synced favorites were restored." : "Saved. TMDB browsing is ready.",
-        "ok"
-      );
+      setStatus($("tmdbStatus"), "Saved locally in this browser. TMDB browsing is ready.", "ok");
     });
     $("tmdbClear").addEventListener("click", () => {
       localStorage.removeItem(TMDB_KEY);
@@ -235,6 +228,14 @@
         const response = await fetch(`${API}/health`);
         const health = await response.json();
         const locked = Boolean(health.integrations?.remote_search_locked);
+        const llmAllowed = Boolean(health.integrations?.client_llm);
+        window.__lumitraceClientLlm = llmAllowed;
+        ["llmUrl", "llmKey", "llmModel", "llmRemember", "llmSave"].forEach((id) => { $(id).disabled = !llmAllowed; });
+        if (!llmAllowed) {
+          $("llmBadge").textContent = "Self-host only";
+          $("llmBadge").className = "badge off";
+          setStatus($("llmStatus"), "Disabled by this public deployment.", "muted");
+        }
         $("searchUrl").disabled = locked;
         $("searchSave").disabled = locked;
         $("searchLockNote").hidden = !locked;
@@ -265,20 +266,26 @@
     // --- Test pipeline ---
     $("testBtn").addEventListener("click", async () => {
       setStatus($("testStatus"), "Running...", "muted");
-      const llm = getLlm();
-      const body = { overviews: ["a quiet rainy european mystery with a subtle twist"], top_k: 3 };
-      if (llm.api_url) body.llm = llm;
-      const override = localStorage.getItem(SEARCH_KEY) || "";
-      if (override && !window.__lumitraceSearchLocked) body.remote_search_url = override;
+      let favorites = [];
+      let ratings = {};
       try {
-        const r = await fetch(`${API}/semantic-recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        favorites = JSON.parse(localStorage.getItem("lumitrace_favorites") || "[]");
+        ratings = JSON.parse(localStorage.getItem("lumitrace_ratings") || "{}");
+      } catch { /* Invalid local data is treated as an empty profile. */ }
+      if (!favorites.length) {
+        setStatus($("testStatus"), "Save and rate at least one movie before testing recommendations.", "err");
+        return;
+      }
+      const body = window.LumiTraceRecs.buildPayload({ favorites, ratings, topK: 3 });
+      try {
+        const r = await fetch(`${API}/recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
         const d = await r.json();
         const results = (d.results || []).length;
         if (d.error) { setStatus($("testStatus"), "Backend error: " + d.error, "err"); return; }
-        if (!results) { setStatus($("testStatus"), (d.fallback || "No results") + " — check the BERT URL / server REMOTE_SEARCH_URL.", "err"); return; }
+        if (!results) { setStatus($("testStatus"), d.fallback || "No recommendation results.", "err"); return; }
         const llmOn = d.llm && d.llm.enabled;
         const hasReason = (d.results || []).some((m) => m.llm_reason);
-        setStatus($("testStatus"), `OK — ${results} results from BERT. LLM narrator: ${llmOn ? "enabled" : "off"}${hasReason ? " (reasons present)" : ""}.`, "ok");
+        setStatus($("testStatus"), `OK — ${results} vector recommendations. LLM narrator: ${llmOn ? "enabled" : "off"}${hasReason ? " (reasons present)" : ""}.`, "ok");
       } catch (e) {
         setStatus($("testStatus"), "Request failed: " + e.message + " — is the Flask backend running on :8080?", "err");
       }

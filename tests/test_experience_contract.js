@@ -24,5 +24,8 @@ assert.match(settings, /id="llmRemember"/);
 assert.match(settings, /recommendation-core\.js/);
 assert.match(collection, /LumiTraceRecs\.buildPayload/);
 assert.match(collection, /LumiTraceRecs\.requestRecommendations/);
+assert.match(index, /config\.js/);
+assert.doesNotMatch(index, /sync\.js/);
+assert.doesNotMatch(settings, /localhost:8080/);
 
 console.log("experience contract checks passed");
