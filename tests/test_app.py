@@ -141,7 +141,9 @@ def test_semantic_proxy_ignores_browser_target_when_locked(client, monkeypatch):
     assert captured["url"] == "https://configured.example/search"
 
 
-def test_semantic_proxy_requires_signal(client):
+def test_semantic_proxy_requires_signal(client, monkeypatch):
+    monkeypatch.setattr(app_module, "LOCK_REMOTE_SEARCH_URL", True)
+    monkeypatch.setattr(app_module, "REMOTE_SEARCH_URL", "https://configured.example/search")
     response = client.post(
         "/api/semantic-recommendations",
         json={"remote_search_url": "http://127.0.0.1:5001/search"},
