@@ -4,12 +4,13 @@ LumiTrace is a content-based, local-first recommendation system. User taste rema
 
 ## 1. Offline Catalog Encoding
 
-The expensive Transformer stage runs while building the catalog, not while serving ordinary recommendations. Each movie is converted into enriched text:
+The expensive Transformer stage runs while building the catalog, not while serving ordinary recommendations. The text is source-dependent. The redistributable demo uses MovieLens title, genre, and community tags:
 
 ```text
-title + genres + language + release year + audience rating
-+ director + leading cast + collection + overview
+title + genres + community tags
 ```
+
+An independently authorized private catalog may enrich that text with language, year, cast, collection, or plot fields when its data license permits those uses.
 
 For movie `i`, the encoder produces an L2-normalized vector:
 
@@ -76,7 +77,7 @@ score = semantic_score * (1 - 0.75 * negative_penalty)
 
 This preserves the positive retrieval geometry and reduces the work from a full-catalog negative scan to `shortlist_size x negative_seed_count`.
 
-The quality adjustment uses TMDB vote average with a catalog prior and vote-count confidence. Candidates below a configurable minimum vote count are skipped, preventing unrated or near-empty catalog records from dominating a public demo through unstable metadata.
+The quality adjustment uses the index's source rating with a catalog prior and vote-count confidence. Candidates below a configurable minimum vote count are skipped, preventing unrated or near-empty records from dominating a public demo through unstable metadata.
 
 ## 5. Diversity Re-ranking
 
@@ -117,3 +118,5 @@ Without an index, the browser ranks TMDB discovery results using genre overlap, 
 ## 9. Scope
 
 Exact retrieval is appropriate for LumiTrace's current catalog scale. A much larger corpus or sustained high concurrency should add measured caching, queueing, observability, and an ANN index such as Faiss or HNSW only after profiling shows that exact matrix retrieval is the bottleneck.
+
+The bundled index is a MovieLens transformation governed by [DATA_LICENSE.md](DATA_LICENSE.md). Private indexes are not redistributable merely because the index format is open. Operators must verify the rights for every metadata, tag, plot, identifier, and model used to build or serve an index.

@@ -162,7 +162,7 @@
   }
 
   function normalizeResults(raw) {
-    const filtered = (Array.isArray(raw) ? raw : []).filter((movie) => movie?.poster_path);
+    const filtered = (Array.isArray(raw) ? raw : []).filter((movie) => Number.isFinite(Number(movie?.id)));
     const movies = filtered.map(normalizedMovie);
     const highest = Math.max(0.001, ...movies.map((movie) => Number(movie.score || movie.semantic_score || 0)));
     return movies.map((movie, index) => {
@@ -179,6 +179,37 @@
         llm_reason: String(source.llm_reason || ""),
       };
     });
+  }
+
+  async function hydrateResults(raw, fetchMovie, batchSize = 5) {
+    const movies = normalizeResults(raw);
+    if (typeof fetchMovie !== "function") return movies.filter((movie) => movie.poster_path);
+    const hydrated = [];
+    const size = Math.max(1, Math.min(10, Number(batchSize) || 5));
+    for (let start = 0; start < movies.length; start += size) {
+      const batch = movies.slice(start, start + size);
+      const rows = await Promise.all(batch.map(async (movie) => {
+        if (movie.poster_path) return movie;
+        try {
+          const detail = normalizedMovie(await fetchMovie(movie.id));
+          return {
+            ...movie,
+            ...detail,
+            score: movie.score,
+            semantic_score: movie.semantic_score,
+            recommendationScore: movie.recommendationScore,
+            negative_penalty: movie.negative_penalty,
+            diversity_penalty: movie.diversity_penalty,
+            evidence: movie.evidence,
+            llm_reason: movie.llm_reason,
+          };
+        } catch {
+          return movie;
+        }
+      }));
+      hydrated.push(...rows);
+    }
+    return hydrated.filter((movie) => movie.poster_path);
   }
 
   function evidenceRows(movie, genreNames = {}) {
@@ -268,6 +299,7 @@
     exportTaste,
     getFeedback,
     getLlmConfig,
+    hydrateResults,
     importTaste,
     movieYear,
     normalizeResults,

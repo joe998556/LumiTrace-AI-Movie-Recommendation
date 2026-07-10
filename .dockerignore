@@ -15,4 +15,7 @@ scratch
 .agents
 .claude
 .codex*
+.devcontainer
 .playwright-mcp
+*.npy
+!demo_index/vectors.npy

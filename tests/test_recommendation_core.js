@@ -63,13 +63,25 @@ const normalized = core.normalizeResults([
   { id: 99, title: "No poster", score: 0.99 },
   { id: 3, title: "Visible", poster_path: "/visible.jpg", score: 0.82, evidence: { similar_to: ["First Signal"] } },
 ]);
-assert.equal(normalized.length, 1);
-assert.equal(normalized[0].score, 0.82);
-assert.deepEqual(normalized[0].evidence.similar_to, ["First Signal"]);
+assert.equal(normalized.length, 2);
+assert.equal(normalized[1].score, 0.82);
+assert.deepEqual(normalized[1].evidence.similar_to, ["First Signal"]);
 
 const exported = core.exportTaste();
 assert.equal(exported.favorites.length, 0);
 assert.equal(exported.feedback["2"].movie.title, "Low Signal");
 assert.equal(JSON.stringify(exported).includes("session-only"), false);
 
-console.log("recommendation core checks passed");
+(async () => {
+  const hydrated = await core.hydrateResults(
+    [{ id: 99, title: "No poster", score: 0.91 }],
+    async () => ({ id: 99, title: "Hydrated", poster_path: "/hydrated.jpg", genre_ids: [878] }),
+  );
+  assert.equal(hydrated.length, 1);
+  assert.equal(hydrated[0].poster_path, "/hydrated.jpg");
+  assert.equal(hydrated[0].score, 0.91);
+  console.log("recommendation core checks passed");
+})().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

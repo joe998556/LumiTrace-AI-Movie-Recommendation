@@ -602,12 +602,12 @@ async function runZeroShotPlaylist() {
   setStatus("Generating zero-shot semantic playlist...");
   resetRecScroll();
   recDone = true;
-  document.getElementById("recommendationReason").textContent = "Tracing your scene prompt through the BERT vector index...";
+  document.getElementById("recommendationReason").textContent = "Tracing your scene prompt through the semantic vector index...";
 
   try {
     const data = await window.LumiTraceRecs.requestRecommendations(BACKEND_URL, payload);
 
-    const movies = normalizeSemantic(data.results || []);
+    const movies = await normalizeSemantic(data.results || []);
     if (!movies.length) {
       document.getElementById("recommendationReason").textContent = data.fallback || "No semantic playlist results.";
       setStatus(data.fallback || "No semantic playlist results.");
@@ -807,7 +807,7 @@ async function loadMoreRecs() {
         if (sem.length > 0) {
           sem.forEach((m) => seenRecIds.add(m.id));
           renderRecGrid(sem);
-          document.getElementById("recommendationReason").textContent = `BERT semantic analysis from ${favs.length} favorites. Scroll for more.`;
+          document.getElementById("recommendationReason").textContent = `Semantic vector analysis from ${favs.length} favorites. Scroll for more.`;
           recPage = 2;
           recLoading = false;
           setRecLoaderVisible(false);
@@ -880,7 +880,10 @@ async function loadSemanticRecs(favs) {
   });
   if (!payload.user_movie_ids.length) return [];
   const response = await window.LumiTraceRecs.requestRecommendations(BACKEND_URL, payload);
-  return window.LumiTraceRecs.normalizeResults(response.results || []);
+  return window.LumiTraceRecs.hydrateResults(
+    response.results || [],
+    (id) => tmdb(`movie/${id}?language=${TMDB_LANGUAGE}`),
+  );
 }
 
 function renderRecGrid(movies) {
@@ -1071,8 +1074,12 @@ function normalizeMovies(movies) {
   }));
 }
 
-function normalizeSemantic(movies) {
-  return window.LumiTraceRecs?.normalizeResults(movies) || [];
+async function normalizeSemantic(movies) {
+  if (!window.LumiTraceRecs) return [];
+  return window.LumiTraceRecs.hydrateResults(
+    movies,
+    (id) => tmdb(`movie/${id}?language=${TMDB_LANGUAGE}`),
+  );
 }
 
 function buildProfile(favs) {

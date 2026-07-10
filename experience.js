@@ -78,7 +78,10 @@
       return [];
     }
     const response = await core().requestRecommendations(apiBase(), payload);
-    const movies = core().normalizeResults(response.results || []);
+    const movies = await core().hydrateResults(
+      response.results || [],
+      (id) => window.tmdb(`movie/${id}?language=en-US`),
+    );
     if (!movies.length) throw new Error(response.fallback || "No recommendations yet.");
     return movies;
   }

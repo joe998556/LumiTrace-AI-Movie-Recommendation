@@ -53,7 +53,8 @@ def main() -> int:
         normalized = relative.replace("\\", "/")
         lowered = normalized.lower()
         name = Path(normalized).name.lower()
-        if name in FORBIDDEN_NAMES or lowered.startswith(FORBIDDEN_PREFIXES) or lowered.endswith(FORBIDDEN_SUFFIXES):
+        allowed_demo_vector = lowered == "demo_index/vectors.npy"
+        if name in FORBIDDEN_NAMES or lowered.startswith(FORBIDDEN_PREFIXES) or (lowered.endswith(FORBIDDEN_SUFFIXES) and not allowed_demo_vector):
             failures.append(f"forbidden public artifact: {normalized}")
             continue
         path = ROOT / relative

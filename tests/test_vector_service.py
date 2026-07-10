@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import zipfile
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -9,6 +10,9 @@ import pytest
 from ai_engine import bert_service
 from ai_engine.index_format import load_index, write_index
 from tools.fetch_index import safe_extract
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def sample_records():
@@ -59,6 +63,18 @@ def test_compact_index_round_trip(tmp_path):
     assert [movie["id"] for movie in loaded.movies] == [1, 2, 3]
     with manifest_path.open("r", encoding="utf-8") as handle:
         assert json.load(handle)["model"] == "test/tiny-model"
+
+
+def test_bundled_demo_index_is_loadable_and_attributed():
+    loaded = load_index(ROOT / "demo_index")
+
+    assert loaded.manifest["count"] == 1000
+    assert loaded.manifest["dimension"] == 384
+    assert loaded.manifest["model"] == "sentence-transformers/all-MiniLM-L6-v2"
+    assert loaded.manifest["dataset"] == "MovieLens Latest Small"
+    assert loaded.manifest["data_license"] == "MOVIELENS_README.txt"
+    assert loaded.vectors.shape == (1000, 384)
+    assert (ROOT / "demo_index" / loaded.manifest["data_license"]).is_file()
 
 
 def test_id_rating_recommendation_does_not_load_text_model(tmp_path, monkeypatch):

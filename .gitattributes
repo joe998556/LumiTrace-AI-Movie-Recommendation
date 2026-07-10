@@ -1,0 +1,4 @@
+# Preserve the upstream MovieLens notice byte-for-byte without treating its
+# Setext title underline as a merge-conflict marker during diff checks.
+demo_index/MOVIELENS_README.txt -diff
+demo_index/vectors.npy binary

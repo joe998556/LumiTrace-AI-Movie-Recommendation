@@ -1,7 +1,8 @@
-"""One-command TMDB data downloader and BERT vector builder for LumiTrace.
+"""Authorized-data TMDB downloader and semantic vector builder for LumiTrace.
 
 This script intentionally never writes API keys to disk. It reads TMDB_API_KEY
-from the current environment/.env or asks for it interactively.
+from the current environment/.env or asks for it interactively. TMDB's current
+API terms restrict AI/ML uses, so this is not the public demo data path.
 """
 
 from __future__ import annotations
@@ -127,6 +128,11 @@ def parse_args() -> argparse.Namespace:
         help="Embedding text mode. Use overview for baseline experiments and rich for LumiTrace.",
     )
     parser.add_argument("--overwrite", action="store_true", help="Rebuild vectors even if output already exists.")
+    parser.add_argument(
+        "--acknowledge-data-rights",
+        action="store_true",
+        help="Confirm that you have permission to use the selected API content for AI/ML indexing.",
+    )
     return parser.parse_args()
 
 
@@ -490,6 +496,13 @@ def main() -> int:
         output = ROOT / output
     if args.output_format == "legacy-json" and output.suffix.lower() != ".json":
         raise SystemExit("--output-format legacy-json requires an --output path ending in .json")
+
+    if not args.acknowledge_data_rights:
+        raise SystemExit(
+            "This builder embeds API content for AI/ML use. Review the current provider terms and obtain any "
+            "required permission, then rerun with --acknowledge-data-rights. The bundled MovieLens demo index "
+            "does not require this command."
+        )
 
     key = resolve_tmdb_key(args.tmdb_key)
     device = resolve_device(args.device)

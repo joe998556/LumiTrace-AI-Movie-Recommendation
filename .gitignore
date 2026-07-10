@@ -12,6 +12,7 @@ lumitrace-index*.zip
 *.pth
 *.pkl
 *.npy
+!demo_index/vectors.npy
 *.npz
 scratch/
 paper/

@@ -54,6 +54,8 @@ if not LOCAL_VECTOR_FILE:
         LOCAL_VECTOR_FILE = "movie_index"
     elif (ROOT / "movie_vectors.json").exists():
         LOCAL_VECTOR_FILE = "movie_vectors.json"
+    elif (ROOT / "demo_index").exists():
+        LOCAL_VECTOR_FILE = "demo_index"
 if LOCAL_VECTOR_FILE:
     configured_index = Path(LOCAL_VECTOR_FILE)
     if not configured_index.is_absolute():

@@ -619,7 +619,10 @@
             if (payload.user_movie_ids.length) {
               try {
                 const d = await window.LumiTraceRecs.requestRecommendations(API, payload);
-                const res = window.LumiTraceRecs.normalizeResults(d.results || []);
+                const res = await window.LumiTraceRecs.hydrateResults(
+                  d.results || [],
+                  (id) => tmdb(`movie/${id}?language=${LANG}`),
+                );
                 if (res.length) { res.forEach((m) => seenRec.add(m.id)); appendCards(res); document.getElementById("recReason").textContent = `BERT · ${favs.length} favorites`; recPage = 2; recLoading = false; document.getElementById("recLoader").style.opacity = "0"; return; }
               } catch {}
             }

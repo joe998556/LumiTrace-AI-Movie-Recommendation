@@ -384,7 +384,7 @@ def metadata_fallback(excluded: set[int], top_k: int) -> list[dict[str, Any]]:
     ordered = sorted(MOVIES, key=lambda movie: (*quality_prior(movie), movie["vote_count"]), reverse=True)
     results: list[dict[str, Any]] = []
     for movie in ordered:
-        if movie["id"] in excluded or not movie["poster_path"] or movie["vote_count"] < MIN_VOTE_COUNT:
+        if movie["id"] in excluded or movie["vote_count"] < MIN_VOTE_COUNT:
             continue
         quality, _confidence = quality_prior(movie)
         results.append(
@@ -560,7 +560,7 @@ def recommend(data: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any
     candidates: list[dict[str, Any]] = []
     for shortlist_index, position in enumerate(positions.detach().cpu().tolist()):
         movie = MOVIES[position]
-        if movie["id"] in excluded or not movie["poster_path"] or movie["vote_count"] < MIN_VOTE_COUNT:
+        if movie["id"] in excluded or movie["vote_count"] < MIN_VOTE_COUNT:
             continue
         movie_genres = movie["genre_ids"]
         if playlist_genres and not playlist_genres.intersection(movie_genres):
