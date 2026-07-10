@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LumiTrace | Settings</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --glass-bg: rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.1);
+      --glass-border-hover: rgba(255,255,255,0.2);
+      --primary: #14b8a6;
+      --secondary: #5eead4;
+      --gradient: linear-gradient(135deg, #14b8a6, #5eead4);
+      --text-primary: #f0f0ff;
+      --text-secondary: #a0a0c0;
+      --text-muted: #606080;
+    }
+    * { box-sizing: border-box; margin: 0; }
+    body { background: #080807; color: var(--text-primary); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.55; min-height: 100vh; overflow-x: hidden; }
+    a { color: inherit; }
+    ::selection { background: rgba(20,184,166,0.3); }
+    #starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: transparent; }
+
+    .wrap { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
+
+    header.page-head { margin-bottom: 28px; }
+    .crumb { font-size: 11px; font-weight: 600; color: var(--text-muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em; transition: color 150ms; }
+    .crumb:hover { color: var(--text-secondary); }
+    .page-title { font-family: 'Fraunces', serif; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-top: 14px; }
+    .page-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; max-width: 60ch; }
+
+    .card {
+      background: rgba(12,12,28,0.55);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 22px;
+      margin-top: 18px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .card h2 { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
+    .card .desc { font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; }
+    .card .desc code { background: rgba(255,255,255,0.07); border-radius: 4px; padding: 1px 5px; font-size: 11.5px; }
+
+    .badge { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; vertical-align: middle; margin-left: 8px; }
+    .badge.on { background: rgba(20,184,166,0.15); color: var(--secondary); border: 1px solid rgba(20,184,166,0.35); }
+    .badge.off { background: rgba(255,255,255,0.05); color: var(--text-muted); border: 1px solid var(--glass-border); }
+
+    label.field { display: block; margin-top: 14px; }
+    label.field > span { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 7px; }
+    input.in {
+      width: 100%; border: 1px solid var(--glass-border); border-radius: 10px;
+      background: rgba(255,255,255,0.03); color: var(--text-primary);
+      font-family: inherit; font-size: 13px; padding: 11px 13px; transition: border-color 150ms, background 150ms;
+    }
+    input.in:focus { outline: none; border-color: rgba(20,184,166,0.55); background: rgba(20,184,166,0.04); }
+    input.in::placeholder { color: #4a4a66; }
+
+    .row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .btn { border: none; border-radius: 10px; padding: 10px 18px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all 150ms ease-out; }
+    .btn-grad { background: var(--gradient); color: #04201c; }
+    .btn-grad:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(20,184,166,0.25); }
+    .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--glass-border); }
+    .btn-ghost:hover { border-color: var(--glass-border-hover); color: var(--text-primary); }
+
+    .status { font-size: 12px; margin-top: 12px; min-height: 1.2em; }
+    .status.ok { color: var(--secondary); }
+    .status.err { color: #f0a0a0; }
+    .status.muted { color: var(--text-muted); }
+
+    .note { font-size: 11.5px; color: var(--text-muted); margin-top: 12px; line-height: 1.5; }
+    .note strong { color: var(--text-secondary); }
+  </style>
+  <link rel="stylesheet" href="styles.css?v=teal-v1">
+</head>
+<body>
+  <canvas id="starfield"></canvas>
+  <div class="wrap">
+    <header class="page-head">
+      <a class="crumb" href="/">&#8592; Back to LumiTrace</a>
+      <h1 class="page-title">Settings</h1>
+      <p class="page-sub">Bring your own keys. TMDB preferences stay in this browser. LLM keys last for the current session unless you explicitly choose to remember them, and are never committed to the repository.</p>
+    </header>
+
+    <!-- TMDB -->
+    <section class="card">
+      <h2>TMDB API Key <span id="tmdbBadge" class="badge off">Not set</span></h2>
+      <p class="desc">Required to browse movie data. Get a free key at <code>themoviedb.org</code>. If the server already has a <code>TMDB_API_KEY</code> in its <code>.env</code>, this is optional.</p>
+      <label class="field">
+        <span>TMDB API Key</span>
+        <input id="tmdbKey" class="in" type="password" autocomplete="off" placeholder="Paste your TMDB API key">
+      </label>
+      <div class="row">
+        <button id="tmdbSave" class="btn btn-grad" type="button">Save</button>
+        <button id="tmdbClear" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+      <p id="tmdbStatus" class="status muted" aria-live="polite"></p>
+    </section>
+
+    <!-- LLM -->
+    <section class="card">
+      <h2>LLM Narrator (bring your own) <span id="llmBadge" class="badge off">Not set</span></h2>
+      <p class="desc">Optional. Adds an AI-written "why this recommendation" reason to each pick. Use any <strong>OpenAI-compatible</strong> chat endpoint (OpenAI, Ollama's <code>/v1</code>, vLLM, LM Studio, etc.). Leave blank to skip — recommendations work without it.</p>
+      <label class="field">
+        <span>API URL (OpenAI-compatible base or chat/completions)</span>
+        <input id="llmUrl" class="in" type="text" autocomplete="off" placeholder="https://api.openai.com/v1  or  http://localhost:11434/v1">
+      </label>
+      <label class="field">
+        <span>API Key (optional for local models)</span>
+        <input id="llmKey" class="in" type="password" autocomplete="off" placeholder="sk-...  (leave blank for keyless local endpoints)">
+      </label>
+      <label class="field">
+        <span>Model</span>
+        <input id="llmModel" class="in" type="text" autocomplete="off" placeholder="gpt-4.1-mini  /  llama3.1  /  qwen2.5">
+      </label>
+      <label class="remember-field" for="llmRemember">
+        <input id="llmRemember" type="checkbox">
+        <span>Remember this key on this device</span>
+      </label>
+      <div class="row">
+        <button id="llmSave" class="btn btn-grad" type="button">Save</button>
+        <button id="llmClear" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+      <p id="llmStatus" class="status muted" aria-live="polite"></p>
+      <p class="note">Your key is sent per-request to your configured BERT gateway and is not stored on the server. Public deployments reject local/private LLM URLs; enable <code>LUMITRACE_ALLOW_PRIVATE_LLM=true</code> only for a self-hosted BERT process.</p>
+    </section>
+
+    <!-- BERT override -->
+    <section class="card">
+      <h2>BERT Service URL <span id="searchBadge" class="badge off">Server default</span></h2>
+      <p class="desc">Advanced. Overrides the server's <code>REMOTE_SEARCH_URL</code> so you can point semantic search at your own BERT service. Leave blank to use whatever the server has in its <code>.env</code>.</p>
+      <label class="field">
+        <span>BERT /search or gateway URL</span>
+        <input id="searchUrl" class="in" type="text" autocomplete="off" placeholder="https://your-bert-gateway.example/search">
+      </label>
+      <div class="row">
+        <button id="searchSave" class="btn btn-grad" type="button">Save</button>
+        <button id="searchClear" class="btn btn-ghost" type="button">Clear</button>
+      </div>
+      <p id="searchStatus" class="status muted" aria-live="polite"></p>
+      <p class="note">The override only works if the operator has <strong>not</strong> set <code>LOCK_REMOTE_SEARCH_URL=true</code> on the server (public deployments should lock it to prevent the server from forwarding to arbitrary hosts).</p>
+      <p id="searchLockNote" class="note" hidden>The server has locked the semantic target. Your browser cannot redirect requests to another host.</p>
+    </section>
+
+    <!-- Test -->
+    <section class="card">
+      <h2>Test recommendation pipeline</h2>
+      <p class="desc">Sends one tiny semantic query through the backend using the settings above and reports what came back.</p>
+      <div class="row">
+        <button id="testBtn" class="btn btn-grad" type="button">Run test</button>
+      </div>
+      <p id="testStatus" class="status muted" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <script src="sync.js?v=teal-v1"></script>
+  <script src="recommendation-core.js?v=lite-1"></script>
+  <script>
+    const API = "http://localhost:8080/api";
+    const TMDB_KEY = "lumitrace_tmdb_key";
+    const LLM_KEY = "lumitrace_llm";
+    const SEARCH_KEY = "lumitrace_search_url";
+
+    const $ = (id) => document.getElementById(id);
+    const setStatus = (el, msg, cls) => { el.textContent = msg; el.className = "status " + (cls || "muted"); };
+
+    // --- TMDB ---
+    function loadTmdb() {
+      const v = localStorage.getItem(TMDB_KEY) || "";
+      $("tmdbKey").value = v;
+      $("tmdbBadge").textContent = v ? "Set" : "Not set";
+      $("tmdbBadge").className = "badge " + (v ? "on" : "off");
+    }
+    $("tmdbSave").addEventListener("click", async () => {
+      const v = $("tmdbKey").value.trim();
+      if (!v) { setStatus($("tmdbStatus"), "Enter a key first.", "err"); return; }
+      localStorage.setItem(TMDB_KEY, v);
+      loadTmdb();
+      // Restore any favorites previously synced under this TMDB key.
+      setStatus($("tmdbStatus"), "Saved. Checking for synced favorites…", "muted");
+      const restored = await window.lumitraceSync?.pullFavorites();
+      setStatus(
+        $("tmdbStatus"),
+        restored ? "Saved. Your synced favorites were restored." : "Saved. TMDB browsing is ready.",
+        "ok"
+      );
+    });
+    $("tmdbClear").addEventListener("click", () => {
+      localStorage.removeItem(TMDB_KEY);
+      loadTmdb();
+      setStatus($("tmdbStatus"), "Cleared. Falls back to the server's .env key if set.", "muted");
+    });
+
+    // --- LLM ---
+    function getLlm() { return window.LumiTraceRecs?.getLlmConfig() || {}; }
+    function loadLlm() {
+      const c = getLlm();
+      $("llmUrl").value = c.api_url || "";
+      $("llmKey").value = c.api_key || "";
+      $("llmModel").value = c.model || "";
+      $("llmRemember").checked = Boolean(localStorage.getItem(window.LumiTraceRecs?.KEYS.llmRemembered || "lumitrace_llm_remembered"));
+      const on = !!(c.api_url && c.api_url.trim());
+      $("llmBadge").textContent = on ? "Set" : "Not set";
+      $("llmBadge").className = "badge " + (on ? "on" : "off");
+    }
+    $("llmSave").addEventListener("click", () => {
+      const api_url = $("llmUrl").value.trim();
+      if (!api_url) { setStatus($("llmStatus"), "Enter an API URL, or use Clear to disable.", "err"); return; }
+      if (!/^https?:\/\//i.test(api_url)) { setStatus($("llmStatus"), "API URL must start with http:// or https://", "err"); return; }
+      const cfg = { api_url, api_key: $("llmKey").value.trim(), model: $("llmModel").value.trim() };
+      window.LumiTraceRecs?.saveLlmConfig(cfg, $("llmRemember").checked);
+      loadLlm();
+      setStatus($("llmStatus"), "Saved. AI reasons will be generated on your recommendations.", "ok");
+    });
+    $("llmClear").addEventListener("click", () => {
+      window.LumiTraceRecs?.clearLlmConfig();
+      loadLlm();
+      setStatus($("llmStatus"), "Cleared. Recommendations still work, just without AI reasons.", "muted");
+    });
+
+    // --- BERT override ---
+    function loadSearch() {
+      const v = localStorage.getItem(SEARCH_KEY) || "";
+      $("searchUrl").value = v;
+      $("searchBadge").textContent = v ? "Custom" : "Server default";
+      $("searchBadge").className = "badge " + (v ? "on" : "off");
+    }
+    async function loadSearchPolicy() {
+      try {
+        const response = await fetch(`${API}/health`);
+        const health = await response.json();
+        const locked = Boolean(health.integrations?.remote_search_locked);
+        $("searchUrl").disabled = locked;
+        $("searchSave").disabled = locked;
+        $("searchLockNote").hidden = !locked;
+        window.__lumitraceSearchLocked = locked;
+        if (locked) {
+          $("searchBadge").textContent = "Server locked";
+          $("searchBadge").className = "badge on";
+        } else {
+          loadSearch();
+        }
+      } catch { /* Settings remain usable for a local backend. */ }
+    }
+    $("searchSave").addEventListener("click", () => {
+      if (window.__lumitraceSearchLocked) { setStatus($("searchStatus"), "The server has locked this setting.", "err"); return; }
+      const v = $("searchUrl").value.trim();
+      if (!v) { setStatus($("searchStatus"), "Empty — use Clear to fall back to the server default.", "err"); return; }
+      if (!/^https?:\/\//i.test(v)) { setStatus($("searchStatus"), "URL must start with http:// or https://", "err"); return; }
+      localStorage.setItem(SEARCH_KEY, v);
+      loadSearch();
+      setStatus($("searchStatus"), "Saved. Semantic search will target your BERT service.", "ok");
+    });
+    $("searchClear").addEventListener("click", () => {
+      localStorage.removeItem(SEARCH_KEY);
+      loadSearch();
+      setStatus($("searchStatus"), "Cleared. Using the server's REMOTE_SEARCH_URL.", "muted");
+    });
+
+    // --- Test pipeline ---
+    $("testBtn").addEventListener("click", async () => {
+      setStatus($("testStatus"), "Running...", "muted");
+      const llm = getLlm();
+      const body = { overviews: ["a quiet rainy european mystery with a subtle twist"], top_k: 3 };
+      if (llm.api_url) body.llm = llm;
+      const override = localStorage.getItem(SEARCH_KEY) || "";
+      if (override && !window.__lumitraceSearchLocked) body.remote_search_url = override;
+      try {
+        const r = await fetch(`${API}/semantic-recommendations`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        const d = await r.json();
+        const results = (d.results || []).length;
+        if (d.error) { setStatus($("testStatus"), "Backend error: " + d.error, "err"); return; }
+        if (!results) { setStatus($("testStatus"), (d.fallback || "No results") + " — check the BERT URL / server REMOTE_SEARCH_URL.", "err"); return; }
+        const llmOn = d.llm && d.llm.enabled;
+        const hasReason = (d.results || []).some((m) => m.llm_reason);
+        setStatus($("testStatus"), `OK — ${results} results from BERT. LLM narrator: ${llmOn ? "enabled" : "off"}${hasReason ? " (reasons present)" : ""}.`, "ok");
+      } catch (e) {
+        setStatus($("testStatus"), "Request failed: " + e.message + " — is the Flask backend running on :8080?", "err");
+      }
+    });
+
+    // Starfield (matches the rest of the app)
+    (function () {
+      const canvas = $("starfield");
+      const ctx = canvas.getContext('2d');
+      let w, h, stars = [];
+      function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; stars = Array.from({ length: 90 }, () => ({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.1 + 0.2, a: Math.random() * 0.5 + 0.1 })); }
+      function draw() { ctx.clearRect(0, 0, w, h); for (const s of stars) { ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(94,234,212,${s.a})`; ctx.fill(); } }
+      resize(); draw();
+      window.addEventListener('resize', () => { resize(); draw(); });
+    })();
+
+    loadTmdb(); loadLlm(); loadSearch(); loadSearchPolicy();
+  </script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LumiTrace is a local-first AI movie recommendation workspace powered by TMDB metadata and optional BERT semantic vectors.">
+  <meta property="og:title" content="LumiTrace AI Movie Recommendation">
+  <meta property="og:description" content="Save films you like, build a taste profile, and discover movies that fit your viewing style.">
+  <title>LumiTrace | AI movie recommendation</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=teal-v1">
+  <script src="dropdown.js?v=teal-v1" defer></script>
+  <script src="sync.js?v=teal-v1" defer></script>
+  <script src="recommendation-core.js?v=lite-1" defer></script>
+  <script src="script.js?v=atelier-v1" defer></script>
+  <script src="experience.js?v=lite-1" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to movie browser</a>
+
+  <div class="page-shell">
+    <nav class="nav-island reveal" aria-label="Primary navigation">
+      <a class="brand-mark" href="/">
+        <span class="brand-glyph">L</span>
+        <span class="brand-copy">
+          <span class="brand-title">LumiTrace</span>
+          <span class="brand-subtitle">Taste engine</span>
+        </span>
+      </a>
+      <div class="nav-links">
+        <a class="nav-link" href="ALGORITHM.md">Algorithm</a>
+        <a class="nav-link" href="/favorites.html" target="_blank" rel="noopener">Collection</a>
+        <a class="nav-link" href="/settings.html">Settings</a>
+        <a class="nav-link" href="README.md">Docs</a>
+      </div>
+    </nav>
+
+    <main id="main">
+      <section class="workspace-hero">
+        <div class="bezel reveal">
+          <div class="bezel-core hero-core">
+            <div>
+              <span class="eyebrow">AI movie recommendation</span>
+              <h1 class="hero-title">Trace your taste.</h1>
+              <p class="hero-copy">Add your TMDB key in Settings, browse live movie data, save films that feel right, then let LumiTrace build a recommendation profile from metadata and optional BERT vectors.</p>
+            </div>
+            <div class="hero-metrics" aria-label="Project capabilities">
+              <div class="metric">
+                <strong>30k</strong>
+                <span>xlarge vector target</span>
+              </div>
+              <div class="metric">
+                <strong>BERT</strong>
+                <span>semantic mode</span>
+              </div>
+              <div class="metric">
+                <strong>local</strong>
+                <span>browser favorites</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="bezel reveal" aria-label="Connection status">
+          <div class="bezel-core control-core">
+            <div>
+              <p class="section-kicker">Start here</p>
+              <h2 class="panel-title">Connections</h2>
+              <p class="panel-copy">API keys live on the Settings page and stay in your browser localStorage. Bring your own TMDB key and, optionally, your own LLM.</p>
+            </div>
+
+            <ul id="connList" class="conn-list" aria-live="polite">
+              <li id="connTmdb" class="conn-row"><span class="conn-dot"></span><span class="conn-label">TMDB</span><span class="conn-state">checking...</span></li>
+              <li id="connBert" class="conn-row"><span class="conn-dot"></span><span class="conn-label">BERT semantic</span><span class="conn-state">checking...</span></li>
+              <li id="connLlm" class="conn-row"><span class="conn-dot"></span><span class="conn-label">LLM narrator</span><span class="conn-state">checking...</span></li>
+            </ul>
+
+            <div class="button-row">
+              <a id="openSettingsBtn" class="btn btn-primary" href="/settings.html">
+                Open Settings
+                <span class="btn-icon">-&gt;</span>
+              </a>
+            </div>
+
+            <p id="keyStatus" class="status-line" aria-live="polite"></p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="bezel browse-shell reveal" aria-label="Movie browser">
+        <div class="bezel-core browse-core">
+          <div class="browse-topline">
+            <div>
+              <p class="section-kicker">Browse</p>
+              <h2 id="categoryTitle" class="section-title">Trending</h2>
+              <p id="categoryDesc" class="section-desc">Current TMDB trends.</p>
+            </div>
+            <div class="search-bar" role="search">
+              <input id="searchInput" class="input" placeholder="Search movies..." aria-label="Search movies">
+              <button id="searchBtn" class="btn btn-ghost" type="button">Search</button>
+            </div>
+          </div>
+
+          <div id="categoryTabs" class="tab-rail" aria-label="Movie categories">
+            <button data-category="trending" class="category-tab active" type="button">Trending</button>
+            <button data-category="popular" class="category-tab" type="button">Popular</button>
+            <button data-category="top_rated" class="category-tab" type="button">Top rated</button>
+            <button data-category="now_playing" class="category-tab" type="button">Now playing</button>
+            <button data-category="upcoming" class="category-tab" type="button">Upcoming</button>
+          </div>
+
+          <div id="genreChips" class="chip-rail" aria-label="Genres">
+            <button data-genre="28" class="genre-chip" type="button">Action</button>
+            <button data-genre="12" class="genre-chip" type="button">Adventure</button>
+            <button data-genre="16" class="genre-chip" type="button">Animation</button>
+            <button data-genre="35" class="genre-chip" type="button">Comedy</button>
+            <button data-genre="80" class="genre-chip" type="button">Crime</button>
+            <button data-genre="99" class="genre-chip" type="button">Documentary</button>
+            <button data-genre="18" class="genre-chip" type="button">Drama</button>
+            <button data-genre="10751" class="genre-chip" type="button">Family</button>
+            <button data-genre="14" class="genre-chip" type="button">Fantasy</button>
+            <button data-genre="27" class="genre-chip" type="button">Horror</button>
+            <button data-genre="9648" class="genre-chip" type="button">Mystery</button>
+            <button data-genre="10749" class="genre-chip" type="button">Romance</button>
+            <button data-genre="878" class="genre-chip" type="button">Sci-Fi</button>
+            <button data-genre="53" class="genre-chip" type="button">Thriller</button>
+            <button data-genre="37" class="genre-chip" type="button">Western</button>
+          </div>
+
+          <section class="zero-shot-panel" aria-label="Zero-shot semantic playlist">
+            <div>
+              <p class="section-kicker">Zero-shot playlist</p>
+              <h3 class="zero-shot-title">Describe the viewing mood.</h3>
+              <p class="zero-shot-copy">Turn an abstract scene into a semantic movie list without saving or rating anything first.</p>
+            </div>
+            <label class="field-label" for="playlistPrompt">
+              Scene prompt
+              <textarea id="playlistPrompt" class="input textarea zero-shot-input" placeholder="A rainy-night European mystery with a quiet pace and a subtle twist..."></textarea>
+            </label>
+            <div class="zero-shot-controls">
+              <label class="field-label compact-label" for="playlistLanguage">
+                Language
+                <select id="playlistLanguage" class="input select-input">
+                  <option value="">Auto</option>
+                  <option value="en">English</option>
+                  <option value="fr">French</option>
+                  <option value="de">German</option>
+                  <option value="es">Spanish</option>
+                  <option value="it">Italian</option>
+                  <option value="ja">Japanese</option>
+                  <option value="ko">Korean</option>
+                  <option value="zh">Chinese</option>
+                </select>
+              </label>
+              <label class="field-label compact-label" for="playlistGenre">
+                Genre
+                <select id="playlistGenre" class="input select-input">
+                  <option value="">Auto</option>
+                  <option value="9648">Mystery</option>
+                  <option value="53">Thriller</option>
+                  <option value="80">Crime</option>
+                  <option value="18">Drama</option>
+                  <option value="878">Sci-Fi</option>
+                  <option value="27">Horror</option>
+                  <option value="10749">Romance</option>
+                </select>
+              </label>
+              <button id="playlistBtn" class="btn btn-primary" type="button">
+                Generate semantic playlist
+                <span class="btn-icon">-&gt;</span>
+              </button>
+            </div>
+          </section>
+
+          <section class="experience-rail" aria-label="Taste tools">
+            <div class="experience-rail-copy">
+              <p class="section-kicker">Taste tools</p>
+              <h3 class="zero-shot-title">Choose with more intent.</h3>
+            </div>
+            <div class="experience-actions">
+              <button id="tonightBtn" class="tool-pill" type="button"><span>Tonight</span><i>01</i></button>
+              <button id="coupleBtn" class="tool-pill" type="button"><span>Two people</span><i>02</i></button>
+              <button id="tasteMapBtn" class="tool-pill" type="button"><span>Taste map</span><i>03</i></button>
+              <button id="journalBtn" class="tool-pill" type="button"><span>Journal</span><i>04</i></button>
+              <button id="dataBtn" class="tool-pill" type="button"><span>Import / export</span><i>05</i></button>
+            </div>
+          </section>
+
+          <section id="movieGrid" class="movie-grid" aria-live="polite"></section>
+        </div>
+      </section>
+
+      <footer class="app-footer">
+        Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.
+      </footer>
+    </main>
+  </div>
+
+  <div id="ratingModal" class="modal" style="display:none; opacity:0;">
+    <div id="ratingBackdrop" class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">Rate this movie</span>
+        <button id="closeRatingBtn" class="icon-button" type="button" aria-label="Close rating modal">x</button>
+      </div>
+      <div id="ratingBody" class="modal-body">
+        <div class="rating-preview">
+          <img id="ratingPoster" alt="">
+          <div>
+            <div id="ratingTitle" class="panel-title"></div>
+            <div id="ratingMeta" class="panel-copy"></div>
+          </div>
+        </div>
+        <label class="field-label">
+          Score
+          <div id="ratingScoreBtns" class="score-grid"></div>
+        </label>
+        <label class="field-label rating-comment">
+          Comment (optional)
+          <textarea id="ratingComment" class="input textarea" placeholder="What did you think?"></textarea>
+        </label>
+        <div class="button-row rating-actions">
+          <button id="saveRatingBtn" class="btn btn-primary" type="button">Save</button>
+          <button id="deleteRatingBtn" class="btn btn-ghost" type="button" style="display:none;">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="movieModal" class="modal" style="display:none; opacity:0;">
+    <div id="movieBackdrop" class="modal-backdrop"></div>
+    <div class="movie-modal-card">
+      <button id="closeMovieBtn" class="icon-button movie-close" type="button" aria-label="Close details">x</button>
+      <div id="movieModalBody" class="movie-modal-body"></div>
+    </div>
+  </div>
+
+  <button id="recommendFab" class="recommend-fab" type="button" aria-label="Open recommendations">
+    <span class="fab-symbol">AI</span>
+    <span class="fab-copy">
+      <strong>Recommendations</strong>
+      <small>For you</small>
+    </span>
+    <span id="fabBadge" class="fab-badge">0</span>
+  </button>
+
+  <div id="explanationModal" class="modal" style="display:none; opacity:0;">
+    <div id="explanationBackdrop" class="modal-backdrop"></div>
+    <div class="explanation-content">
+      <div class="modal-head">
+        <span class="modal-title">Why this recommendation?</span>
+        <button id="closeExplanationBtn" class="icon-button" type="button" aria-label="Close explanation">x</button>
+      </div>
+      <div id="explanationBody" class="modal-body explanation-body"></div>
+    </div>
+  </div>
+
+  <div id="recommendOverlay" class="recommend-overlay">
+    <div id="overlayBackdrop"></div>
+  </div>
+
+  <div id="recommendPanel" class="recommend-panel">
+    <div class="recommend-panel-core">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Recommendations</div>
+          <div id="recommendationReason" class="panel-copy">Scroll for more.</div>
+        </div>
+        <button id="closePanelBtn" class="icon-button" type="button" aria-label="Close recommendations">x</button>
+      </div>
+      <div class="panel-subhead">
+        <a class="collection-pill" href="/favorites.html" target="_blank" rel="noopener">
+          Collection <span id="panelFavCount"></span>
+        </a>
+        <span id="panelFavSummary" class="panel-summary"></span>
+      </div>
+      <div class="rec-tuning">
+        <label class="diversity-control" for="diversityRange">
+          <span>Familiar</span>
+          <input id="diversityRange" type="range" min="0" max="100" value="55" aria-label="Recommendation variety">
+          <span>Surprise</span>
+        </label>
+        <button id="rouletteBtn" class="roulette-btn" type="button">Pick one <span>o</span></button>
+      </div>
+      <div id="recScrollArea" class="scroll-area">
+        <div id="recommendationGrid" class="recommendation-grid">
+          <div id="recSentinel" class="grid-sentinel">
+            <div class="loader-dots is-idle" id="recLoaderDots"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll(".reveal").forEach((node) => observer.observe(node));
+    });
+  </script>
+</body>
+</html>

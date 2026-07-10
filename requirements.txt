@@ -1,0 +1,8 @@
+flask
+flask-cors
+python-dotenv
+requests
+werkzeug
+numpy
+torch
+transformers
