@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -27,10 +28,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,6 +44,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.CircularProgressIndicator
@@ -73,6 +80,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -81,18 +89,19 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.lumitrace.app.data.Movie
 import com.lumitrace.app.data.FeedbackKind
 import com.lumitrace.app.data.ViewingContext
 import com.lumitrace.app.data.ViewingProfile
-import com.lumitrace.app.integration.EdgeGalleryBridge
 import com.lumitrace.app.ui.AppTheme
 import com.lumitrace.app.ui.Clay
 import com.lumitrace.app.ui.Dim
@@ -117,6 +126,7 @@ import com.lumitrace.app.ui.TonightUiState
 import com.lumitrace.app.recommendation.RecommendationTrace
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlin.math.absoluteValue
 
 private val HeavyEase = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
 private val SpringEase = CubicBezierEasing(0.32f, 0.72f, 0f, 1f)
@@ -171,8 +181,6 @@ fun MovieScreen(viewModel: MovieViewModel, openTonight: Boolean = false) {
     var traktClientSecretInput by remember { mutableStateOf(traktClientSecret) }
     var destination by remember(openTonight) { mutableStateOf(if (openTonight) AppDestination.Tonight else AppDestination.Home) }
     var heroIndex by remember { mutableIntStateOf(0) }
-    val context = LocalContext.current
-
     // Handle back button press
     BackHandler(destination != AppDestination.Home) {
         destination = AppDestination.Home
@@ -343,23 +351,6 @@ fun MovieScreen(viewModel: MovieViewModel, openTonight: Boolean = false) {
                                         title = state.aiTitle ?: "Recommended for you",
                                         copy = state.aiSummary ?: "Scroll down for more locally ranked matches."
                                     )
-                                    EdgeGalleryPanel(
-                                        isInstalled = EdgeGalleryBridge.isInstalled(context),
-                                        onOpen = {
-                                            val result = EdgeGalleryBridge.openRecommendationExplanation(
-                                                context = context,
-                                                watchedMovies = watchedMovies.toList(),
-                                                journalEntries = journalEntries,
-                                                recommendations = state.movies
-                                            )
-                                            val message = when (result) {
-                                                EdgeGalleryBridge.LaunchResult.Opened -> "Prompt sent to AI Edge Gallery."
-                                                EdgeGalleryBridge.LaunchResult.StoreOpened -> "Install AI Edge Gallery, then try again."
-                                                EdgeGalleryBridge.LaunchResult.Unavailable -> "AI Edge Gallery is unavailable on this phone."
-                                            }
-                                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                                        }
-                                    )
                                 }
                             }
                         }
@@ -433,9 +424,10 @@ fun MovieScreen(viewModel: MovieViewModel, openTonight: Boolean = false) {
                     Reveal(index = 1) {
                         TonightScreen(
                             state = tonightUiState,
+                            watchedMovieIds = watchedMovieIds,
                             onBuild = viewModel::buildTonight,
                             onMarkWatched = viewModel::toggleWatched,
-                            onBackHome = { destination = AppDestination.Home }
+                            onSelect = { selectedMovie = it }
                         )
                     }
                 }
@@ -666,7 +658,7 @@ private fun SettingsScreen(
                     lineHeight = 18.sp
                 )
                 Text(
-                    "Optional account synchronization is powered by Trakt. Google AI Edge Gallery is opened only when you request an explanation; its installed model and generated answer remain inside that app.",
+                    "Optional account synchronization is powered by Trakt and runs only when you explicitly import or upload.",
                     color = Muted,
                     fontSize = 12.sp,
                     lineHeight = 18.sp
@@ -806,40 +798,6 @@ private fun TraktPanel(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun EdgeGalleryPanel(
-    isInstalled: Boolean,
-    onOpen: () -> Unit
-) {
-    DoubleBezel(radius = 26.dp, innerRadius = 20.dp) {
-        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Eyebrow("Optional explanation")
-                    Spacer(modifier = Modifier.height(7.dp))
-                    Text("Google AI Edge Gallery", color = LumiText, fontWeight = FontWeight.ExtraBold, fontSize = 16.sp)
-                }
-                StatusDot(active = isInstalled)
-            }
-            Text(
-                if (isInstalled) {
-                    "Send this local result and a limited taste summary directly to your installed Gemma-4-E4B-it model. Generation opens and remains inside Gallery."
-                } else {
-                    "Install Google AI Edge Gallery to explain this result with an on-device model. LumiTrace does not copy or access Gallery's private model files."
-                },
-                color = LumiTextSoft,
-                fontSize = 12.sp,
-                lineHeight = 18.sp
-            )
-            LumiPillButton(
-                label = if (isInstalled) "Explain with Gemma 4" else "Get AI Edge Gallery",
-                secondary = !isInstalled,
-                onClick = onOpen
-            )
         }
     }
 }
@@ -1408,12 +1366,14 @@ private fun InsightsScreen(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun TonightScreen(
     state: TonightUiState,
+    watchedMovieIds: Set<Int>,
     onBuild: (ViewingContext) -> Unit,
     onMarkWatched: (Movie) -> Unit,
-    onBackHome: () -> Unit
+    onSelect: (Movie) -> Unit
 ) {
     var maxRuntime by remember { mutableStateOf("") }
     var minYear by remember { mutableStateOf("") }
@@ -1422,91 +1382,397 @@ private fun TonightScreen(
     var companion by remember { mutableStateOf<String?>(null) }
     var language by remember { mutableStateOf<String?>(null) }
     var genreIds by remember { mutableStateOf(setOf<Int>()) }
-    DoubleBezel {
-        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Eyebrow("Tonight")
-            Text("Choose one film.", color = LumiText, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-            Text("Local vector ranking plus direct TMDB details. No LumiTrace server or account is used.", color = LumiTextSoft, fontSize = 13.sp)
-            BasicTextField(
-                value = maxRuntime,
-                onValueChange = { maxRuntime = it.filter(Char::isDigit).take(3) },
-                textStyle = TextStyle(color = LumiText, fontSize = 14.sp),
-                cursorBrush = SolidColor(Teal),
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.06f)).padding(14.dp),
-                decorationBox = { inner ->
-                    if (maxRuntime.isBlank()) Text("Maximum runtime in minutes (optional)", color = Dim, fontSize = 13.sp)
-                    inner()
+
+    Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        SectionHeader(
+            eyebrow = "Tonight",
+            title = "Choose the feeling, not the feed.",
+            copy = "Set only what matters. LumiTrace combines those choices with your local taste profile."
+        )
+
+        DoubleBezel(
+            modifier = Modifier.testTag("tonight_filters"),
+            radius = 30.dp,
+            innerRadius = 24.dp
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    TonightNumberField(
+                        label = "Runtime",
+                        hint = "e.g. 120 min",
+                        value = maxRuntime,
+                        maxLength = 3,
+                        onValueChange = { maxRuntime = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                    TonightNumberField(
+                        label = "From year",
+                        hint = "e.g. 2010",
+                        value = minYear,
+                        maxLength = 4,
+                        onValueChange = { minYear = it },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf("warm", "tense", "light", "cerebral").forEach { value ->
-                    SmallTextButton(if (mood == value) "✓ $value" else value) { mood = if (mood == value) null else value }
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf("en", "ja", "ko", "zh").forEach { value ->
-                    SmallTextButton(if (language == value) "✓ $value" else value) { language = if (language == value) null else value }
-                }
-            }
-            BasicTextField(
-                value = minYear,
-                onValueChange = { minYear = it.filter(Char::isDigit).take(4) },
-                textStyle = TextStyle(color = LumiText, fontSize = 14.sp),
-                cursorBrush = SolidColor(Teal),
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.06f)).padding(14.dp),
-                decorationBox = { inner ->
-                    if (minYear.isBlank()) Text("Released from year (optional)", color = Dim, fontSize = 13.sp)
-                    inner()
-                }
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf("fast", "slow").forEach { value ->
-                    SmallTextButton(if (pace == value) "[$value]" else "$value pace") { pace = if (pace == value) null else value }
-                }
-                listOf("solo", "date", "family", "friends").forEach { value ->
-                    SmallTextButton(if (companion == value) "[$value]" else value) { companion = if (companion == value) null else value }
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                listOf(28 to "action", 35 to "comedy", 18 to "drama", 878 to "sci-fi").forEach { (id, label) ->
-                    SmallTextButton(if (id in genreIds) "[$label]" else label) {
-                        genreIds = if (id in genreIds) genreIds - id else genreIds + id
-                    }
-                }
-            }
-            LumiPillButton(
-                label = "Build local shortlist",
-                onClick = {
-                    onBuild(ViewingContext(
-                        maxRuntimeMinutes = maxRuntime.toIntOrNull(),
-                        minYear = minYear.toIntOrNull(),
-                        language = language,
-                        genreIds = genreIds,
-                        mood = mood,
-                        pace = pace,
-                        companion = companion
-                    ))
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-            when (state) {
-                TonightUiState.Idle -> StatusPanel("Choose any local constraints, then build three on-device picks.")
-                TonightUiState.Loading -> LoadingPanel()
-                is TonightUiState.Error -> StatusPanel(state.message)
-                is TonightUiState.Success -> {
-                    Text("Your three picks", color = LumiText, fontWeight = FontWeight.Bold)
-                    state.movies.forEach { movie ->
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(movie.title, color = LumiText, fontWeight = FontWeight.SemiBold)
-                            Text(movie.overview.take(96), color = Dim, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+
+                TonightChoiceGroup(
+                    label = "Mood",
+                    options = listOf("warm" to "Warm", "tense" to "Tense", "light" to "Light", "cerebral" to "Cerebral"),
+                    selected = mood,
+                    onSelect = { mood = it }
+                )
+                TonightChoiceGroup(
+                    label = "Language",
+                    options = listOf("en" to "English", "ja" to "Japanese", "ko" to "Korean", "zh" to "Chinese"),
+                    selected = language,
+                    onSelect = { language = it }
+                )
+                TonightChoiceGroup(
+                    label = "Pace",
+                    options = listOf("fast" to "Fast", "slow" to "Slow"),
+                    selected = pace,
+                    onSelect = { pace = it }
+                )
+                TonightChoiceGroup(
+                    label = "Company",
+                    options = listOf("solo" to "Solo", "date" to "Date", "family" to "Family", "friends" to "Friends"),
+                    selected = companion,
+                    onSelect = { companion = it }
+                )
+
+                Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    TonightFilterLabel("Genre", "Choose more than one")
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(28 to "Action", 35 to "Comedy", 18 to "Drama", 878 to "Sci-fi").forEach { (id, label) ->
+                            TonightChoiceChip(
+                                label = label,
+                                selected = id in genreIds,
+                                onClick = {
+                                    genreIds = if (id in genreIds) genreIds - id else genreIds + id
+                                }
+                            )
                         }
-                        LumiPillButton(label = "Watched", onClick = { onMarkWatched(movie) })
-                    }
                     }
                 }
+
+                LumiPillButton(
+                    label = if (state == TonightUiState.Loading) "Building shortlist" else "Draw three local picks",
+                    enabled = state != TonightUiState.Loading,
+                    onClick = {
+                        onBuild(
+                            ViewingContext(
+                                maxRuntimeMinutes = maxRuntime.toIntOrNull(),
+                                minYear = minYear.toIntOrNull(),
+                                language = language,
+                                genreIds = genreIds,
+                                mood = mood,
+                                pace = pace,
+                                companion = companion
+                            )
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                when (state) {
+                    TonightUiState.Idle -> Text(
+                        "No filters are required. Draw whenever your taste profile is ready.",
+                        color = Dim,
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
+                    )
+                    TonightUiState.Loading -> LoadingPanel()
+                    is TonightUiState.Error -> StatusPanel(state.message)
+                    is TonightUiState.Success -> Unit
+                }
             }
-            LumiPillButton(label = "Back to home", onClick = onBackHome, modifier = Modifier.fillMaxWidth())
+        }
+
+        if (state is TonightUiState.Success) {
+            TonightPickDeck(
+                movies = state.movies,
+                watchedMovieIds = watchedMovieIds,
+                onMarkWatched = onMarkWatched,
+                onSelect = onSelect
+            )
+        }
+    }
+}
+
+@Composable
+private fun TonightNumberField(
+    label: String,
+    hint: String,
+    value: String,
+    maxLength: Int,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        Text(label, color = Teal2, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+        BasicTextField(
+            value = value,
+            onValueChange = { onValueChange(it.filter(Char::isDigit).take(maxLength)) },
+            textStyle = TextStyle(color = LumiText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold),
+            cursorBrush = SolidColor(Teal),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color.White.copy(alpha = 0.055f))
+                .padding(horizontal = 13.dp, vertical = 14.dp),
+            decorationBox = { inner ->
+                if (value.isBlank()) Text(hint, color = Dim, fontSize = 11.sp)
+                inner()
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TonightChoiceGroup(
+    label: String,
+    options: List<Pair<String, String>>,
+    selected: String?,
+    onSelect: (String?) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        TonightFilterLabel(label, "Choose one")
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { (value, display) ->
+                TonightChoiceChip(
+                    label = display,
+                    selected = selected == value,
+                    onClick = { onSelect(if (selected == value) null else value) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TonightFilterLabel(label: String, helper: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = LumiText, fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+        Text(helper, color = Dim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+    }
+}
+
+@Composable
+private fun TonightChoiceChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.96f else if (selected) 1.02f else 1f,
+        animationSpec = tween(300, easing = SpringEase),
+        label = "tonightChoiceScale"
+    )
+    Row(
+        modifier = Modifier
+            .scale(scale)
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (selected) Teal.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.055f))
+            .clickable(interactionSource = source, indication = null, onClick = onClick)
+            .padding(start = 13.dp, top = 9.dp, end = if (selected) 10.dp else 13.dp, bottom = 9.dp),
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = if (selected) Teal2 else LumiTextSoft, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        if (selected) {
+            Box(
+                modifier = Modifier
+                    .size(19.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Teal.copy(alpha = 0.22f)),
+                contentAlignment = Alignment.Center
+            ) {
+                ThinCheckIcon(color = Teal2, modifier = Modifier.size(11.dp))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun TonightPickDeck(
+    movies: List<Movie>,
+    watchedMovieIds: Set<Int>,
+    onMarkWatched: (Movie) -> Unit,
+    onSelect: (Movie) -> Unit
+) {
+    val pagerState = rememberPagerState(pageCount = { movies.size })
+    val movieKey = movies.joinToString("-") { it.id.toString() }
+    LaunchedEffect(movieKey) {
+        if (movies.isNotEmpty()) pagerState.scrollToPage(0)
+    }
+
+    Column(
+        modifier = Modifier.testTag("tonight_pick_deck"),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Eyebrow("Your draw")
+                Text("Three ways tonight could go.", color = LumiText, fontSize = 21.sp, fontWeight = FontWeight.ExtraBold)
+            }
+            Text("Swipe", color = Teal2, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            pageSize = PageSize.Fixed(306.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            pageSpacing = 12.dp,
+            beyondViewportPageCount = 1,
+            modifier = Modifier.fillMaxWidth().height(492.dp)
+        ) { page ->
+            val signedOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+            val distance = signedOffset.absoluteValue.coerceIn(0f, 1f)
+            TonightPickCard(
+                movie = movies[page],
+                index = page,
+                total = movies.size,
+                isWatched = movies[page].id in watchedMovieIds,
+                onMarkWatched = { onMarkWatched(movies[page]) },
+                onSelect = { onSelect(movies[page]) },
+                modifier = Modifier.graphicsLayer {
+                    scaleX = 1f - distance * 0.065f
+                    scaleY = 1f - distance * 0.065f
+                    alpha = 1f - distance * 0.24f
+                    rotationZ = signedOffset * -2.2f
+                    translationY = distance * 10.dp.toPx()
+                }
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            movies.indices.forEach { index ->
+                val selected = pagerState.currentPage == index
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .size(8.dp)
+                        .scale(if (selected) 1.25f else 0.8f)
+                        .alpha(if (selected) 1f else 0.35f)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(if (selected) Teal2 else LumiTextSoft)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TonightPickCard(
+    movie: Movie,
+    index: Int,
+    total: Int,
+    isWatched: Boolean,
+    onMarkWatched: () -> Unit,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    DoubleBezel(modifier = modifier, radius = 30.dp, innerRadius = 24.dp, outerPadding = 5.dp) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(326.dp)
+                    .clickable(onClickLabel = "Open ${movie.title} details", onClick = onSelect)
+            ) {
+                MoviePoster(movie = movie, imageSize = "w500", modifier = Modifier.fillMaxSize())
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Transparent, PanelStrong.copy(alpha = 0.96f))
+                            )
+                        )
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(14.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(PanelStrong.copy(alpha = 0.88f))
+                            .padding(horizontal = 11.dp, vertical = 7.dp)
+                    ) {
+                        Text("PICK ${index + 1} / $total", color = Teal2, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold)
+                    }
+                    RatingPill(movie.voteAverage)
+                }
+                Column(
+                    modifier = Modifier.align(Alignment.BottomStart).padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        movie.title,
+                        color = LumiText,
+                        fontSize = 23.sp,
+                        lineHeight = 25.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        movie.releaseDate.take(4).ifBlank { "Tap for details" },
+                        color = LumiTextSoft,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(start = 16.dp, top = 10.dp, end = 16.dp, bottom = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    movie.reason?.takeIf { it.isNotBlank() } ?: movie.overview.ifBlank { "A local taste match for tonight." },
+                    color = LumiTextSoft,
+                    fontSize = 11.sp,
+                    lineHeight = 16.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                LumiPillButton(
+                    label = watchedActionLabel(isWatched),
+                    secondary = isWatched,
+                    onClick = onMarkWatched,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -1809,6 +2075,7 @@ private fun MoviePoster(movie: Movie, imageSize: String, modifier: Modifier = Mo
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MovieDetailDialog(
     movie: Movie,
@@ -1822,88 +2089,181 @@ private fun MovieDetailDialog(
     onNoteChange: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        DoubleBezel(radius = 34.dp, innerRadius = 28.dp) {
-            Column(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.72f))
+                .padding(horizontal = 12.dp, vertical = 18.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            DoubleBezel(
+                modifier = Modifier.fillMaxWidth().fillMaxHeight(0.96f),
+                radius = 34.dp,
+                innerRadius = 28.dp,
+                outerPadding = 5.dp
             ) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Eyebrow("Movie detail")
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = movie.title,
-                            color = LumiText,
-                            style = MaterialTheme.typography.headlineSmall,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis
+                Column(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                ) {
+                    MovieDetailHero(movie = movie, onDismiss = onDismiss)
+
+                    Column(
+                        modifier = Modifier.padding(start = 18.dp, top = 18.dp, end = 18.dp, bottom = 26.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            DetailWatchedButton(
+                                isWatched = isWatched,
+                                onClick = onWatchedClick,
+                                modifier = Modifier.weight(1f)
+                            )
+                            LumiPillButton(
+                                label = "Watch queue",
+                                secondary = true,
+                                onClick = onQueueClick,
+                                modifier = Modifier.weight(0.92f).height(56.dp)
+                            )
+                        }
+
+                        movie.reason?.takeIf { it.isNotBlank() }?.let { reason ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(3.dp)
+                                        .height(58.dp)
+                                        .clip(RoundedCornerShape(2.dp))
+                                        .background(Teal)
+                                )
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Eyebrow("Why this")
+                                    Text(reason, color = LumiTextSoft, fontSize = 13.sp, lineHeight = 19.sp)
+                                }
+                            }
+                        }
+
+                        recommendationTrace?.let { trace ->
+                            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                                TonightFilterLabel("Local score trace", "Transparent ranking")
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                                ) {
+                                    TraceMetric("Semantic", trace.semanticSimilarity)
+                                    TraceMetric("Genre", trace.genreAffinity)
+                                    TraceMetric("Quality", trace.qualityPrior)
+                                    TraceMetric("Dislike", -trace.negativePreferencePenalty)
+                                    TraceMetric("Variety", -trace.diversityAdjustment)
+                                    TraceMetric("Final", trace.finalScore, emphasized = true)
+                                }
+                            }
+                        }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Eyebrow("Story")
+                            Text(
+                                movie.overview.ifBlank { "No synopsis is available from TMDB." },
+                                color = LumiTextSoft,
+                                fontSize = 14.sp,
+                                lineHeight = 21.sp
+                            )
+                        }
+
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            TonightFilterLabel("Recommendation feedback", "Optional local signal")
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                SmallTextButton("More like this") { onFeedback(FeedbackKind.MORE_LIKE_THIS) }
+                                SmallTextButton("Less like this") { onFeedback(FeedbackKind.LESS_LIKE_THIS) }
+                                SmallTextButton("Not tonight") { onFeedback(FeedbackKind.NOT_TONIGHT) }
+                                SmallTextButton("Already seen") { onFeedback(FeedbackKind.ALREADY_SEEN) }
+                                SmallTextButton("Too long") { onFeedback(FeedbackKind.TOO_LONG) }
+                                SmallTextButton("Unavailable") { onFeedback(FeedbackKind.UNAVAILABLE) }
+                            }
+                        }
+
+                        MovieJournalPanel(
+                            entry = journalEntry,
+                            onRatingChange = onRatingChange,
+                            onNoteChange = onNoteChange
                         )
                     }
-                    RoundIconButton(label = "Close", secondary = true, onClick = onDismiss) {
-                        ThinCloseIcon(color = LumiTextSoft, modifier = Modifier.size(16.dp))
-                    }
                 }
-                RatingPill(movie.voteAverage)
-                movie.reason?.takeIf { it.isNotBlank() }?.let { reason ->
-                    DoubleBezel(radius = 24.dp, innerRadius = 18.dp, outerPadding = 4.dp) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Eyebrow("Why this")
-                            Text(reason, color = LumiTextSoft, style = MaterialTheme.typography.bodyLarge)
-                        }
-                    }
-                }
-                recommendationTrace?.let { trace ->
-                    DoubleBezel(radius = 24.dp, innerRadius = 18.dp, outerPadding = 4.dp) {
-                        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            Eyebrow("Local recommendation trace")
-                            Text(
-                                "Semantic ${trace.semanticSimilarity.formatTrace()} · genre ${trace.genreAffinity.formatTrace()} · quality ${trace.qualityPrior.formatTrace()}",
-                                color = LumiTextSoft,
-                                fontSize = 12.sp
-                            )
-                            Text(
-                                "Negative preference −${trace.negativePreferencePenalty.formatTrace()} · variety −${trace.diversityAdjustment.formatTrace()} · final ${trace.finalScore.formatTrace()}",
-                                color = LumiTextSoft,
-                                fontSize = 12.sp
-                            )
-                        }
-                    }
-                }
-                Text(movie.overview, color = LumiTextSoft, style = MaterialTheme.typography.bodyLarge)
-                DetailWatchedButton(
-                    isWatched = isWatched,
-                    onClick = onWatchedClick,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                LumiPillButton(
-                    label = "Add to Watch Queue",
-                    secondary = true,
-                    onClick = onQueueClick,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Eyebrow("Recommendation feedback")
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        SmallTextButton("More like this") { onFeedback(FeedbackKind.MORE_LIKE_THIS) }
-                        SmallTextButton("Less like this") { onFeedback(FeedbackKind.LESS_LIKE_THIS) }
-                        SmallTextButton("Not tonight") { onFeedback(FeedbackKind.NOT_TONIGHT) }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                        SmallTextButton("Already seen") { onFeedback(FeedbackKind.ALREADY_SEEN) }
-                        SmallTextButton("Too long") { onFeedback(FeedbackKind.TOO_LONG) }
-                        SmallTextButton("Unavailable") { onFeedback(FeedbackKind.UNAVAILABLE) }
-                    }
-                }
-                MovieJournalPanel(
-                    entry = journalEntry,
-                    onRatingChange = onRatingChange,
-                    onNoteChange = onNoteChange
-                )
             }
         }
+    }
+}
+
+@Composable
+private fun MovieDetailHero(movie: Movie, onDismiss: () -> Unit) {
+    Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
+        MoviePoster(movie = movie, imageSize = "w780", modifier = Modifier.fillMaxSize())
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Black.copy(alpha = 0.08f), Color.Transparent, PanelStrong.copy(alpha = 0.98f))
+                    )
+                )
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Eyebrow("Movie detail")
+            RoundIconButton(label = "Close", secondary = true, onClick = onDismiss) {
+                ThinCloseIcon(color = LumiTextSoft, modifier = Modifier.size(16.dp))
+            }
+        }
+        Column(
+            modifier = Modifier.align(Alignment.BottomStart).padding(start = 18.dp, end = 18.dp, bottom = 17.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            Text(
+                text = movie.title,
+                color = LumiText,
+                fontSize = 30.sp,
+                lineHeight = 31.sp,
+                fontWeight = FontWeight.ExtraBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                RatingPill(movie.voteAverage)
+                movie.releaseDate.take(4).takeIf { it.isNotBlank() }?.let { year ->
+                    Text(year, color = LumiTextSoft, fontSize = 11.sp, fontFamily = FontFamily.Monospace)
+                }
+                movie.originalLanguage.takeIf { it.isNotBlank() }?.let { language ->
+                    Text(language.uppercase(Locale.US), color = Teal2, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TraceMetric(label: String, value: Float, emphasized: Boolean = false) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (emphasized) Teal.copy(alpha = 0.17f) else Color.White.copy(alpha = 0.05f))
+            .padding(horizontal = 10.dp, vertical = 7.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, color = if (emphasized) Teal2 else LumiTextSoft, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+        Text(value.formatTrace(), color = LumiText, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
     }
 }
 
@@ -2075,6 +2435,8 @@ private fun DotRatingSlider(value: Float, onValueChange: (Float) -> Unit) {
 
 private fun formatRating(score: Float): String = String.format(Locale.US, "%.1f", score)
 
+internal fun watchedActionLabel(isWatched: Boolean): String = if (isWatched) "Watched" else "Mark watched"
+
 @Composable
 private fun MovieNoteField(value: String, onValueChange: (String) -> Unit) {
     Box(
@@ -2153,7 +2515,7 @@ private fun DetailWatchedButton(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = if (isWatched) "Watched" else "Mark watched",
+            text = watchedActionLabel(isWatched),
             color = textColor,
             fontSize = 13.sp,
             fontWeight = FontWeight.ExtraBold

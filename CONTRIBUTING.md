@@ -29,7 +29,7 @@ Command-line checks on Windows:
 - Do not add a required LumiTrace backend, account, analytics collector, or hidden endpoint.
 - Do not commit API keys, OAuth tokens, signing keys, taste exports, or private URLs.
 - Do not silently upload watched movies, ratings, notes, or profiles.
-- Keep Trakt and AI Edge Gallery optional and explicitly initiated by the user.
+- Keep Trakt optional and explicitly initiated by the user.
 - Do not add generated datasets unless redistribution terms and provenance are documented.
 - Preserve the direct TMDB model: the user supplies a key and the app calls TMDB over HTTPS.
 

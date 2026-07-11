@@ -15,8 +15,7 @@ Non-sensitive hardening suggestions may be filed as normal issues.
 LumiTrace has no account or first-party backend. The Android app communicates directly with:
 
 - TMDB over HTTPS after the user enters a personal API key;
-- Trakt over HTTPS only after the user configures and authorizes that optional integration;
-- Google AI Edge Gallery through an explicit Android intent when the user requests an explanation.
+- Trakt over HTTPS only after the user configures and authorizes that optional integration.
 
 Watched movies, ratings, journal notes, profiles, recommendation traces, and credentials are stored in app-private Android storage. The app requests AndroidX Security encrypted preferences and falls back to app-private preferences if encrypted storage cannot be initialized on a device. Android backup is disabled.
 

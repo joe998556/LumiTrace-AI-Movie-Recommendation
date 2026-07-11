@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The LumiTrace privacy boundary: local movie taste data, direct TMDB access, and explicit optional integrations.">
+  <meta name="description" content="The LumiTrace privacy boundary: local movie taste data, direct TMDB access, and optional Trakt sync.">
   <meta name="theme-color" content="#090c0b">
   <title>Privacy | LumiTrace</title>
   <link rel="icon" href="assets/lumitrace-app-icon.png">
@@ -31,7 +31,7 @@
     <section class="privacy-matrix" data-reveal>
       <article><span>Stays in app-private storage</span><strong>Viewing profiles, watched films, favorites, ratings, notes, feedback, queue, events, and recommendation inputs</strong></article>
       <article><span>Sent directly to TMDB</span><strong>Movie discovery, search, detail, and image requests made with the personal TMDB key</strong></article>
-      <article><span>Sent only after explicit setup</span><strong>Trakt history and rating sync, or a bounded evidence prompt handed to Google AI Edge Gallery</strong></article>
+      <article><span>Sent only after explicit setup</span><strong>Trakt history and rating sync using credentials supplied by the user</strong></article>
       <article><span>Not collected by LumiTrace</span><strong>Accounts, email addresses, analytics identifiers, ad profiles, server-side taste history, and crash telemetry</strong></article>
     </section>
 
@@ -45,7 +45,6 @@
       <h2>External data flows are narrow and visible.</h2>
       <div class="data-flow-row"><strong>TMDB</strong><p>Required for the normal browsing experience. Requests go from the phone to `api.themoviedb.org` over HTTPS with the key entered in Settings. TMDB's own terms and privacy practices apply.</p></div>
       <div class="data-flow-row"><strong>Trakt</strong><p>Optional. Device authorization, import, and upload occur only after the user enters credentials for a Trakt API application and invokes a sync action. Disconnecting can remove locally stored Trakt credentials and tokens.</p></div>
-      <div class="data-flow-row"><strong>AI Edge Gallery</strong><p>Optional. LumiTrace opens the installed Google app with a bounded prompt containing up to twelve watched titles and ratings and up to eight recommendations with short plot and ranking evidence. It does not send journal text. The receiving app controls model execution and its own data handling.</p></div>
       <div class="data-flow-row"><strong>GitHub</strong><p>The release APK does not contact GitHub during normal use. GitHub is only the distribution source selected by the user.</p></div>
     </section>
 

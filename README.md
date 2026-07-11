@@ -17,7 +17,7 @@
 <p align="center">
   <a href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml"><img src="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml/badge.svg" alt="Android CI"></a>
   <img src="https://img.shields.io/badge/Android-7.0%2B-36d6c2" alt="Android 7.0 or newer">
-  <img src="https://img.shields.io/badge/release-v1.2.0-f28c6f" alt="Version 1.2.0">
+  <img src="https://img.shields.io/badge/release-v1.2.1-f28c6f" alt="Version 1.2.1">
   <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-9bc6b8" alt="MIT license"></a>
 </p>
 
@@ -67,7 +67,7 @@ The compact index contains 1,000 normalized 384-dimensional float16 vectors gene
 
 ## Privacy Boundary
 
-**Stored on the phone:** watched movies, ratings, notes, profiles, recommendation feedback, the TMDB key, and optional integration credentials.
+**Stored on the phone:** watched movies, ratings, notes, profiles, recommendation feedback, the TMDB key, and optional Trakt credentials.
 
 **Sent to TMDB:** movie discovery, search, details, and image requests made with the user's own key.
 
@@ -75,12 +75,9 @@ The compact index contains 1,000 normalized 384-dimensional float16 vectors gene
 
 Android cloud backup is disabled. Clearing the app's data removes the local profile. See the [live privacy boundary](https://joe998556.github.io/LumiTrace-AI-Movie-Recommendation/privacy.html) and [SECURITY.md](SECURITY.md) for the complete boundary.
 
-## Optional Integrations
+## Optional Trakt Sync
 
-- **Trakt:** connect your own Trakt API application to deliberately import watched history and ratings or upload selected local changes.
-- **Google AI Edge Gallery:** hand a bounded, evidence-only prompt to `Gemma-4-E4B-it` installed in AI Edge Gallery for a natural-language explanation. The LLM does not rank movies and is not required for recommendations.
-
-Both features are off until the user configures and invokes them.
+Connect your own Trakt API application to deliberately import watched history and ratings or upload selected local changes. Trakt remains off until the user configures and invokes it.
 
 ## Build From Source
 
@@ -107,7 +104,6 @@ app/src/main/java/com/lumitrace/app/
   data/             Encrypted local taste state and profile operations
   recommendation/   On-device vector loading, ranking, penalties, traces
   network/          Direct TMDB and optional Trakt clients
-  integration/      Optional Google AI Edge Gallery handoff
   ui/               Jetpack Compose application and view model
 app/src/main/assets/lumitrace/
   movies.json       MovieLens-derived starter metadata

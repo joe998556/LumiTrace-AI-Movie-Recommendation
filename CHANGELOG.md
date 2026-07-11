@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.1 - 2026-07-12
+
+### Changed
+
+- Reworked Tonight filters into compact, labeled groups.
+- Replaced the static Tonight result list with animated swipeable pick cards.
+- Refined the movie detail surface around the poster, actions, feedback, and journal.
+- Removed the unusable Google AI Edge Gallery integration.
+
+### Fixed
+
+- Tonight recommendations now show their real watched state instead of a hard-coded `Watched` label.
+
 ## 1.2.0 - 2026-07-11
 
 This is the first Android-only public release of LumiTrace.
@@ -13,7 +26,6 @@ This is the first Android-only public release of LumiTrace.
 - Tonight contextual shortlist and Android home-screen widget.
 - Local taste backup import and export without API credentials.
 - Optional Trakt device authorization, import, and deliberate upload.
-- Optional evidence-only recommendation explanations through Google AI Edge Gallery and `Gemma-4-E4B-it`.
 - Android unit tests, lint, build CI, app-first website, setup guide, privacy boundary, and signed APK distribution.
 
 ### Removed

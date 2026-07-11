@@ -4,10 +4,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <queries>
-        <package android:name="com.google.ai.edge.gallery" />
-    </queries>
-
     <application android:usesCleartextTraffic="false"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"

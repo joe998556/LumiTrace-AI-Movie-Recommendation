@@ -99,7 +99,7 @@ Each result has a local recommendation trace containing:
 - base score,
 - final score.
 
-The app also names the closest positive watched movie when that evidence exists. Optional Google AI Edge Gallery support receives a bounded summary of these existing signals; the LLM cannot select or reorder results.
+The app also names the closest positive watched movie when that evidence exists. These explanations are deterministic and generated from the same local score trace used for ranking.
 
 ## 8. Limits
 

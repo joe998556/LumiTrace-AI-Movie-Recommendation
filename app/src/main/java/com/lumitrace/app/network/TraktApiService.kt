@@ -9,7 +9,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 private const val TRAKT_API_VERSION = "2"
-private const val LUMITRACE_USER_AGENT = "LumiTrace/1.2.0 (Android)"
+private const val LUMITRACE_USER_AGENT = "LumiTrace/1.2.1 (Android)"
 
 interface TraktApiService {
     @Headers(

@@ -53,7 +53,7 @@ jobs:
       - name: Test, lint, and assemble
         run: |
           chmod +x ./gradlew
-          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4

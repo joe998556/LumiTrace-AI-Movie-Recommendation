@@ -58,4 +58,4 @@ The portion of a Recommendation Trace that explains one candidate's eligibility 
 A credential supplied and owned by the user for direct access to a third-party provider. It is never a LumiTrace account credential.
 
 ### Optional Integration
-A provider connection that is disabled until the user configures and invokes it. Trakt sync and Google AI Edge Gallery explanation are Optional Integrations.
+A provider connection that is disabled until the user configures and invokes it. Trakt sync is an Optional Integration.

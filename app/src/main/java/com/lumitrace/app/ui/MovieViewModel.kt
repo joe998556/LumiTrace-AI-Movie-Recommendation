@@ -1149,6 +1149,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
             KEY_TRAKT_REFRESH_TOKEN,
             KEY_TRAKT_EXPIRES_AT
         )
+        // Upgrade-only deletion targets: removed integrations must not leave credentials behind.
         private val LEGACY_NETWORK_KEYS = listOf(
             "remote_search_url",
             "llm_api_url",
