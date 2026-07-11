@@ -11,7 +11,7 @@
   &nbsp;|&nbsp;
   <a href="https://joe998556.github.io/LumiTrace-AI-Movie-Recommendation/">Product page</a>
   &nbsp;|&nbsp;
-  <a href="guide.html">Setup guide</a>
+  <a href="https://joe998556.github.io/LumiTrace-AI-Movie-Recommendation/guide.html">Setup guide</a>
 </p>
 
 <p align="center">
@@ -73,7 +73,7 @@ The compact index contains 1,000 normalized 384-dimensional float16 vectors gene
 
 **Never required:** a LumiTrace account, analytics, a lab endpoint, a BERT server, Docker, Python, or a public IP address.
 
-Android cloud backup is disabled. Clearing the app's data removes the local profile. See [privacy.html](privacy.html) and [SECURITY.md](SECURITY.md) for the complete boundary.
+Android cloud backup is disabled. Clearing the app's data removes the local profile. See the [live privacy boundary](https://joe998556.github.io/LumiTrace-AI-Movie-Recommendation/privacy.html) and [SECURITY.md](SECURITY.md) for the complete boundary.
 
 ## Optional Integrations
 
