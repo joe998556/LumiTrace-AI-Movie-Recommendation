@@ -1,5 +1,5 @@
 name: Feature request
-description: Propose a focused improvement to recommendation quality, privacy, or usability.
+description: Propose a focused improvement to local recommendation, privacy, or Android usability.
 title: "feat: "
 body:
   - type: textarea
@@ -20,7 +20,9 @@ body:
     attributes:
       label: Project boundaries
       options:
-        - label: The proposal can preserve browser-local taste storage.
+        - label: The proposal preserves device-local taste storage by default.
           required: true
-        - label: The proposal does not require committing keys, indexes, or private endpoints.
+        - label: The proposal does not require a LumiTrace account or mandatory backend.
+          required: true
+        - label: The proposal does not require committing keys, tokens, signing files, private endpoints, or unlicensed data.
           required: true

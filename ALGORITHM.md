@@ -1,122 +1,108 @@
-# LumiTrace Recommendation Algorithm
+# On-Device Recommendation Algorithm
 
-LumiTrace is a content-based, local-first recommendation system. User taste remains in the browser; the recommendation request contains only bounded TMDB movie IDs, 1-10 ratings, optional genre IDs, and explicit query controls.
+LumiTrace is a content-based Android recommender. Ranking runs locally from explicit watched and rating signals. The app does not call a LumiTrace recommendation API.
 
-## 1. Offline Catalog Encoding
+## 1. Bundled Catalog
 
-The expensive Transformer stage runs while building the catalog, not while serving ordinary recommendations. The text is source-dependent. The redistributable demo uses MovieLens title, genre, and community tags:
-
-```text
-title + genres + community tags
-```
-
-An independently authorized private catalog may enrich that text with language, year, cast, collection, or plot fields when its data license permits those uses.
-
-For movie `i`, the encoder produces an L2-normalized vector:
+The APK contains a compact index generated from MovieLens Latest Small:
 
 ```text
-x_i = normalize(BERT(rich_text_i))
+1,000 movies x 384 dimensions x float16
 ```
 
-All rows form `X` with shape `N x D`. The default compact index stores normalized rows as float16 in `vectors.npy`, metadata in `movies.json`, and model/dimension checks in `manifest.json`. Serving converts the matrix to float32 for reliable CPU matrix multiplication.
+Each movie vector was generated ahead of time with `sentence-transformers/all-MiniLM-L6-v2` from MovieLens title, genre, and community-tag text. Rows are L2-normalized. At app startup, the loader validates the manifest, movie count, dimensions, data type, and vector file size before accepting the index.
 
-The legacy JSON vector format remains readable only as a migration path.
+No Transformer model runs on the phone. The app decodes the float16 rows into memory and performs dot products against this precomputed catalog.
 
-## 2. Online Input Contract
+## 2. Taste Signals
 
-The preferred request format keeps each rating aligned with its movie:
-
-```json
-{
-  "items": [
-    { "tmdb_id": 329865, "rating": 9, "genre_ids": [18, 878] }
-  ]
-}
-```
-
-- `6-10`: positive taste seed.
-- `5`: neutral; excluded from the semantic center.
-- `1-4`: negative seed used only during shortlist re-ranking.
-- More/Less feedback becomes a local `9` or `2` signal.
-
-Notes and journal text never enter the recommendation API.
-
-## 3. Positive Taste Retrieval
-
-For positive seed vectors `p_j` with ratings `r_j`, LumiTrace creates one normalized weighted center:
+For watched movie `j`, the positive-profile weight is:
 
 ```text
-w_j = r_j / 5
-u = normalize(sum(w_j * p_j))
+unrated watched movie: w_j = 1
+rating below 5:        w_j = 0
+rating 5 to 10:        w_j = rating_j - 4
 ```
 
-Exact cosine similarity is one matrix multiplication because both `X` and `u` are normalized:
-
-```python
-semantic_scores = torch.mm(X, u.T).squeeze(1)
-```
-
-The service takes a bounded shortlist, currently `max(180, top_k * 24)`, before applying more expensive per-candidate adjustments. At 30,000 movies this remains a small exact-retrieval workload and avoids a vector-database dependency.
-
-For watched-and-rated requests, no Transformer model is loaded. The server only looks up precomputed rows and performs tensor operations.
-
-## 4. Negative Preference Penalty
-
-LumiTrace never subtracts a disliked embedding from the positive center. A negative direction in embedding space does not reliably represent an opposite movie preference.
-
-Instead, negative seed vectors are compared only with the retrieved shortlist:
+The normalized taste vector is:
 
 ```text
-negative_penalty = clamp((max_negative_similarity - 0.52) / 0.48, 0, 1)
-
-score = semantic_score * (1 - 0.75 * negative_penalty)
-        + genre_bonus
-        + language_bonus
-        + Bayesian_quality_adjustment
+u = normalize(sum(w_j * x_j))
 ```
 
-This preserves the positive retrieval geometry and reduces the work from a full-catalog negative scan to `shortlist_size x negative_seed_count`.
+An unrated watched movie therefore contributes a modest positive signal. A high rating contributes more. Ratings below 5 do not distort the positive vector; they are handled separately as negative evidence.
 
-The quality adjustment uses the index's source rating with a catalog prior and vote-count confidence. Candidates below a configurable minimum vote count are skipped, preventing unrated or near-empty records from dominating a public demo through unstable metadata.
+## 3. Candidate Score
 
-## 5. Diversity Re-ranking
+When a semantic profile is available, each candidate receives:
 
-The Familiar-to-Surprise control affects the final short list only. It applies small deterministic penalties when selected results repeatedly use the same:
+```text
+base_score = 0.82 * semantic_similarity
+           + 0.10 * genre_affinity
+           + 0.08 * quality_prior
+```
 
-- genres,
-- original language,
-- franchise or collection.
+- `semantic_similarity` is the dot product between normalized movie and taste vectors.
+- `genre_affinity` summarizes the user's explicit rating-weighted genre history.
+- `quality_prior` combines normalized TMDB vote average and vote-count confidence.
 
-The control does not fabricate a different user profile and does not call a second model.
+If none of the watched films can be mapped into the starter index, ranking falls back to:
 
-## 6. Evidence
+```text
+base_score = 0.72 * genre_affinity + 0.28 * quality_prior
+```
 
-Each result contains structured evidence:
+This fallback is reported as metadata ranking rather than semantic AI.
 
-- closest positive seed titles,
-- matching genre IDs,
-- strongest rating signal,
-- low-rated titles that caused a penalty,
-- semantic and diversity penalty values.
+## 4. Negative Preference
 
-The Web UI displays this evidence directly. On a trusted self-host, an optional LLM may narrate only the supplied evidence. It cannot select, filter, or reorder candidates.
+Ratings below 5 become negative seeds with strength:
 
-## 7. Optional Free-Text Search
+```text
+negative_strength = clamp((5 - rating) / 4, 0, 1)
+```
 
-A scene prompt requires a query vector produced by the same model that built the index. Deployments choose one mode:
+LumiTrace does not subtract disliked vectors from the taste vector. Instead, it first retrieves a bounded candidate pool, compares only those candidates with negative seeds, and subtracts at most:
 
-- `disabled`: public CPU demo; rated movie IDs only.
-- `auto`: load the encoder on the first free-text request.
-- `preload`: load the encoder at service startup.
+```text
+negative_penalty = max(candidate_similarity_to_negative * strength) * 0.24
+```
 
-The index manifest and model hidden size are checked before text retrieval, preventing silent cross-model dimension errors.
+This keeps positive semantic geometry intact while suppressing candidates that closely resemble a clearly disliked movie.
 
-## 8. Metadata Fallback
+## 5. Diversity Re-Ranking
 
-Without an index, the browser ranks TMDB discovery results using genre overlap, TMDB rating, vote count, and the viewer's ratings. This is deliberately labeled as a fallback and keeps a fresh clone useful without pretending that semantic retrieval ran.
+The top candidate pool is re-ranked greedily. A candidate loses a small score proportional to its maximum genre overlap with an already selected result:
 
-## 9. Scope
+```text
+selection_score = current_score - genre_jaccard_overlap * diversity_strength
+```
 
-Exact retrieval is appropriate for LumiTrace's current catalog scale. A much larger corpus or sustained high concurrency should add measured caching, queueing, observability, and an ANN index such as Faiss or HNSW only after profiling shows that exact matrix retrieval is the bottleneck.
+The strength is bounded to `0.0..0.2`. A zero value preserves the original relevance order; higher values trade a small amount of similarity for a broader final list.
 
-The bundled index is a MovieLens transformation governed by [DATA_LICENSE.md](DATA_LICENSE.md). Private indexes are not redistributable merely because the index format is open. Operators must verify the rights for every metadata, tag, plot, identifier, and model used to build or serve an index.
+## 6. Constraints and Exclusions
+
+- Watched seed movies are excluded from results.
+- `topK` is bounded to the catalog size and a maximum of 300.
+- Tonight can apply required genre groups and minimum or maximum release year before ranking.
+- A wider bounded pool is retained before diversity and negative-preference re-ranking.
+
+## 7. Explainability
+
+Each result has a local recommendation trace containing:
+
+- semantic similarity,
+- genre affinity,
+- quality prior,
+- negative-preference penalty,
+- diversity adjustment,
+- base score,
+- final score.
+
+The app also names the closest positive watched movie when that evidence exists. Optional Google AI Edge Gallery support receives a bounded summary of these existing signals; the LLM cannot select or reorder results.
+
+## 8. Limits
+
+The starter index is a demo-scale catalog, not a complete movie universe. A live TMDB result that is absent from the index may still be saved and rated, but it cannot add semantic dimensions to the local profile. Enlarging the index requires a redistributable data source, measured APK-size and memory budgets, and regenerated vectors with exactly the model declared by the manifest.
+
+MovieLens provenance and terms are documented in [DATA_LICENSE.md](DATA_LICENSE.md).

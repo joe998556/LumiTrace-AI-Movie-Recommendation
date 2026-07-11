@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Install LumiTrace on Android, create a TMDB API key, and start private on-device movie recommendations in three steps.">
+  <meta name="theme-color" content="#090c0b">
+  <title>Setup Guide | LumiTrace</title>
+  <link rel="icon" href="assets/lumitrace-app-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=android-v1">
+  <script src="site.js?v=android-v1" defer></script>
+</head>
+<body class="document-body">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="nav-island" aria-label="Primary navigation">
+    <a class="brand" href="index.html" aria-label="LumiTrace home">
+      <img src="assets/lumitrace-app-icon.png" alt="" width="40" height="40">
+      <span><strong>LumiTrace</strong><small>Android taste engine</small></span>
+    </a>
+    <nav class="nav-links" aria-label="Page navigation"><a href="index.html#features">Features</a><a href="privacy.html">Privacy</a><a href="ALGORITHM.md">Algorithm</a></nav>
+    <a class="button button-compact" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk"><span>Download APK</span><i aria-hidden="true">&darr;</i></a>
+  </header>
+
+  <main class="document-shell" id="main">
+    <header class="document-hero" data-reveal>
+      <span class="eyebrow"><b></b> Three-minute setup</span>
+      <h1>From APK to your first recommendation.</h1>
+      <p>No server address, model download, Python environment, or LumiTrace account is required. You need Android 7.0 or newer, internet access for TMDB, and your own TMDB API key.</p>
+    </header>
+
+    <section class="guide-step" data-reveal>
+      <div class="step-number">01</div>
+      <div class="step-content">
+        <span class="eyebrow">Install</span>
+        <h2>Download the official APK.</h2>
+        <p>Download the latest signed build from GitHub Releases. If Android asks, allow your browser or file manager to install this one app, then continue through the normal package installer.</p>
+        <div class="inline-actions">
+          <a class="button button-primary" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk"><span>Download LumiTrace.apk</span><i aria-hidden="true">&darr;</i></a>
+          <a class="text-link" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest">View release notes <span>&rarr;</span></a>
+        </div>
+        <aside class="document-note"><strong>Optional checksum check</strong><p>On Windows, run <code>Get-FileHash .\LumiTrace.apk -Algorithm SHA256</code> and compare the value with <code>LumiTrace.apk.sha256</code> attached to the same release.</p></aside>
+      </div>
+    </section>
+
+    <section class="guide-step" data-reveal>
+      <div class="step-number">02</div>
+      <div class="step-content">
+        <span class="eyebrow">Connect TMDB</span>
+        <h2>Create your personal API key.</h2>
+        <p>Sign in to TMDB, open API settings, and request an API key under the provider's current process. LumiTrace uses the TMDB API v3 key to retrieve movie discovery, search, details, and posters directly from your phone.</p>
+        <div class="inline-actions"><a class="button button-secondary" href="https://www.themoviedb.org/settings/api"><span>Open TMDB API settings</span><i aria-hidden="true">&nearr;</i></a></div>
+        <aside class="document-note"><strong>Your key is not bundled with the APK</strong><p>Every user supplies their own key. Do not post it in an issue, screenshot, source file, or public build log.</p></aside>
+      </div>
+    </section>
+
+    <section class="guide-step" data-reveal>
+      <div class="step-number">03</div>
+      <div class="step-content">
+        <span class="eyebrow">Start tracing taste</span>
+        <h2>Save the key and rate what you watched.</h2>
+        <ol class="instruction-list">
+          <li><span>1</span><p>Open LumiTrace and tap the sliders icon in the top-right corner.</p></li>
+          <li><span>2</span><p>Open the TMDB section, paste the API v3 key, and save it.</p></li>
+          <li><span>3</span><p>Return home, browse or search for films, and mark at least one as watched.</p></li>
+          <li><span>4</span><p>Add a 1-10 rating when possible, then open Recommend. More ratings produce a clearer local taste profile.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="document-grid" data-reveal>
+      <article><span class="eyebrow">Recommendation scope</span><h2>What happens locally?</h2><p>The APK includes a 1,000-film MovieLens/MiniLM starter index. Watched films represented in that index shape a weighted vector; low ratings suppress similar candidates, and a diversity pass keeps the list from repeating one genre.</p><a class="text-link" href="ALGORITHM.md">Read exact weights <span>&rarr;</span></a></article>
+      <article><span class="eyebrow">Optional services</span><h2>Add them later.</h2><p>Trakt sync and Google AI Edge Gallery explanations are independent settings. Neither is needed to browse with TMDB or calculate local recommendations.</p><a class="text-link" href="privacy.html">Review data flows <span>&rarr;</span></a></article>
+    </section>
+
+    <section class="troubleshooting" data-reveal>
+      <span class="eyebrow">Troubleshooting</span>
+      <h2>Common first-run checks.</h2>
+      <details><summary>The home screen still asks for a TMDB key.</summary><p>Confirm that you saved the API v3 key, not a read-access token with extra text. Remove leading or trailing spaces and retry on a working internet connection.</p></details>
+      <details><summary>I can browse movies but recommendations are limited.</summary><p>The live TMDB catalog is broader than the bundled 1,000-film semantic index. Mark several recognizable films as watched and add ratings. The app reports when it falls back to metadata signals.</p></details>
+      <details><summary>Android warns that the app was not installed from Play.</summary><p>This is expected for a GitHub-distributed APK. Keep Play Protect enabled, install only the release asset from this repository, and compare the published checksum when you want an additional integrity check.</p></details>
+      <details><summary>I want to remove everything.</summary><p>Use Android Settings > Apps > LumiTrace > Storage > Clear data, or uninstall the app. Android cloud backup is disabled.</p></details>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-brand"><img src="assets/lumitrace-app-icon.png" alt="" width="36" height="36"><span><strong>LumiTrace</strong><small>Local-first Android movie taste engine</small></span></div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="ALGORITHM.md">Algorithm</a><a href="LICENSE">MIT License</a></div>
+    <p>Movie metadata and posters are provided by TMDB. This product is not endorsed or certified by TMDB. <span id="copyrightYear"></span></p>
+  </footer>
+</body>
+</html>

@@ -1,33 +1,39 @@
-name: Bug report
-description: Report reproducible behavior in the Web app, API, or vector service.
+name: Android bug report
+description: Report reproducible behavior in the LumiTrace Android app.
 title: "bug: "
 body:
   - type: markdown
     attributes:
-      value: Do not include API keys, gateway tokens, private URLs, or personal taste exports.
-  - type: dropdown
-    id: mode
+      value: Never include TMDB keys, Trakt credentials, OAuth tokens, journal text, or personal taste exports.
+  - type: input
+    id: version
     attributes:
-      label: Deployment mode
-      options:
-        - Metadata only
-        - In-process CPU vector index
-        - Standalone or remote vector service
-        - Docker
+      label: LumiTrace version
+      placeholder: 1.2.0, from Settings or the GitHub Release
     validations:
       required: true
   - type: input
-    id: environment
+    id: device
     attributes:
-      label: Environment
-      placeholder: Windows 11, Python 3.11, Chrome 140
+      label: Device and Android version
+      placeholder: Pixel 8, Android 16
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Installation source
+      options:
+        - GitHub Release APK
+        - Android Studio or Gradle debug build
+        - Other local build
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: Reproduction steps
-      placeholder: Describe the smallest sequence that reproduces the issue.
+      description: Include the smallest sequence that reliably reproduces the issue.
     validations:
       required: true
   - type: textarea
@@ -39,5 +45,6 @@ body:
   - type: textarea
     id: logs
     attributes:
-      label: Sanitized logs
+      label: Sanitized Logcat excerpt
+      description: Remove credentials, notes, movie history, device identifiers, and private URLs.
       render: text

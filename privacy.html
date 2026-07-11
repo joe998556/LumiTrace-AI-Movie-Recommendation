@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The LumiTrace privacy boundary: local movie taste data, direct TMDB access, and explicit optional integrations.">
+  <meta name="theme-color" content="#090c0b">
+  <title>Privacy | LumiTrace</title>
+  <link rel="icon" href="assets/lumitrace-app-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=android-v1">
+  <script src="site.js?v=android-v1" defer></script>
+</head>
+<body class="document-body">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="nav-island" aria-label="Primary navigation">
+    <a class="brand" href="index.html" aria-label="LumiTrace home"><img src="assets/lumitrace-app-icon.png" alt="" width="40" height="40"><span><strong>LumiTrace</strong><small>Android taste engine</small></span></a>
+    <nav class="nav-links" aria-label="Page navigation"><a href="guide.html">Setup</a><a href="index.html#features">Features</a><a href="ALGORITHM.md">Algorithm</a></nav>
+    <a class="button button-compact" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk"><span>Download APK</span><i aria-hidden="true">&darr;</i></a>
+  </header>
+
+  <main class="document-shell" id="main">
+    <header class="document-hero" data-reveal>
+      <span class="eyebrow"><b></b> Privacy boundary</span>
+      <h1>A movie profile, not another cloud account.</h1>
+      <p>LumiTrace does not operate an account, analytics, synchronization, or recommendation backend. Core taste ranking is calculated inside the Android app.</p>
+    </header>
+
+    <section class="privacy-matrix" data-reveal>
+      <article><span>Stays in app-private storage</span><strong>Viewing profiles, watched films, favorites, ratings, notes, feedback, queue, events, and recommendation inputs</strong></article>
+      <article><span>Sent directly to TMDB</span><strong>Movie discovery, search, detail, and image requests made with the personal TMDB key</strong></article>
+      <article><span>Sent only after explicit setup</span><strong>Trakt history and rating sync, or a bounded evidence prompt handed to Google AI Edge Gallery</strong></article>
+      <article><span>Not collected by LumiTrace</span><strong>Accounts, email addresses, analytics identifiers, ad profiles, server-side taste history, and crash telemetry</strong></article>
+    </section>
+
+    <section class="document-grid" data-reveal>
+      <article><span class="eyebrow">Local storage</span><h2>Protected by Android's app boundary.</h2><p>LumiTrace requests encrypted preferences backed by Android Keystore. If encrypted preferences cannot be initialized on a device, the current build falls back to Android app-private preferences rather than exporting data. Android cloud backup is disabled in the manifest.</p></article>
+      <article><span class="eyebrow">User control</span><h2>Delete or move your profile.</h2><p>The app can export and import taste data without including API credentials. Clearing app data or uninstalling LumiTrace removes its local profile. A user should inspect any exported file before sharing it.</p></article>
+    </section>
+
+    <section class="data-flow" data-reveal>
+      <span class="eyebrow">Provider-by-provider</span>
+      <h2>External data flows are narrow and visible.</h2>
+      <div class="data-flow-row"><strong>TMDB</strong><p>Required for the normal browsing experience. Requests go from the phone to `api.themoviedb.org` over HTTPS with the key entered in Settings. TMDB's own terms and privacy practices apply.</p></div>
+      <div class="data-flow-row"><strong>Trakt</strong><p>Optional. Device authorization, import, and upload occur only after the user enters credentials for a Trakt API application and invokes a sync action. Disconnecting can remove locally stored Trakt credentials and tokens.</p></div>
+      <div class="data-flow-row"><strong>AI Edge Gallery</strong><p>Optional. LumiTrace opens the installed Google app with a bounded prompt containing up to twelve watched titles and ratings and up to eight recommendations with short plot and ranking evidence. It does not send journal text. The receiving app controls model execution and its own data handling.</p></div>
+      <div class="data-flow-row"><strong>GitHub</strong><p>The release APK does not contact GitHub during normal use. GitHub is only the distribution source selected by the user.</p></div>
+    </section>
+
+    <section class="troubleshooting" data-reveal>
+      <span class="eyebrow">Limits</span>
+      <h2>What local-first does not promise.</h2>
+      <details open><summary>A compromised device can expose app data.</summary><p>Root access, malicious accessibility services, screenshots, clipboard capture, or a compromised operating system are outside LumiTrace's protection boundary.</p></details>
+      <details><summary>A provider can observe requests sent to it.</summary><p>TMDB and explicitly enabled providers receive the requests needed to deliver their service. Local recommendation prevents LumiTrace from collecting taste history; it does not make third-party network calls invisible to those providers.</p></details>
+      <details><summary>Sideloading is not an app-store review.</summary><p>Install only release assets published by this repository, retain Android security scanning, and verify the attached checksum when appropriate.</p></details>
+    </section>
+
+    <section class="download-section compact-download" data-reveal>
+      <div><span class="eyebrow">Inspectable by design</span><h2>Build it, audit it, or install it.</h2><p>The Android source, recommendation weights, tests, bundled-index notice, and release checksum are public in this repository.</p></div>
+      <div class="download-actions"><a class="button button-primary" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation"><span>Browse source</span><i aria-hidden="true">&nearr;</i></a><a class="text-link" href="SECURITY.md">Security policy <span>&rarr;</span></a></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-brand"><img src="assets/lumitrace-app-icon.png" alt="" width="36" height="36"><span><strong>LumiTrace</strong><small>Local-first Android movie taste engine</small></span></div>
+    <div class="footer-links"><a href="index.html">Home</a><a href="guide.html">Setup</a><a href="ALGORITHM.md">Algorithm</a><a href="LICENSE">MIT License</a></div>
+    <p>Movie metadata and posters are provided by TMDB. This product is not endorsed or certified by TMDB. <span id="copyrightYear"></span></p>
+  </footer>
+</body>
+</html>

@@ -1,4 +1,21 @@
-# Preserve the upstream MovieLens notice byte-for-byte without treating its
-# Setext title underline as a merge-conflict marker during diff checks.
-demo_index/MOVIELENS_README.txt -diff
-demo_index/vectors.npy binary
+* text=auto
+
+# Keep scripts portable across Windows development and Linux CI.
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.kt text eol=lf
+*.kts text eol=lf
+*.xml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+
+# Preserve licensed and generated binary assets byte-for-byte.
+app/src/main/assets/lumitrace/MOVIELENS_README.txt -text -diff
+app/src/main/assets/lumitrace/vectors.npy binary
+*.png binary
+*.jar binary

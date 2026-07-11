@@ -1,19 +1,46 @@
+# Android and Gradle
+.gradle/
+.idea/
+**/build/
+local.properties
+captures/
+*.iml
+
+# Signing material
+*.jks
+*.keystore
+*.p12
+keystore.properties
+
+# Secrets and local configuration
 .env
+.env.*
+!.env.example
 .venv/
 __pycache__/
 .pytest_cache/
 *.pyc
 *.db
-*.sqlite*
+*.sqlite
+*.sqlite3
+
+# Native and generated output
+.cxx/
+.externalNativeBuild/
+*.apk
+*.aab
+
+# Private model and index artifacts
 movie_vectors*.json
 movie_index*/
-lumitrace-index*.zip
 *.pt
 *.pth
 *.pkl
 *.npy
-!demo_index/vectors.npy
+!app/src/main/assets/lumitrace/vectors.npy
 *.npz
+
+# Local tools and workspaces
 scratch/
 paper/
 research/

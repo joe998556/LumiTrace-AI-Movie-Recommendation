@@ -1,312 +1,233 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="LumiTrace is a local-first AI movie recommendation workspace powered by TMDB metadata and optional BERT semantic vectors.">
-  <meta property="og:title" content="LumiTrace AI Movie Recommendation">
-  <meta property="og:description" content="Save films you like, build a taste profile, and discover movies that fit your viewing style.">
-  <title>LumiTrace | AI movie recommendation</title>
-  <link rel="icon" href="data:,">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LumiTrace is a private Android movie taste engine. Download the APK, add your own TMDB key, and get on-device recommendations from what you watched and rated.">
+  <meta name="theme-color" content="#090c0b">
+  <meta property="og:title" content="LumiTrace - Private movie recommendations on Android">
+  <meta property="og:description" content="One APK. Your TMDB key. Recommendations calculated on your phone.">
+  <meta property="og:image" content="assets/lumitrace-app-icon.png">
+  <title>LumiTrace | Private movie recommendations on Android</title>
+  <link rel="icon" href="assets/lumitrace-app-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500..750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=teal-v1">
-  <script src="config.js?v=public-v1" defer></script>
-  <script src="dropdown.js?v=teal-v1" defer></script>
-  <script src="recommendation-core.js?v=lite-1" defer></script>
-  <script src="script.js?v=atelier-v1" defer></script>
-  <script src="experience.js?v=lite-1" defer></script>
+  <link rel="stylesheet" href="styles.css?v=android-v1">
+  <script src="site.js?v=android-v1" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to movie browser</a>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <div class="page-shell">
-    <nav class="nav-island reveal" aria-label="Primary navigation">
-      <a class="brand-mark" href="/">
-        <span class="brand-glyph">L</span>
-        <span class="brand-copy">
-          <span class="brand-title">LumiTrace</span>
-          <span class="brand-subtitle">Taste engine</span>
-        </span>
-      </a>
-      <div class="nav-links">
-        <a class="nav-link" href="ALGORITHM.md">Algorithm</a>
-        <a class="nav-link" href="/favorites.html" target="_blank" rel="noopener">Collection</a>
-        <a class="nav-link" href="/settings.html">Settings</a>
-        <a class="nav-link" href="README.md">Docs</a>
-      </div>
+  <header class="nav-island" aria-label="Primary navigation">
+    <a class="brand" href="#top" aria-label="LumiTrace home">
+      <img src="assets/lumitrace-app-icon.png" alt="" width="40" height="40">
+      <span>
+        <strong>LumiTrace</strong>
+        <small>Android taste engine</small>
+      </span>
+    </a>
+    <nav class="nav-links" aria-label="Page sections">
+      <a href="#experience">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a href="guide.html">Setup guide</a>
     </nav>
+    <a class="button button-compact" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk" data-download>
+      <span>Download APK</span>
+      <i aria-hidden="true">&darr;</i>
+    </a>
+  </header>
 
-    <main id="main">
-      <section class="workspace-hero">
-        <div class="bezel reveal">
-          <div class="bezel-core hero-core">
-            <div>
-              <span class="eyebrow">AI movie recommendation</span>
-              <h1 class="hero-title">Trace your taste.</h1>
-              <p class="hero-copy">Add your TMDB key in Settings, browse live movie data, save films that feel right, then let LumiTrace build a recommendation profile from metadata and optional BERT vectors.</p>
-            </div>
-            <div class="hero-metrics" aria-label="Project capabilities">
-              <div class="metric">
-                <strong>30k</strong>
-                <span>xlarge vector target</span>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-copy" data-reveal>
+        <span class="eyebrow"><b></b> Android 7.0+ / local-first</span>
+        <h1>LumiTrace</h1>
+        <p class="hero-lead">Movie recommendations shaped by what you actually watched and how you rated it, calculated directly on your phone.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk" data-download>
+            <span>Download for Android</span>
+            <i aria-hidden="true">&darr;</i>
+          </a>
+          <a class="button button-secondary" href="guide.html">
+            <span>Read the 3-minute setup</span>
+            <i aria-hidden="true">&rarr;</i>
+          </a>
+        </div>
+        <ul class="hero-facts" aria-label="Application facts">
+          <li><strong>v1.2.0</strong><span>current release</span></li>
+          <li><strong>No account</strong><span>your data stays yours</span></li>
+          <li><strong>One key</strong><span>bring your own TMDB API</span></li>
+        </ul>
+      </div>
+
+      <div class="phone-stage" data-reveal aria-label="LumiTrace application interface preview">
+        <div class="phone-shadow"></div>
+        <div class="phone-shell">
+          <div class="phone-screen">
+            <div class="phone-status"><span>11:34</span><span>5G&nbsp;&nbsp;100%</span></div>
+            <div class="app-bar">
+              <div class="app-identity">
+                <img src="assets/lumitrace-app-icon.png" alt="" width="44" height="44">
+                <span><strong>LumiTrace</strong><small>Taste engine</small></span>
               </div>
-              <div class="metric">
-                <strong>BERT</strong>
-                <span>semantic mode</span>
+              <div class="recommend-pill"><b>AI</b><span><strong>Recommend</strong><small>12 watched</small></span></div>
+            </div>
+            <div class="phone-heading"><span>Tonight</span><strong>Pick the right signal.</strong></div>
+            <div class="phone-feature">
+              <div class="poster-art poster-a"><span>01</span></div>
+              <div class="phone-feature-copy">
+                <small>LOCAL MATCH</small>
+                <strong>Quiet science fiction</strong>
+                <p>Reflective, cerebral, under two hours.</p>
+                <div><span>TMDB 8.1</span><span>Why this</span></div>
               </div>
-              <div class="metric">
-                <strong>local</strong>
-                <span>browser favorites</span>
-              </div>
+            </div>
+            <div class="phone-subhead"><strong>Recommended for you</strong><span>On device</span></div>
+            <div class="poster-row">
+              <div><div class="poster-art poster-b"><span>02</span></div><strong>Signal</strong><small>8.7 match</small></div>
+              <div><div class="poster-art poster-c"><span>03</span></div><strong>Afterlight</strong><small>8.4 match</small></div>
+              <div><div class="poster-art poster-d"><span>04</span></div><strong>Threshold</strong><small>8.2 match</small></div>
             </div>
           </div>
         </div>
-
-        <aside class="bezel reveal" aria-label="Connection status">
-          <div class="bezel-core control-core">
-            <div>
-              <p class="section-kicker">Start here</p>
-              <h2 class="panel-title">Connections</h2>
-              <p class="panel-copy">API keys live on the Settings page and stay in your browser localStorage. Bring your own TMDB key and, optionally, your own LLM.</p>
-            </div>
-
-            <ul id="connList" class="conn-list" aria-live="polite">
-              <li id="connTmdb" class="conn-row"><span class="conn-dot"></span><span class="conn-label">TMDB</span><span class="conn-state">checking...</span></li>
-              <li id="connBert" class="conn-row"><span class="conn-dot"></span><span class="conn-label">BERT semantic</span><span class="conn-state">checking...</span></li>
-              <li id="connLlm" class="conn-row"><span class="conn-dot"></span><span class="conn-label">LLM narrator</span><span class="conn-state">checking...</span></li>
-            </ul>
-
-            <div class="button-row">
-              <a id="openSettingsBtn" class="btn btn-primary" href="/settings.html">
-                Open Settings
-                <span class="btn-icon">-&gt;</span>
-              </a>
-            </div>
-
-            <p id="keyStatus" class="status-line" aria-live="polite"></p>
-          </div>
-        </aside>
-      </section>
-
-      <section class="bezel browse-shell reveal" aria-label="Movie browser">
-        <div class="bezel-core browse-core">
-          <div class="browse-topline">
-            <div>
-              <p class="section-kicker">Browse</p>
-              <h2 id="categoryTitle" class="section-title">Trending</h2>
-              <p id="categoryDesc" class="section-desc">Current TMDB trends.</p>
-            </div>
-            <div class="search-bar" role="search">
-              <input id="searchInput" class="input" placeholder="Search movies..." aria-label="Search movies">
-              <button id="searchBtn" class="btn btn-ghost" type="button">Search</button>
-            </div>
-          </div>
-
-          <div id="categoryTabs" class="tab-rail" aria-label="Movie categories">
-            <button data-category="trending" class="category-tab active" type="button">Trending</button>
-            <button data-category="popular" class="category-tab" type="button">Popular</button>
-            <button data-category="top_rated" class="category-tab" type="button">Top rated</button>
-            <button data-category="now_playing" class="category-tab" type="button">Now playing</button>
-            <button data-category="upcoming" class="category-tab" type="button">Upcoming</button>
-          </div>
-
-          <div id="genreChips" class="chip-rail" aria-label="Genres">
-            <button data-genre="28" class="genre-chip" type="button">Action</button>
-            <button data-genre="12" class="genre-chip" type="button">Adventure</button>
-            <button data-genre="16" class="genre-chip" type="button">Animation</button>
-            <button data-genre="35" class="genre-chip" type="button">Comedy</button>
-            <button data-genre="80" class="genre-chip" type="button">Crime</button>
-            <button data-genre="99" class="genre-chip" type="button">Documentary</button>
-            <button data-genre="18" class="genre-chip" type="button">Drama</button>
-            <button data-genre="10751" class="genre-chip" type="button">Family</button>
-            <button data-genre="14" class="genre-chip" type="button">Fantasy</button>
-            <button data-genre="27" class="genre-chip" type="button">Horror</button>
-            <button data-genre="9648" class="genre-chip" type="button">Mystery</button>
-            <button data-genre="10749" class="genre-chip" type="button">Romance</button>
-            <button data-genre="878" class="genre-chip" type="button">Sci-Fi</button>
-            <button data-genre="53" class="genre-chip" type="button">Thriller</button>
-            <button data-genre="37" class="genre-chip" type="button">Western</button>
-          </div>
-
-          <section class="zero-shot-panel" aria-label="Zero-shot semantic playlist">
-            <div>
-              <p class="section-kicker">Zero-shot playlist</p>
-              <h3 class="zero-shot-title">Describe the viewing mood.</h3>
-              <p class="zero-shot-copy">Turn an abstract scene into a semantic movie list without saving or rating anything first.</p>
-            </div>
-            <label class="field-label" for="playlistPrompt">
-              Scene prompt
-              <textarea id="playlistPrompt" class="input textarea zero-shot-input" placeholder="A rainy-night European mystery with a quiet pace and a subtle twist..."></textarea>
-            </label>
-            <div class="zero-shot-controls">
-              <label class="field-label compact-label" for="playlistLanguage">
-                Language
-                <select id="playlistLanguage" class="input select-input">
-                  <option value="">Auto</option>
-                  <option value="en">English</option>
-                  <option value="fr">French</option>
-                  <option value="de">German</option>
-                  <option value="es">Spanish</option>
-                  <option value="it">Italian</option>
-                  <option value="ja">Japanese</option>
-                  <option value="ko">Korean</option>
-                  <option value="zh">Chinese</option>
-                </select>
-              </label>
-              <label class="field-label compact-label" for="playlistGenre">
-                Genre
-                <select id="playlistGenre" class="input select-input">
-                  <option value="">Auto</option>
-                  <option value="9648">Mystery</option>
-                  <option value="53">Thriller</option>
-                  <option value="80">Crime</option>
-                  <option value="18">Drama</option>
-                  <option value="878">Sci-Fi</option>
-                  <option value="27">Horror</option>
-                  <option value="10749">Romance</option>
-                </select>
-              </label>
-              <button id="playlistBtn" class="btn btn-primary" type="button">
-                Generate semantic playlist
-                <span class="btn-icon">-&gt;</span>
-              </button>
-            </div>
-          </section>
-
-          <section class="experience-rail" aria-label="Taste tools">
-            <div class="experience-rail-copy">
-              <p class="section-kicker">Taste tools</p>
-              <h3 class="zero-shot-title">Choose with more intent.</h3>
-            </div>
-            <div class="experience-actions">
-              <button id="tonightBtn" class="tool-pill" type="button"><span>Tonight</span><i>01</i></button>
-              <button id="coupleBtn" class="tool-pill" type="button"><span>Two people</span><i>02</i></button>
-              <button id="tasteMapBtn" class="tool-pill" type="button"><span>Taste map</span><i>03</i></button>
-              <button id="journalBtn" class="tool-pill" type="button"><span>Journal</span><i>04</i></button>
-              <button id="dataBtn" class="tool-pill" type="button"><span>Import / export</span><i>05</i></button>
-            </div>
-          </section>
-
-          <section id="movieGrid" class="movie-grid" aria-live="polite"></section>
-        </div>
-      </section>
-
-      <footer class="app-footer">
-        Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.
-      </footer>
-    </main>
-  </div>
-
-  <div id="ratingModal" class="modal" style="display:none; opacity:0;">
-    <div id="ratingBackdrop" class="modal-backdrop"></div>
-    <div class="modal-card">
-      <div class="modal-head">
-        <span class="modal-title">Rate this movie</span>
-        <button id="closeRatingBtn" class="icon-button" type="button" aria-label="Close rating modal">x</button>
+        <span class="preview-label">Interface preview</span>
       </div>
-      <div id="ratingBody" class="modal-body">
-        <div class="rating-preview">
-          <img id="ratingPoster" alt="">
-          <div>
-            <div id="ratingTitle" class="panel-title"></div>
-            <div id="ratingMeta" class="panel-copy"></div>
+    </section>
+
+    <section class="provider-strip" aria-label="Product boundaries" data-reveal>
+      <div><span class="signal-dot"></span><strong>No LumiTrace server</strong><small>ranking runs locally</small></div>
+      <div><img src="assets/tmdb-logo.svg" alt="TMDB" width="68"><small>live posters and metadata</small></div>
+      <div><strong>Encrypted local profile</strong><small>watched films, ratings, notes</small></div>
+    </section>
+
+    <section class="section setup-section" id="experience">
+      <div class="section-heading" data-reveal>
+        <span class="eyebrow">From zero to useful</span>
+        <h2>Three steps. Then it starts learning your taste.</h2>
+        <p>The old server setup is gone. LumiTrace is now designed for the person holding the phone, not the person maintaining infrastructure.</p>
+      </div>
+      <div class="steps">
+        <article data-reveal>
+          <span>01</span>
+          <h3>Install the APK</h3>
+          <p>Download the latest signed release from GitHub and install it on Android 7.0 or newer.</p>
+        </article>
+        <article data-reveal>
+          <span>02</span>
+          <h3>Add your TMDB key</h3>
+          <p>Paste your own TMDB API key once in Settings. It is stored in app-private storage on your phone.</p>
+        </article>
+        <article data-reveal>
+          <span>03</span>
+          <h3>Watch, rate, discover</h3>
+          <p>Mark films watched, score them from 1.0 to 10.0, and run a recommendation whenever you want.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="section-heading section-heading-wide" data-reveal>
+        <span class="eyebrow">The application</span>
+        <h2>A movie journal with a recommendation engine underneath.</h2>
+      </div>
+      <div class="feature-grid">
+        <article class="feature feature-main" data-reveal>
+          <span class="feature-index">01 / Local recommendation</span>
+          <h3>Your ratings change the result.</h3>
+          <p>High scores strengthen related semantic and genre signals. Low scores suppress candidates that resemble what did not work for you. The final list is diversified before it reaches the screen.</p>
+          <div class="rating-scale" aria-label="Rating influence example">
+            <span><b>2.0</b><small>reduce similar</small></span>
+            <span><b>5.0</b><small>neutral</small></span>
+            <span><b>9.0</b><small>boost similar</small></span>
           </div>
-        </div>
-        <label class="field-label">
-          Score
-          <div id="ratingScoreBtns" class="score-grid"></div>
-        </label>
-        <label class="field-label rating-comment">
-          Comment (optional)
-          <textarea id="ratingComment" class="input textarea" placeholder="What did you think?"></textarea>
-        </label>
-        <div class="button-row rating-actions">
-          <button id="saveRatingBtn" class="btn btn-primary" type="button">Save</button>
-          <button id="deleteRatingBtn" class="btn btn-ghost" type="button" style="display:none;">Delete</button>
-        </div>
+        </article>
+        <article class="feature feature-library" data-reveal>
+          <span class="feature-index">02 / Taste library</span>
+          <h3>Watched, queued, rated, remembered.</h3>
+          <p>Keep viewing profiles, a watch queue, decimal ratings, short notes, recommendation feedback, and a private activity timeline.</p>
+          <div class="library-list"><span>Watched</span><span>Watchlist</span><span>Journal</span><span>Profiles</span></div>
+        </article>
+        <article class="feature feature-tonight" data-reveal>
+          <span class="feature-index">03 / Tonight</span>
+          <h3>Choose for this evening.</h3>
+          <p>Filter by mood, pace, company, runtime, language, genre, and year. A home-screen widget keeps the shortlist close.</p>
+          <div class="context-tags"><span>Warm</span><span>Under 120 min</span><span>Two people</span></div>
+        </article>
+        <article class="feature feature-explain" data-reveal>
+          <span class="feature-index">04 / Explainability</span>
+          <h3>See the score, not a magic label.</h3>
+          <p>Every local match can expose semantic similarity, genre affinity, quality prior, negative preference penalty, and diversity adjustment.</p>
+          <div class="trace-bars" aria-hidden="true">
+            <i style="--value:82%"></i><i style="--value:58%"></i><i style="--value:36%"></i><i style="--value:18%"></i>
+          </div>
+        </article>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div id="movieModal" class="modal" style="display:none; opacity:0;">
-    <div id="movieBackdrop" class="modal-backdrop"></div>
-    <div class="movie-modal-card">
-      <button id="closeMovieBtn" class="icon-button movie-close" type="button" aria-label="Close details">x</button>
-      <div id="movieModalBody" class="movie-modal-body"></div>
-    </div>
-  </div>
-
-  <button id="recommendFab" class="recommend-fab" type="button" aria-label="Open recommendations">
-    <span class="fab-symbol">AI</span>
-    <span class="fab-copy">
-      <strong>Recommendations</strong>
-      <small>For you</small>
-    </span>
-    <span id="fabBadge" class="fab-badge">0</span>
-  </button>
-
-  <div id="explanationModal" class="modal" style="display:none; opacity:0;">
-    <div id="explanationBackdrop" class="modal-backdrop"></div>
-    <div class="explanation-content">
-      <div class="modal-head">
-        <span class="modal-title">Why this recommendation?</span>
-        <button id="closeExplanationBtn" class="icon-button" type="button" aria-label="Close explanation">x</button>
+    <section class="algorithm-band" id="algorithm">
+      <div class="section-heading" data-reveal>
+        <span class="eyebrow">How the AI works</span>
+        <h2>The expensive model work is already done.</h2>
+        <p>The APK carries a compact, precomputed MovieLens/MiniLM starter index. At recommendation time the phone performs vector lookup, a weighted taste profile, exact similarity scoring, low-rating penalties, and diversity re-ranking. It does not run a Transformer or contact a LumiTrace backend.</p>
+        <a class="text-link" href="ALGORITHM.md">Read the complete algorithm <span>&rarr;</span></a>
       </div>
-      <div id="explanationBody" class="modal-body explanation-body"></div>
-    </div>
-  </div>
-
-  <div id="recommendOverlay" class="recommend-overlay">
-    <div id="overlayBackdrop"></div>
-  </div>
-
-  <div id="recommendPanel" class="recommend-panel">
-    <div class="recommend-panel-core">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">Recommendations</div>
-          <div id="recommendationReason" class="panel-copy">Scroll for more.</div>
-        </div>
-        <button id="closePanelBtn" class="icon-button" type="button" aria-label="Close recommendations">x</button>
+      <div class="pipeline" data-reveal aria-label="On-device recommendation pipeline">
+        <div><span>01</span><strong>Watched + ratings</strong><small>private taste signals</small></div>
+        <b aria-hidden="true">&rarr;</b>
+        <div><span>02</span><strong>Local vector profile</strong><small>384 dimensions</small></div>
+        <b aria-hidden="true">&rarr;</b>
+        <div><span>03</span><strong>Re-rank + diversify</strong><small>explainable scores</small></div>
       </div>
-      <div class="panel-subhead">
-        <a class="collection-pill" href="/favorites.html" target="_blank" rel="noopener">
-          Collection <span id="panelFavCount"></span>
+    </section>
+
+    <section class="section privacy-section" id="privacy">
+      <div class="privacy-copy" data-reveal>
+        <span class="eyebrow">Private by architecture</span>
+        <h2>Your movie history is not a LumiTrace account.</h2>
+        <p>There is no LumiTrace login, cloud profile, analytics collector, or recommendation server. Android backup is disabled. Clearing app data removes the local profile.</p>
+        <a class="text-link" href="privacy.html">Read the privacy boundary <span>&rarr;</span></a>
+      </div>
+      <div class="privacy-ledger" data-reveal>
+        <div><span>Stays on phone</span><strong>Watched films, ratings, notes, profiles, ranking inputs</strong></div>
+        <div><span>Goes to TMDB</span><strong>Movie search and detail requests made with your own key</strong></div>
+        <div><span>Only when enabled</span><strong>Explicit Trakt sync and AI Edge Gallery explanation</strong></div>
+      </div>
+    </section>
+
+    <section class="optional-band" data-reveal>
+      <div>
+        <span class="eyebrow">Optional, never required</span>
+        <h2>Bring the services you already use.</h2>
+      </div>
+      <div class="optional-items">
+        <article><strong>Trakt sync</strong><p>Import watched history and missing ratings, or upload deliberate local changes using your own Trakt app credentials.</p></article>
+        <article><strong>Gemma 4 explanations</strong><p>Send a bounded recommendation summary to Gemma-4-E4B-it installed in Google AI Edge Gallery. The answer stays there.</p></article>
+      </div>
+    </section>
+
+    <section class="download-section" id="download">
+      <div data-reveal>
+        <span class="eyebrow">Ready when you are</span>
+        <h2>Download. Add one key. Start tracing your taste.</h2>
+        <p>The latest APK is distributed through GitHub Releases. Source, tests, data notices, and build instructions live in this repository.</p>
+      </div>
+      <div class="download-actions" data-reveal>
+        <a class="button button-primary" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk" data-download>
+          <span>Download LumiTrace APK</span>
+          <i aria-hidden="true">&darr;</i>
         </a>
-        <span id="panelFavSummary" class="panel-summary"></span>
+        <a class="text-link" href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation">Browse Android source <span>&rarr;</span></a>
       </div>
-      <div class="rec-tuning">
-        <label class="diversity-control" for="diversityRange">
-          <span>Familiar</span>
-          <input id="diversityRange" type="range" min="0" max="100" value="55" aria-label="Recommendation variety">
-          <span>Surprise</span>
-        </label>
-        <button id="rouletteBtn" class="roulette-btn" type="button">Pick one <span>o</span></button>
-      </div>
-      <div id="recScrollArea" class="scroll-area">
-        <div id="recommendationGrid" class="recommendation-grid">
-          <div id="recSentinel" class="grid-sentinel">
-            <div class="loader-dots is-idle" id="recLoaderDots"><span></span><span></span><span></span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12 });
-      document.querySelectorAll(".reveal").forEach((node) => observer.observe(node));
-    });
-  </script>
+  <footer>
+    <div class="footer-brand"><img src="assets/lumitrace-app-icon.png" alt="" width="36" height="36"><span><strong>LumiTrace</strong><small>Local-first Android movie taste engine</small></span></div>
+    <div class="footer-links"><a href="guide.html">Setup</a><a href="privacy.html">Privacy</a><a href="ALGORITHM.md">Algorithm</a><a href="LICENSE">MIT License</a></div>
+    <p>Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB. <span id="copyrightYear"></span></p>
+  </footer>
 </body>
 </html>

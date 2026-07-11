@@ -1,233 +1,124 @@
 # LumiTrace
 
-[![CI](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml/badge.svg)](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-14b8a6.svg)](LICENSE)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-5eead4.svg)](https://www.python.org/)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/joe998556/LumiTrace-AI-Movie-Recommendation?quickstart=1)
+<p align="center">
+  <img src="assets/lumitrace-app-icon.png" width="112" height="112" alt="LumiTrace app icon">
+</p>
 
-**A local-first semantic movie taste engine built around what you watched and how you rated it.**
+<p align="center"><strong>A private, local-first movie taste engine for Android.</strong></p>
 
-LumiTrace combines precomputed sentence-transformer movie embeddings, transparent rating signals, metadata re-ranking, and a polished Web client. It requires no LumiTrace account, keeps the taste profile in the browser, and can run its main recommendation path on an ordinary CPU.
+<p align="center">
+  <a href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk"><strong>Download the latest APK</strong></a>
+  &nbsp;|&nbsp;
+  <a href="https://joe998556.github.io/LumiTrace-AI-Movie-Recommendation/">Product page</a>
+  &nbsp;|&nbsp;
+  <a href="guide.html">Setup guide</a>
+</p>
 
-## Why This Architecture
+<p align="center">
+  <a href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml"><img src="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml/badge.svg" alt="Android CI"></a>
+  <img src="https://img.shields.io/badge/Android-7.0%2B-36d6c2" alt="Android 7.0 or newer">
+  <img src="https://img.shields.io/badge/release-v1.2.0-f28c6f" alt="Version 1.2.0">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-9bc6b8" alt="MIT license"></a>
+</p>
 
-Most visitors should not have to download or run a Transformer model. LumiTrace separates expensive preparation from inexpensive recommendation:
+LumiTrace turns watched movies and 1-10 ratings into explainable recommendations without a LumiTrace account or recommendation server. Install one APK, enter your own TMDB API key, and the app is ready to browse, track, rate, and recommend.
+
+## Start in Three Steps
+
+1. Download [`LumiTrace.apk`](https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/releases/latest/download/LumiTrace.apk) from the latest GitHub Release.
+2. Create a TMDB API key at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api), then save it in **Settings > TMDB**.
+3. Mark movies as watched and optionally rate them. Open **Recommend** to build a local taste profile.
+
+Android may ask for permission to install an app from your browser or file manager. The APK is published directly from this repository; its SHA-256 checksum is attached to the release.
+
+## What It Does
+
+- Browse trending, popular, top-rated, upcoming, and genre collections from TMDB.
+- Search the TMDB catalog and open poster-rich movie details.
+- Record watched status, favorites, a 1-10 score, and private journal notes.
+- Keep separate local viewing profiles for solo, partner, or family taste.
+- Produce an infinite recommendation feed from watched and rated films.
+- Build a focused **Tonight** shortlist with year, genre, language, runtime, and diversity controls.
+- Explain each recommendation with semantic, genre, quality, negative-preference, and diversity signals.
+- Export or import a local taste backup without exporting API credentials.
+- Add a home-screen widget for the current Tonight pick.
+
+## No LumiTrace Backend
+
+The release app does not connect to a LumiTrace server. Its recommendation path is packaged inside the APK:
 
 ```text
-Offline, once                                Online, per recommendation
-licensed catalog text -> encoder -> index    movie IDs + ratings -> vector lookup
-                                             -> one matrix multiply -> re-rank
+watched movies + ratings
+        |
+        v
+weighted local taste vector
+        |
+        v
+1,000-movie MovieLens/MiniLM starter index
+        |
+        v
+semantic score + genre affinity + quality prior
+        |
+        v
+low-rating penalty + diversity re-ranking
 ```
 
-For the normal **watched + 1-10 rating** flow, the server never runs an encoder at request time. The catalog is already encoded. The online service only looks up saved movie vectors, forms a taste profile, retrieves candidates, applies low-rating penalties to the shortlist, and returns movie IDs with evidence.
+The compact index contains 1,000 normalized 384-dimensional float16 vectors generated ahead of time. The phone performs vector lookup and scoring; it does not run a Transformer model at recommendation time. Read [ALGORITHM.md](ALGORITHM.md) for the exact weights and fallback behavior.
 
-This gives the project three useful modes:
+## Privacy Boundary
 
-| Mode | Setup | Runtime | Best for |
-|---|---|---|---|
-| Bundled demo | 1,000-movie MovieLens index | CPU, no Transformer loaded | Immediate clone-and-run AI preview |
-| Metadata | No usable seed in the index | Browser + configured movie API | Explicit fallback and browsing |
-| Full semantic | Same index + matching encoder | CPU/GPU encoder loaded on demand | Optional free-text scene playlists |
+**Stored on the phone:** watched movies, ratings, notes, profiles, recommendation feedback, the TMDB key, and optional integration credentials.
 
-## Product Experience
+**Sent to TMDB:** movie discovery, search, details, and image requests made with the user's own key.
 
-- First Signal onboarding for a quick initial taste profile
-- Saved films, 1-10 ratings, notes, and More/Less feedback
-- Explainable recommendations with source films and rating evidence
-- Familiar-to-Surprise diversity control and one-redraw roulette
-- Tonight, Two People, Taste Map, Journal, and comparison tools
-- Portable JSON export/import without API keys
-- Optional OpenAI-compatible narration on trusted self-hosts
+**Never required:** a LumiTrace account, analytics, a lab endpoint, a BERT server, Docker, Python, or a public IP address.
 
-## Five-Minute Local Preview
+Android cloud backup is disabled. Clearing the app's data removes the local profile. See [privacy.html](privacy.html) and [SECURITY.md](SECURITY.md) for the complete boundary.
 
-For the lowest-friction preview, use the **Open in GitHub Codespaces** badge above. The container builds the app, starts the bundled semantic index, forwards port `7860`, and opens the Web client. No model download or vector generation is required.
+## Optional Integrations
 
-For poster-backed browsing, create a TMDB API key at <https://www.themoviedb.org/settings/api> after reviewing the provider's current terms.
+- **Trakt:** connect your own Trakt API application to deliberately import watched history and ratings or upload selected local changes.
+- **Google AI Edge Gallery:** hand a bounded, evidence-only prompt to `Gemma-4-E4B-it` installed in AI Edge Gallery for a natural-language explanation. The LLM does not rank movies and is not required for recommendations.
+
+Both features are off until the user configures and invokes them.
+
+## Build From Source
+
+Use Android Studio with its bundled JDK and Android SDK 36, or run the Gradle wrapper from PowerShell after setting `JAVA_HOME`:
 
 ```powershell
 git clone https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation.git
 cd LumiTrace-AI-Movie-Recommendation
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-demo.txt
-Copy-Item .env.example .env
-python app.py
+.\gradlew.bat :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
 
-Open <http://localhost:8080>, enter the TMDB key in **Settings**, and start saving and rating movies. Browser requests made with your key go directly to TMDB; the LumiTrace backend does not receive it.
-
-The repository already contains a compact 1,000-movie MovieLens/MiniLM index, so watched-and-rated recommendations work without downloading a model or building vectors. Poster metadata is hydrated in the browser with the user's own provider key.
-
-## Bundled AI Demo
-
-`demo_index/` is generated from MovieLens Latest Small using title, genre, and community-tag text encoded by `sentence-transformers/all-MiniLM-L6-v2`:
+The debug APK is written to:
 
 ```text
-demo_index/
-  manifest.json    model, dimensions, source, license pointer
-  movies.json      MovieLens-derived ranking metadata
-  vectors.npy      1,000 normalized float16 vectors (~0.8 MB)
-  MOVIELENS_README.txt  upstream data terms, included unchanged
+app/build/outputs/apk/debug/app-debug.apk
 ```
 
-Rebuild it reproducibly with:
-
-```powershell
-python -m pip install -r requirements.txt
-python tools\build_movielens_demo.py --limit 1000 --output demo_index
-```
-
-MovieLens data carries separate research/non-commercial conditions; see [DATA_LICENSE.md](DATA_LICENSE.md). The MIT software license does not replace the data license.
-
-## Private Full Index
-
-LumiTrace still supports private 30,000-movie indexes. The compact format avoids parsing a 500 MB float-filled JSON document. For BGE-M3, a 30,000 x 1,024 float16 matrix uses about 61 MB before metadata; 768-dimensional legacy indexes are smaller.
-
-The repository deliberately does **not** distribute the existing TMDB-derived 30k index. TMDB's current API terms contain specific AI/ML restrictions. Use the API-based builder only if you have reviewed the current terms and obtained any permission required for your use:
-
-```powershell
-python -m pip install -r requirements.txt
-python tools\bootstrap_recommender.py --preset xlarge --tmdb-key YOUR_TMDB_KEY --acknowledge-data-rights
-```
-
-The builder writes `movie_index/`. Presets are `demo` (200), `small` (1,000), `medium` (5,000), `large` (15,000), and `xlarge` (30,000).
-
-### Migrate an Existing JSON Index
-
-```powershell
-python tools\convert_vector_index.py movie_vectors.json --output movie_index --model YOUR_ORIGINAL_MODEL
-```
-
-Legacy JSON does not record its encoder reliably, so conversion requires the original model name. Legacy JSON remains directly readable, so migration does not have to happen immediately.
-
-## Docker
-
-```powershell
-docker compose up --build
-```
-
-Open <http://localhost:8080>. The bundled demo index is active immediately. The image runs one Web process with the vector engine in-process, uses one worker to avoid duplicating the index in RAM, and disables live text encoding by default.
-
-To mount a private full index instead:
-
-```powershell
-$env:LUMITRACE_INDEX_DIR = ".\movie_index"
-$env:LUMITRACE_MIN_VOTE_COUNT = "100"
-docker compose up --build
-```
-
-### Optional LLM Narration
-
-Recommendation ranking never depends on an LLM. A trusted self-host may let its own users supply an OpenAI-compatible narrator by setting:
-
-```text
-LUMITRACE_ALLOW_CLIENT_LLM=true
-```
-
-Local Ollama or LM Studio targets additionally require `LUMITRACE_ALLOW_PRIVATE_LLM=true`. Do not enable either option on an anonymous public demo that should never receive visitor API keys.
-
-## Publish a Safe Live Demo
-
-The recommended public setup is a [Docker-based Hugging Face Space](https://huggingface.co/docs/hub/en/spaces-sdks-docker) or another small CPU container host. The repository supplies one container for both the UI and API, and its licensed demo index starts without extra model assets.
-
-For an authorized custom index, package it separately:
-
-```powershell
-python tools\convert_vector_index.py movie_index --output movie_index --archive lumitrace-index-v1.zip
-```
-
-Upload the archive only to storage whose terms permit your dataset. Keep it private if redistribution is not appropriate, then configure:
-
-```text
-LUMITRACE_INDEX_URL=https://storage.example/lumitrace-index-v1.zip
-LUMITRACE_INDEX_SHA256=<checksum printed by the packaging command>
-LUMITRACE_VECTOR_FILE=movie_index
-LUMITRACE_TEXT_SEARCH=disabled
-LUMITRACE_MIN_VOTE_COUNT=100
-LOCK_REMOTE_SEARCH_URL=true
-```
-
-The container verifies the archive checksum and validates its manifest before serving it. Hugging Face Docker Spaces support custom FastAPI/Flask containers and optional hardware upgrades; free hardware may sleep when idle.
-
-For a separate static frontend, set `DEPLOYED_API_BASE` in `config.js` (or define `window.LUMITRACE_API_BASE` before it loads) and allow only that origin through `LUMITRACE_ALLOWED_ORIGINS`. A same-origin deployment needs no override.
-
-For an Internet-facing service, place [Cloudflare rate limiting](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) or an equivalent gateway in front of the container. LumiTrace also enforces a defensive local request limit, but edge rate limiting should remain the primary protection.
-
-## Recommendation API
-
-The stable endpoint accepts aligned records instead of fragile parallel arrays:
-
-```http
-POST /api/recommendations
-Content-Type: application/json
-
-{
-  "items": [
-    { "tmdb_id": 329865, "rating": 9, "genre_ids": [18, 878] },
-    { "tmdb_id": 157336, "rating": 8.5, "genre_ids": [12, 18, 878] }
-  ],
-  "exclude_ids": [329865, 157336],
-  "top_k": 12,
-  "diversity": 0.55
-}
-```
-
-See [openapi.yaml](openapi.yaml) for the complete contract. The old `/api/semantic-recommendations` and standalone `/search` routes remain available for existing clients.
-
-## Privacy and Security Defaults
-
-- Favorites, ratings, notes, and feedback remain in browser storage.
-- There is no account system or server-side taste-profile synchronization.
-- TMDB keys are sent directly from the browser to TMDB when supplied by a user.
-- `.env`, private vector indexes, databases, generated archives, and model files are ignored by Git; only the separately licensed demo index is tracked.
-- Public deployments lock browser-selected proxy targets by default.
-- Public deployments reject client-supplied LLM credentials by default.
-- API bodies are capped at 64 KiB; IDs, ratings, languages, list sizes, and `top_k` are bounded.
-- Gateway tokens stay server-side and are compared in constant time.
-- Remote index archives require SHA-256 verification and safe ZIP extraction.
-
-## Data and Provider Terms
-
-- Software source: [MIT License](LICENSE).
-- Bundled demo transformation: [MovieLens conditions and citation](DATA_LICENSE.md).
-- MiniLM model: Apache-2.0 according to its model card.
-- TMDB requests and content: subject to the [current TMDB API Terms of Use](https://www.themoviedb.org/api-terms-of-use). LumiTrace does not distribute a TMDB-derived vector index.
-
-This repository is a non-commercial reference project, not legal advice. Operators are responsible for confirming that their data source, model, cache duration, and deployment comply with the applicable terms.
-
-## Validation
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-python -m py_compile app.py ai_engine\bert_service.py ai_engine\index_format.py tools\build_movielens_demo.py
-node tests\test_recommendation_core.js
-node tests\test_experience_contract.js
-node tests\test_inline_scripts.js
-```
-
-The tests include a deterministic miniature vector index, an ID-and-rating recommendation check, API sanitization, rate limiting, privacy boundaries, and frontend contracts.
+No API key is needed to compile or test the project. Enter the key only inside the installed app.
 
 ## Project Map
 
 ```text
-app.py                          Web app, public API, rate limits, local/remote engine
-ai_engine/bert_service.py       Vector retrieval, feedback penalty, evidence, text option
-ai_engine/index_format.py       Safe compact index reader/writer
-demo_index/                     Licensed, ready-to-run MovieLens semantic demo
-DATA_LICENSE.md                 Demo-data provenance, conditions, and citation
-tools/build_movielens_demo.py   Reproducible MovieLens/MiniLM demo-index builder
-tools/bootstrap_recommender.py  TMDB downloader and offline BERT index builder
-tools/convert_vector_index.py   JSON migration and deployable archive packaging
-Dockerfile / compose.yaml       One-container public demo and self-hosting
-.devcontainer/                  One-click GitHub Codespaces preview
-recommendation-core.js          Browser taste state and API contract
-experience.js                   Onboarding, taste tools, and portable data controls
-openapi.yaml                    Public recommendation API specification
+app/src/main/java/com/lumitrace/app/
+  data/             Encrypted local taste state and profile operations
+  recommendation/   On-device vector loading, ranking, penalties, traces
+  network/          Direct TMDB and optional Trakt clients
+  integration/      Optional Google AI Edge Gallery handoff
+  ui/               Jetpack Compose application and view model
+app/src/main/assets/lumitrace/
+  movies.json       MovieLens-derived starter metadata
+  vectors.npy       Normalized float16 MiniLM vectors
+  manifest.json     Index model, dimensions, and provenance
 ```
 
-Contributions are welcome; start with [CONTRIBUTING.md](CONTRIBUTING.md). Security concerns belong in [SECURITY.md](SECURITY.md).
+## Current Scope
+
+The bundled semantic index is intentionally compact. TMDB browsing can show a much larger live catalog, but only movies represented in the bundled starter index can contribute a semantic vector or be returned by the local semantic ranker. This release favors a small, inspectable APK and an immediate private demo over a large downloadable model.
+
+Software is released under the [MIT License](LICENSE). The bundled MovieLens-derived index has separate terms and attribution in [DATA_LICENSE.md](DATA_LICENSE.md).
 
 Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.
-
-Released under the [MIT License](LICENSE).

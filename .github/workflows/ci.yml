@@ -1,63 +1,64 @@
-name: CI
+name: Android CI
 
 on:
   push:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  test-build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "20"
-      - run: python -m pip install flask flask-cors numpy python-dotenv requests werkzeug pytest
-      - run: python -m pip install --index-url https://download.pytorch.org/whl/cpu torch
-      - run: python -m py_compile app.py ai_engine/bert_service.py ai_engine/index_format.py tools/bootstrap_recommender.py tools/build_movielens_demo.py tools/check_public_tree.py tools/convert_vector_index.py tools/fetch_index.py tools/start_demo.py
-      - run: python tools/check_public_tree.py
-      - run: node --check config.js && node --check script.js && node --check recommendation-core.js && node --check experience.js && node tests/test_inline_scripts.js && node tests/test_recommendation_core.js && node tests/test_experience_contract.js
-      - run: docker compose config --quiet
-      - run: python -m pytest -q
+    timeout-minutes: 30
 
-  container-smoke:
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - run: docker build --tag lumitrace-ci .
-      - name: Start the bundled AI demo
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Check public repository boundary
+        shell: bash
         run: |
-          docker run --detach --name lumitrace-ci --publish 7860:7860 lumitrace-ci
-          for attempt in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:7860/api/health > health.json; then
-              exit 0
+          set -euo pipefail
+          for path in .env local.properties keystore.properties app/release.jks app/release.keystore; do
+            if git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+              echo "Sensitive local file is tracked: $path"
+              exit 1
             fi
-            sleep 2
           done
-          docker logs lumitrace-ci
-          exit 1
-      - name: Exercise watched-and-rated recommendations
-        run: |
-          curl --fail --silent \
-            --header 'Content-Type: application/json' \
-            --data '{"items":[{"tmdb_id":329865,"rating":9,"genre_ids":[18,878]},{"tmdb_id":157336,"rating":9,"genre_ids":[12,18,878]},{"tmdb_id":27205,"rating":8.5,"genre_ids":[28,878]}],"exclude_ids":[329865,157336,27205],"top_k":5,"diversity":0.55}' \
-            http://127.0.0.1:7860/api/recommendations > recommendations.json
-          python - <<'PY'
-          import json
-          from pathlib import Path
+          for removed in Dockerfile compose.yaml app.py ai_engine requirements.txt; do
+            if [ -e "$removed" ]; then
+              echo "Obsolete backend surface returned: $removed"
+              exit 1
+            fi
+          done
 
-          health = json.loads(Path("health.json").read_text())
-          response = json.loads(Path("recommendations.json").read_text())
-          assert health["integrations"]["semantic_mode"] == "local-index"
-          assert health["integrations"]["local_index_loaded"] is True
-          assert response["taste_profile"]["mode"] == "precomputed_vector"
-          assert len(response["results"]) == 5
-          assert all(result["id"] not in {329865, 157336, 27205} for result in response["results"])
-          print([result["title"] for result in response["results"]])
-          PY
-      - if: always()
-        run: docker rm --force lumitrace-ci || true
+      - name: Test, lint, and assemble
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LumiTrace-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
