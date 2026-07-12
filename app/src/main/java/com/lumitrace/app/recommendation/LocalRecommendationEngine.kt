@@ -60,7 +60,8 @@ private data class Candidate(
     val genre: Float,
     val quality: Float,
     val negativePenalty: Float = 0f,
-    val diversityAdjustment: Float = 0f
+    val diversityAdjustment: Float = 0f,
+    val refreshAdjustment: Float = 0f
 )
 
 /** Optional hard filters applied before taste ranking (used by Tonight). */
@@ -73,6 +74,20 @@ data class RecommendationConstraints(
     val diversifyStrength: Float = 0.08f
 )
 
+internal data class RankingWeights(
+    val semantic: Float = 0.78f,
+    val genre: Float = 0.14f,
+    val quality: Float = 0.08f,
+    val negativePenalty: Float = 0.64f,
+    val refreshSpread: Float = 0.04f
+) {
+    init {
+        require(kotlin.math.abs(semantic + genre + quality - 1f) < 0.0001f)
+        require(negativePenalty in 0f..0.75f)
+        require(refreshSpread in 0f..0.08f)
+    }
+}
+
 class LocalRecommendationEngine(private val assets: AssetManager) {
     @Volatile
     private var cachedCatalog: LocalCatalog? = null
@@ -80,9 +95,10 @@ class LocalRecommendationEngine(private val assets: AssetManager) {
     suspend fun recommend(
         signals: List<TasteSignal>,
         topK: Int,
-        constraints: RecommendationConstraints = RecommendationConstraints()
+        constraints: RecommendationConstraints = RecommendationConstraints(),
+        variationSeed: Long = 0L
     ): LocalRecommendationResult = withContext(Dispatchers.Default) {
-        LocalRecommendationRanker.rank(loadCatalog(), signals, topK, constraints)
+        LocalRecommendationRanker.rank(loadCatalog(), signals, topK, constraints, variationSeed)
     }
 
     private fun loadCatalog(): LocalCatalog {
@@ -213,7 +229,9 @@ internal object LocalRecommendationRanker {
         catalog: LocalCatalog,
         rawSignals: List<TasteSignal>,
         requestedTopK: Int,
-        constraints: RecommendationConstraints = RecommendationConstraints()
+        constraints: RecommendationConstraints = RecommendationConstraints(),
+        variationSeed: Long = 0L,
+        weights: RankingWeights = RankingWeights()
     ): LocalRecommendationResult {
         val signals = rawSignals
             .filter { it.movie.id > 0 }
@@ -238,7 +256,7 @@ internal object LocalRecommendationRanker {
                 val genre = genreAffinity(movie.genreIds, genreWeights)
                 val quality = qualityPrior(movie)
                 val score = if (hasSemanticProfile) {
-                    semantic * 0.82f + genre * 0.10f + quality * 0.08f
+                    semantic * weights.semantic + genre * weights.genre + quality * weights.quality
                 } else {
                     genre * 0.72f + quality * 0.28f
                 }
@@ -259,10 +277,16 @@ internal object LocalRecommendationRanker {
             val penalty = negativeSeeds.maxOfOrNull { (negativePosition, strength) ->
                 max(0f, vectorSimilarity(catalog, candidate.movie.position, negativePosition)) * strength
             } ?: 0f
-            candidate.copy(score = candidate.score - penalty * 0.24f, negativePenalty = penalty * 0.24f)
+            val weightedPenalty = penalty * weights.negativePenalty
+            candidate.copy(score = candidate.score - weightedPenalty, negativePenalty = weightedPenalty)
         }.sortedByDescending { it.score }
 
-        val selected = diversify(penalized, topK, diversifyStrength)
+        val refreshed = penalized.map { candidate ->
+            candidate.copy(
+                refreshAdjustment = refreshAdjustment(candidate.movie.id, variationSeed, weights.refreshSpread)
+            )
+        }
+        val selected = diversify(refreshed, topK, diversifyStrength)
         val positiveSignals = signals.filter { it.rating <= 0f || it.rating >= 5f }
         val movies = selected.map { candidate ->
             Movie(
@@ -279,7 +303,7 @@ internal object LocalRecommendationRanker {
         return LocalRecommendationResult(
             movies = movies,
             title = "Recommended on this device",
-            summary = "Built locally from ${signals.size} watched movies${if (ratedCount > 0) " and $ratedCount ratings" else ""}. No taste data was sent to a recommendation server.",
+            summary = "Built locally from ${signals.size} watched movies${if (ratedCount > 0) " and $ratedCount ratings" else ""}. Refresh explores near-tied matches without changing your taste scores.",
             traces = selected.associate { candidate ->
                 candidate.movie.id to RecommendationTrace(
                     semanticSimilarity = candidate.semantic,
@@ -373,13 +397,23 @@ internal object LocalRecommendationRanker {
         while (remaining.isNotEmpty() && selected.size < topK) {
             val best = remaining.maxByOrNull { candidate ->
                 val overlap = selected.maxOfOrNull { chosen -> genreOverlap(candidate.movie.genreIds, chosen.movie.genreIds) } ?: 0f
-                candidate.score - overlap * strength
+                candidate.score + candidate.refreshAdjustment - overlap * strength
             } ?: break
             val overlap = selected.maxOfOrNull { chosen -> genreOverlap(best.movie.genreIds, chosen.movie.genreIds) } ?: 0f
             selected += best.copy(diversityAdjustment = overlap * strength)
             remaining.remove(best)
         }
         return selected
+    }
+
+    private fun refreshAdjustment(movieId: Int, variationSeed: Long, spread: Float): Float {
+        if (variationSeed == 0L) return 0f
+        var mixed = variationSeed xor (movieId.toLong() * -7046029254386353131L)
+        mixed = (mixed xor (mixed ushr 30)) * -4658895280553007687L
+        mixed = (mixed xor (mixed ushr 27)) * -7723592293110705685L
+        mixed = mixed xor (mixed ushr 31)
+        val unit = ((mixed ushr 40) and 0xFFFFFFL).toFloat() / 0xFFFFFFL.toFloat()
+        return (unit - 0.5f) * spread.coerceIn(0f, 0.08f)
     }
 
     private fun genreOverlap(first: IntArray, second: IntArray): Float {

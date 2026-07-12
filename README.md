@@ -38,6 +38,7 @@ Android may ask for permission to install an app from your browser or file manag
 - Record watched status, favorites, a 1-10 score, and private journal notes.
 - Keep separate local viewing profiles for solo, partner, or family taste.
 - Produce an infinite recommendation feed from watched and rated films.
+- Refresh a recommendation run to explore a different set of near-tied matches without changing the saved collection.
 - Build a focused **Tonight** shortlist with year, genre, language, runtime, and diversity controls.
 - Explain each recommendation with semantic, genre, quality, negative-preference, and diversity signals.
 - Export or import a local taste backup without exporting API credentials.
@@ -64,6 +65,17 @@ low-rating penalty + diversity re-ranking
 ```
 
 The compact index contains 1,000 normalized 384-dimensional float16 vectors generated ahead of time. The phone performs vector lookup and scoring; it does not run a Transformer model at recommendation time. Read [ALGORITHM.md](ALGORITHM.md) for the exact weights and fallback behavior.
+
+## Measured Rating Influence
+
+Six independent film-domain personas created high- and low-rated collections from the bundled catalog. Against the same collections with all ratings neutralized:
+
+- ratings changed an average of **9.5 movies per Top 20**;
+- expert-labeled positive hits increased from **14 to 19**;
+- expert-labeled negative hits decreased from **5 to 2**;
+- an unchanged collection refresh changed **4.8 movies per Top 20** on average while keeping relevance loss below the test gate.
+
+These are reproducible controlled scenarios, not production A/B results. See [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md) for the six profiles, method, representative outputs, limitations, and rerun command.
 
 ## Privacy Boundary
 
@@ -109,6 +121,9 @@ app/src/main/assets/lumitrace/
   movies.json       MovieLens-derived starter metadata
   vectors.npy       Normalized float16 MiniLM vectors
   manifest.json     Index model, dimensions, and provenance
+app/src/test/resources/recommendation/
+  expert_profiles.json  Six independent high/low-rated taste fixtures
+RECOMMENDATION_EVALUATION.md  Protocol, results, limitations, rerun steps
 ```
 
 ## Current Scope

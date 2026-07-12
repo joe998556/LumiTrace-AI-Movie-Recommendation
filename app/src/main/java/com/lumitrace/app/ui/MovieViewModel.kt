@@ -29,6 +29,7 @@ import com.lumitrace.app.network.TraktTokenResponse
 import com.lumitrace.app.recommendation.LocalRecommendationEngine
 import com.lumitrace.app.recommendation.RecommendationConstraints
 import com.lumitrace.app.recommendation.RecommendationTrace
+import com.lumitrace.app.recommendation.RecommendationVariation
 import com.lumitrace.app.recommendation.TasteSignal
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -96,6 +97,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
     private val tasteStore = LocalTasteStore(prefs, gson)
     private var tasteLibrary = tasteStore.load(legacyTasteEntries())
     private val localRecommendationEngine = LocalRecommendationEngine(application.assets)
+    private val recommendationVariation = RecommendationVariation()
     private val movieDetailsCache = mutableMapOf<Int, Movie>()
     private var semanticTopK = SEMANTIC_PAGE_SIZE
     private var semanticEndReached = false
@@ -623,6 +625,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
     fun resetRecommendations() {
         semanticTopK = SEMANTIC_PAGE_SIZE
+        recommendationVariation.reset()
         semanticEndReached = false
         semanticLoading = false
         lastSemanticLoadMoreAt = 0L
@@ -658,6 +661,7 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
         val apiKey = currentTmdbApiKey() ?: return
         val currentResults = (_uiState.value as? UiState.Success)?.movies.orEmpty()
         val requestedTopK = if (expand) semanticTopK + SEMANTIC_PAGE_SIZE else SEMANTIC_PAGE_SIZE
+        val variationSeed = recommendationVariation.seedFor(expand)
 
         viewModelScope.launch {
             semanticLoading = true
@@ -668,7 +672,11 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = UiState.Loading
             }
             try {
-                val result = localRecommendationEngine.recommend(signals, requestedTopK)
+                val result = localRecommendationEngine.recommend(
+                    signals = signals,
+                    topK = requestedTopK,
+                    variationSeed = variationSeed
+                )
                 val hydratedMovies = hydrateRecommendationMovies(result.movies, apiKey)
 
                 if (hydratedMovies.isNotEmpty()) {

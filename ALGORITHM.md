@@ -37,8 +37,8 @@ An unrated watched movie therefore contributes a modest positive signal. A high 
 When a semantic profile is available, each candidate receives:
 
 ```text
-base_score = 0.82 * semantic_similarity
-           + 0.10 * genre_affinity
+base_score = 0.78 * semantic_similarity
+           + 0.14 * genre_affinity
            + 0.08 * quality_prior
 ```
 
@@ -65,10 +65,10 @@ negative_strength = clamp((5 - rating) / 4, 0, 1)
 LumiTrace does not subtract disliked vectors from the taste vector. Instead, it first retrieves a bounded candidate pool, compares only those candidates with negative seeds, and subtracts at most:
 
 ```text
-negative_penalty = max(candidate_similarity_to_negative * strength) * 0.24
+negative_penalty = max(candidate_similarity_to_negative * strength) * 0.64
 ```
 
-This keeps positive semantic geometry intact while suppressing candidates that closely resemble a clearly disliked movie.
+This keeps positive semantic geometry intact while strongly suppressing candidates that closely resemble a clearly disliked movie. The coefficient was selected from a 24-point weight grid evaluated across six independently authored film-taste profiles; see [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md).
 
 ## 5. Diversity Re-Ranking
 
@@ -80,14 +80,26 @@ selection_score = current_score - genre_jaccard_overlap * diversity_strength
 
 The strength is bounded to `0.0..0.2`. A zero value preserves the original relevance order; higher values trade a small amount of similarity for a broader final list.
 
-## 6. Constraints and Exclusions
+## 6. Refresh Variation
+
+An explicit refresh advances a local variation seed. Each shortlisted movie receives a reproducible adjustment in the bounded range `-0.02..0.02`:
+
+```text
+selection_score = current_score
+                + stable_refresh_adjustment(movie_id, refresh_seed)
+                - genre_overlap_penalty
+```
+
+The adjustment is deliberately smaller than the taste score components. It changes near-tied membership without turning refresh into random discovery. Loading more results reuses the active seed, while pressing **Refresh recommendations** advances it. Repeating the same seed reproduces the same order, and the adjustment is excluded from the displayed relevance trace.
+
+## 7. Constraints and Exclusions
 
 - Watched seed movies are excluded from results.
 - `topK` is bounded to the catalog size and a maximum of 300.
 - Tonight can apply required genre groups and minimum or maximum release year before ranking.
 - A wider bounded pool is retained before diversity and negative-preference re-ranking.
 
-## 7. Explainability
+## 8. Explainability
 
 Each result has a local recommendation trace containing:
 
@@ -101,7 +113,13 @@ Each result has a local recommendation trace containing:
 
 The app also names the closest positive watched movie when that evidence exists. These explanations are deterministic and generated from the same local score trace used for ranking.
 
-## 8. Limits
+## 9. Evaluation
+
+Six independent film-domain personas supplied 90+ watched ratings, including explicit high and low scores, plus narrow unseen positive and negative sets. Compared with the identical watched collections made rating-neutral, calibrated ratings changed an average of 9.5 movies in each Top 20, increased labeled positive hits from 14 to 19, and reduced labeled negative hits from 5 to 2. Refresh changed an average of 4.8 movies while preserving focus-genre and score-loss gates.
+
+The fixtures and assertions live under `app/src/test/resources/recommendation/` and `app/src/test/java/com/lumitrace/app/recommendation/`. These are controlled expert scenarios, not population-level accuracy or an online A/B test. The full protocol and limitations are in [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md).
+
+## 10. Limits
 
 The starter index is a demo-scale catalog, not a complete movie universe. A live TMDB result that is absent from the index may still be saved and rated, but it cannot add semantic dimensions to the local profile. Enlarging the index requires a redistributable data source, measured APK-size and memory budgets, and regenerated vectors with exactly the model declared by the manifest.
 

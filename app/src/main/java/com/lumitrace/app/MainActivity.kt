@@ -301,6 +301,8 @@ fun MovieScreen(viewModel: MovieViewModel, openTonight: Boolean = false) {
                     Reveal(index = 1) {
                         RecommendationScreen(
                             seedMovies = watchedMovies.toList(),
+                            hasResults = uiState is UiState.Success,
+                            isLoading = uiState is UiState.Loading,
                             onRun = { viewModel.searchSemanticMovies(watchedMovies.toList()) },
                             onOpenTasteInput = { destination = AppDestination.TasteInput },
                             onBackHome = {
@@ -805,6 +807,8 @@ private fun TraktPanel(
 @Composable
 private fun RecommendationScreen(
     seedMovies: List<Movie>,
+    hasResults: Boolean,
+    isLoading: Boolean,
     onRun: () -> Unit,
     onOpenTasteInput: () -> Unit,
     onBackHome: () -> Unit
@@ -818,6 +822,8 @@ private fun RecommendationScreen(
 
         RecommendationControlPanel(
             seedCount = seedMovies.size,
+            hasResults = hasResults,
+            isLoading = isLoading,
             onOpenTasteInput = onOpenTasteInput,
             onRun = onRun,
             onBackHome = onBackHome
@@ -828,6 +834,8 @@ private fun RecommendationScreen(
 @Composable
 private fun RecommendationControlPanel(
     seedCount: Int,
+    hasResults: Boolean,
+    isLoading: Boolean,
     onOpenTasteInput: () -> Unit,
     onRun: () -> Unit,
     onBackHome: () -> Unit
@@ -860,7 +868,8 @@ private fun RecommendationControlPanel(
                 )
                 if (canRun) {
                     LumiPillButton(
-                        label = "Run AI recommendation",
+                        label = recommendationActionLabel(hasResults, isLoading),
+                        enabled = !isLoading,
                         onClick = onRun,
                         modifier = Modifier.weight(1.35f)
                     )
@@ -2436,6 +2445,12 @@ private fun DotRatingSlider(value: Float, onValueChange: (Float) -> Unit) {
 private fun formatRating(score: Float): String = String.format(Locale.US, "%.1f", score)
 
 internal fun watchedActionLabel(isWatched: Boolean): String = if (isWatched) "Watched" else "Mark watched"
+
+internal fun recommendationActionLabel(hasResults: Boolean, isLoading: Boolean): String = when {
+    isLoading -> "Ranking locally"
+    hasResults -> "Refresh recommendations"
+    else -> "Run recommendation"
+}
 
 @Composable
 private fun MovieNoteField(value: String, onValueChange: (String) -> Unit) {

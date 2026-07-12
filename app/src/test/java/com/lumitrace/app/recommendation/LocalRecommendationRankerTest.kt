@@ -104,6 +104,32 @@ class LocalRecommendationRankerTest {
         assertFalse(result.movies.any { it.id == 3 })
     }
 
+    @Test
+    fun refreshSeedChangesNearTiedPicksButKeepsStrongTasteAnchors() {
+        val rows = buildList {
+            add(indexedMovie(1, "Taste seed", intArrayOf(878)) to floatArrayOf(1f, 0f))
+            add(indexedMovie(2, "Strong anchor", intArrayOf(878)) to normalized(0.999f, 0.04f))
+            repeat(30) { index ->
+                add(
+                    indexedMovie(100 + index, "Near-tied candidate $index", intArrayOf(878)) to
+                        normalized(0.82f, 0.57f)
+                )
+            }
+        }
+        val catalog = catalogOf(*rows.toTypedArray())
+        val signals = listOf(TasteSignal(Movie(id = 1, title = "Taste seed", genreIds = listOf(878)), 9f))
+
+        val first = LocalRecommendationRanker.rank(catalog, signals, requestedTopK = 10, variationSeed = 0L)
+        val refreshed = LocalRecommendationRanker.rank(catalog, signals, requestedTopK = 10, variationSeed = 1L)
+        val repeated = LocalRecommendationRanker.rank(catalog, signals, requestedTopK = 10, variationSeed = 1L)
+
+        assertEquals(2, first.movies.first().id)
+        assertEquals(2, refreshed.movies.first().id)
+        assertEquals(refreshed.movies.map { it.id }, repeated.movies.map { it.id })
+        assertFalse(first.movies.map { it.id }.toSet() == refreshed.movies.map { it.id }.toSet())
+        assertTrue(first.movies.map { it.id }.toSet().intersect(refreshed.movies.map { it.id }.toSet()).size >= 3)
+    }
+
     private fun indexedMovie(id: Int, title: String, genres: IntArray): IndexMovie {
         return IndexMovie(
             id = id,

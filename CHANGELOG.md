@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Six independent film-domain taste fixtures with high ratings, low ratings, unseen positive examples, and unseen negative examples.
+- Reproducible rating-neutral, calibrated-rating, and unchanged-collection refresh evaluation reports.
+- A tested refresh-seed sequence that keeps load-more stable and changes only explicit refresh runs.
+
+### Changed
+
+- Calibrated semantic, genre, and quality weights to `0.78 / 0.14 / 0.08` across a 24-point grid.
+- Increased post-ranking low-score suppression to `0.64`; low-rated vectors remain outside the positive taste centroid.
+- Recommendation controls now say **Refresh recommendations** after the first result set.
+
 ## 1.2.1 - 2026-07-12
 
 ### Changed
