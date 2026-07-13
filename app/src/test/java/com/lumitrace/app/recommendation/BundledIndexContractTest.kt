@@ -25,8 +25,9 @@ class BundledIndexContractTest {
             dimension
         )
 
-        assertEquals(1000, count)
-        assertEquals(384, dimension)
+        assertEquals(30_000, count)
+        assertEquals(768, dimension)
+        assertEquals("AventIQ-AI/bert-movie-recommendation-system", manifest["model"].asString)
         assertEquals(count, movies.size())
         assertEquals(count * dimension, vectors.size)
 
@@ -37,7 +38,6 @@ class BundledIndexContractTest {
         var squaredNorm = 0f
         for (index in 0 until dimension) squaredNorm += vectors[index] * vectors[index]
         assertEquals(1f, sqrt(squaredNorm), 0.01f)
-        assertTrue(File(root, manifest["data_license"].asString).isFile)
         assertTrue(File(root, manifest["data_notice"].asString).isFile)
     }
 }

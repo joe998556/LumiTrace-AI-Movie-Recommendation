@@ -1,1 +1,14 @@
-{"format":"lumitrace-vector-index","version":1,"model":"sentence-transformers/all-MiniLM-L6-v2","count":1000,"dimension":384,"dtype":"float16","normalized":true,"movies":"movies.json","vectors":"vectors.npy","dataset":"MovieLens Latest Small","dataset_url":"https://files.grouplens.org/datasets/movielens/ml-latest-small.zip","dataset_md5":"31a303aabbc519bd33d025e44d6c2570","data_license":"MOVIELENS_README.txt","data_notice":"DATA_LICENSE.md"}
+{
+  "format": "lumitrace-vector-index",
+  "version": 1,
+  "model": "AventIQ-AI/bert-movie-recommendation-system",
+  "count": 30000,
+  "dimension": 768,
+  "dtype": "float16",
+  "normalized": true,
+  "movies": "movies.json",
+  "vectors": "vectors.npy",
+  "dataset": "TMDB-derived 30,000 movie metadata snapshot",
+  "embedding_text_mode": "rich",
+  "data_notice": "DATA_LICENSE.md"
+}

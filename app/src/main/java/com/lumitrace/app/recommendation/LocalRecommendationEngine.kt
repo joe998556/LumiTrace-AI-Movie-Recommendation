@@ -1,16 +1,19 @@
 package com.lumitrace.app.recommendation
 
 import android.content.res.AssetManager
+import android.util.JsonReader
 import com.lumitrace.app.data.Movie
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.Locale
 import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.sqrt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.json.JSONArray
 import org.json.JSONObject
 
 data class TasteSignal(
@@ -75,10 +78,10 @@ data class RecommendationConstraints(
 )
 
 internal data class RankingWeights(
-    val semantic: Float = 0.78f,
-    val genre: Float = 0.14f,
-    val quality: Float = 0.08f,
-    val negativePenalty: Float = 0.64f,
+    val semantic: Float = 0.64f,
+    val genre: Float = 0.22f,
+    val quality: Float = 0.14f,
+    val negativePenalty: Float = 0.32f,
     val refreshSpread: Float = 0.04f
 ) {
     init {
@@ -119,25 +122,10 @@ class LocalRecommendationEngine(private val assets: AssetManager) {
 
         val moviesName = manifest.getString("movies")
         val vectorsName = manifest.getString("vectors")
-        val movieArray = JSONArray(readAssetText("$ASSET_ROOT/$moviesName"))
-        require(movieArray.length() == count) { "Movie metadata and vector counts do not match." }
-
-        val movies = ArrayList<IndexMovie>(count)
-        for (position in 0 until movieArray.length()) {
-            val row = movieArray.getJSONObject(position)
-            movies += IndexMovie(
-                id = row.getInt("id"),
-                title = row.optString("title").ifBlank { "Untitled" },
-                releaseDate = row.optString("release_date"),
-                voteAverage = row.optDouble("vote_average", 0.0).toFloat(),
-                voteCount = row.optDouble("vote_count", 0.0).toInt(),
-                genreIds = row.optJSONArray("genre_ids").toIntArray(),
-                position = position
-            )
+        val movies = readMovies("$ASSET_ROOT/$moviesName", count)
+        val vectors = assets.open("$ASSET_ROOT/$vectorsName").use { input ->
+            NumpyFloat16Reader.decode(input, count, dimension)
         }
-
-        val vectorBytes = assets.open("$ASSET_ROOT/$vectorsName").use { it.readBytes() }
-        val vectors = NumpyFloat16Reader.decode(vectorBytes, count, dimension)
         return LocalCatalog(
             movies = movies,
             vectors = vectors,
@@ -150,9 +138,53 @@ class LocalRecommendationEngine(private val assets: AssetManager) {
         return assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
     }
 
-    private fun JSONArray?.toIntArray(): IntArray {
-        if (this == null) return IntArray(0)
-        return IntArray(length()) { index -> optInt(index) }
+    private fun readMovies(path: String, expectedCount: Int): List<IndexMovie> {
+        val movies = ArrayList<IndexMovie>(expectedCount)
+        assets.open(path).bufferedReader(Charsets.UTF_8).use { input ->
+            JsonReader(input).use { reader ->
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    var id = 0
+                    var title = ""
+                    var releaseDate = ""
+                    var voteAverage = 0f
+                    var voteCount = 0
+                    var genreIds = IntArray(0)
+                    reader.beginObject()
+                    while (reader.hasNext()) {
+                        when (reader.nextName()) {
+                            "id" -> id = reader.nextInt()
+                            "title" -> title = reader.nextString()
+                            "release_date" -> releaseDate = reader.nextString()
+                            "vote_average" -> voteAverage = reader.nextDouble().toFloat()
+                            "vote_count" -> voteCount = reader.nextDouble().toInt()
+                            "genre_ids" -> {
+                                val genres = ArrayList<Int>(4)
+                                reader.beginArray()
+                                while (reader.hasNext()) genres += reader.nextInt()
+                                reader.endArray()
+                                genreIds = genres.toIntArray()
+                            }
+                            else -> reader.skipValue()
+                        }
+                    }
+                    reader.endObject()
+                    require(id > 0) { "The bundled recommendation index contains an invalid movie ID." }
+                    movies += IndexMovie(
+                        id = id,
+                        title = title.ifBlank { "Untitled" },
+                        releaseDate = releaseDate,
+                        voteAverage = voteAverage,
+                        voteCount = voteCount,
+                        genreIds = genreIds,
+                        position = movies.size
+                    )
+                }
+                reader.endArray()
+            }
+        }
+        require(movies.size == expectedCount) { "Movie metadata and vector counts do not match." }
+        return movies
     }
 
     private companion object {
@@ -162,27 +194,33 @@ class LocalRecommendationEngine(private val assets: AssetManager) {
 
 internal object NumpyFloat16Reader {
     fun decode(bytes: ByteArray, count: Int, dimension: Int): FloatArray {
-        require(bytes.size >= 10) { "The bundled vector file is truncated." }
+        return ByteArrayInputStream(bytes).use { input -> decode(input, count, dimension) }
+    }
+
+    fun decode(source: InputStream, count: Int, dimension: Int): FloatArray {
+        val input = source.buffered(64 * 1024)
+        val prefix = ByteArray(8)
+        input.readFully(prefix)
         val magic = byteArrayOf(0x93.toByte(), 'N'.code.toByte(), 'U'.code.toByte(), 'M'.code.toByte(), 'P'.code.toByte(), 'Y'.code.toByte())
-        require(bytes.copyOfRange(0, magic.size).contentEquals(magic)) {
+        require(prefix.copyOfRange(0, magic.size).contentEquals(magic)) {
             "The bundled vector file is not a NumPy array."
         }
 
-        val majorVersion = bytes[6].toInt() and 0xff
-        val headerLength: Int
-        val headerStart: Int
-        if (majorVersion == 1) {
-            headerLength = (bytes[8].toInt() and 0xff) or ((bytes[9].toInt() and 0xff) shl 8)
-            headerStart = 10
+        val majorVersion = prefix[6].toInt() and 0xff
+        val headerLength = if (majorVersion == 1) {
+            val lengthBytes = ByteArray(2)
+            input.readFully(lengthBytes)
+            (lengthBytes[0].toInt() and 0xff) or ((lengthBytes[1].toInt() and 0xff) shl 8)
         } else {
-            require(bytes.size >= 12) { "The bundled vector header is truncated." }
-            headerLength = ByteBuffer.wrap(bytes, 8, 4).order(ByteOrder.LITTLE_ENDIAN).int
-            headerStart = 12
+            val lengthBytes = ByteArray(4)
+            input.readFully(lengthBytes)
+            ByteBuffer.wrap(lengthBytes).order(ByteOrder.LITTLE_ENDIAN).int
         }
 
-        val dataStart = headerStart + headerLength
-        require(dataStart <= bytes.size) { "The bundled vector header is invalid." }
-        val header = String(bytes, headerStart, headerLength, Charsets.US_ASCII)
+        require(headerLength > 0) { "The bundled vector header is invalid." }
+        val headerBytes = ByteArray(headerLength)
+        input.readFully(headerBytes)
+        val header = String(headerBytes, Charsets.US_ASCII)
         require(header.contains("'descr': '<f2'") && header.contains("'fortran_order': False")) {
             "The bundled vectors must be little-endian float16 rows."
         }
@@ -190,13 +228,30 @@ internal object NumpyFloat16Reader {
             "The bundled vector header does not match its manifest."
         }
         val valueCount = Math.multiplyExact(count, dimension)
-        val byteCount = Math.multiplyExact(valueCount, 2)
-        require(dataStart >= headerStart && bytes.size >= dataStart + byteCount) {
-            "The bundled vector matrix has the wrong shape."
+        val vectors = FloatArray(valueCount)
+        val chunk = ByteArray(64 * 1024)
+        var vectorIndex = 0
+        while (vectorIndex < valueCount) {
+            val bytesToRead = minOf(chunk.size, (valueCount - vectorIndex) * 2)
+            input.readFully(chunk, bytesToRead)
+            var offset = 0
+            while (offset < bytesToRead) {
+                val half = (chunk[offset].toInt() and 0xff) or
+                    ((chunk[offset + 1].toInt() and 0xff) shl 8)
+                vectors[vectorIndex++] = halfToFloat(half)
+                offset += 2
+            }
         }
+        return vectors
+    }
 
-        val buffer = ByteBuffer.wrap(bytes, dataStart, byteCount).order(ByteOrder.LITTLE_ENDIAN)
-        return FloatArray(valueCount) { halfToFloat(buffer.short.toInt() and 0xffff) }
+    private fun InputStream.readFully(buffer: ByteArray, length: Int = buffer.size) {
+        var offset = 0
+        while (offset < length) {
+            val read = read(buffer, offset, length - offset)
+            require(read >= 0) { "The bundled vector file is truncated." }
+            offset += read
+        }
     }
 
     private fun halfToFloat(half: Int): Float {
@@ -246,12 +301,14 @@ internal object LocalRecommendationRanker {
         val hasSemanticProfile = profile.any { it != 0f }
         val genreGroups = constraints.requiredGenreGroups.filter { it.isNotEmpty() }
         val poolMultiplier = if (genreGroups.isEmpty()) 6 else 10
+        val minimumCandidatePool = if (catalog.movies.size >= 10_000) 1_000 else 100
         val diversifyStrength = constraints.diversifyStrength.coerceIn(0f, 0.2f)
 
         val candidates = catalog.movies.asSequence()
             .filterNot { it.id in excludedIds }
             .filter { movie -> matchesGenreGroups(movie.genreIds, genreGroups) }
             .filter { movie -> matchesYear(movie.releaseDate, constraints.minYear, constraints.maxYear) }
+            .filter { movie -> movie.voteCount < 50 || movie.voteAverage >= 5f }
             .map { movie ->
                 val semantic = if (hasSemanticProfile) dot(catalog, movie.position, profile) else 0f
                 val genre = genreAffinity(movie.genreIds, genreWeights, genreScale)
@@ -264,7 +321,7 @@ internal object LocalRecommendationRanker {
                 Candidate(movie, score, semantic, genre, quality)
             }
             .sortedByDescending { it.score }
-            .take(max(100, topK * poolMultiplier))
+            .take(max(minimumCandidatePool, topK * poolMultiplier))
             .toList()
 
         val negativeSeeds = signals.mapNotNull { signal ->
@@ -384,9 +441,11 @@ internal object LocalRecommendationRanker {
     }
 
     private fun qualityPrior(movie: IndexMovie): Float {
-        val rating = (movie.voteAverage / 10f).coerceIn(0f, 1f)
-        val confidence = sqrt((movie.voteCount / 300f).coerceIn(0f, 1f))
-        return rating * 0.78f + confidence * 0.22f
+        val votes = movie.voteCount.coerceAtLeast(0).toFloat()
+        val rating = movie.voteAverage.coerceIn(0f, 10f)
+        val adjustedRating = (votes * rating + 1_000f * 6.2f) / (votes + 1_000f)
+        val confidence = (ln(1f + votes) / ln(20_001f)).coerceIn(0f, 1f)
+        return (adjustedRating / 10f) * 0.80f + confidence * 0.20f
     }
 
     private fun diversify(

@@ -17,11 +17,13 @@
 <p align="center">
   <a href="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml"><img src="https://github.com/joe998556/LumiTrace-AI-Movie-Recommendation/actions/workflows/ci.yml/badge.svg" alt="Android CI"></a>
   <img src="https://img.shields.io/badge/Android-7.0%2B-36d6c2" alt="Android 7.0 or newer">
-  <img src="https://img.shields.io/badge/release-v1.2.1-f28c6f" alt="Version 1.2.1">
+  <img src="https://img.shields.io/badge/release-v1.3.0-f28c6f" alt="Version 1.3.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/code-MIT-9bc6b8" alt="MIT license"></a>
 </p>
 
 LumiTrace turns watched movies and 1-10 ratings into explainable recommendations without a LumiTrace account or recommendation server. Install one APK, enter your own TMDB API key, and the app is ready to browse, track, rate, and recommend.
+
+> **Development status:** release and source builds now contain the 30,000-movie index described below.
 
 ## Start in Three Steps
 
@@ -55,7 +57,7 @@ watched movies + ratings
 weighted local taste vector
         |
         v
-1,000-movie MovieLens/MiniLM starter index
+30,000-movie rich-text BERT index
         |
         v
 semantic score + genre affinity + quality prior
@@ -64,18 +66,18 @@ semantic score + genre affinity + quality prior
 low-rating penalty + diversity re-ranking
 ```
 
-The compact index contains 1,000 normalized 384-dimensional float16 vectors generated ahead of time. The phone performs vector lookup and scoring; it does not run a Transformer model at recommendation time. Read [ALGORITHM.md](ALGORITHM.md) for the exact weights and fallback behavior.
+The development index contains 30,000 normalized 768-dimensional float16 vectors generated ahead of time. The phone performs vector lookup and scoring; it does not run a Transformer model at recommendation time. Metadata and vectors are streamed from the APK to control peak loading memory. Read [ALGORITHM.md](ALGORITHM.md) for the exact weights, quality gate, and fallback behavior.
 
 ## Measured Rating Influence
 
 Six independent film-domain personas created high- and low-rated collections from the bundled catalog. Against the same collections with all ratings neutralized:
 
-- ratings changed an average of **9.5 movies per Top 20**;
-- expert-labeled positive hits increased from **14 to 19**;
-- expert-labeled negative hits decreased from **5 to 2**;
-- an unchanged collection refresh changed **4.8 movies per Top 20** on average while keeping relevance loss below the test gate.
+- ratings changed an average of **10.8 movies per Top 20**;
+- focus genres covered **118 of 120** rated recommendation slots;
+- the narrow labeled negative set fell from **1 hit to 0**;
+- an unchanged collection refresh changed **6.8 movies per Top 20** on average while keeping relevance loss below the test gate.
 
-These are reproducible controlled scenarios, not production A/B results. See [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md) for the six profiles, method, representative outputs, limitations, and rerun command.
+These are reproducible controlled scenarios, not production A/B results. The original exact-title positive sets cover only a tiny fraction of the expanded catalog, so broad focus coverage and an independent qualitative review are reported alongside exact hits. See [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md) for the method and remaining weaknesses.
 
 ## Privacy Boundary
 
@@ -118,8 +120,8 @@ app/src/main/java/com/lumitrace/app/
   network/          Direct TMDB and optional Trakt clients
   ui/               Jetpack Compose application and view model
 app/src/main/assets/lumitrace/
-  movies.json       MovieLens-derived starter metadata
-  vectors.npy       Normalized float16 MiniLM vectors
+  movies.json       30,000-movie evaluation metadata snapshot
+  vectors.npy       Normalized 768-d float16 BERT vectors
   manifest.json     Index model, dimensions, and provenance
 app/src/test/resources/recommendation/
   expert_profiles.json  Six independent high/low-rated taste fixtures
@@ -128,8 +130,8 @@ RECOMMENDATION_EVALUATION.md  Protocol, results, limitations, rerun steps
 
 ## Current Scope
 
-The bundled semantic index is intentionally compact. TMDB browsing can show a much larger live catalog, but only movies represented in the bundled starter index can contribute a semantic vector or be returned by the local semantic ranker. This release favors a small, inspectable APK and an immediate private demo over a large downloadable model.
+The release build packages 30,000 candidates in a roughly 60 MiB debug APK (about 54 MiB unsigned release). Only movies represented in this index can contribute a semantic vector or be returned by the local semantic ranker. The index improves coverage substantially, but qualitative evaluation still finds weaker separation between authored animation and branded family titles, and between cerebral science fiction and effects-led genre films.
 
-Software is released under the [MIT License](LICENSE). The bundled MovieLens-derived index has separate terms and attribution in [DATA_LICENSE.md](DATA_LICENSE.md).
+Software is released under the [MIT License](LICENSE). The bundled evaluation metadata and vector index have separate terms and a publication warning in [DATA_LICENSE.md](DATA_LICENSE.md).
 
 Movie metadata and posters are provided by TMDB. This product uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.

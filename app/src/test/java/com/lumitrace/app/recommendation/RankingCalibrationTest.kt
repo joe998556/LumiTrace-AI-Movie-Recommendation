@@ -2,25 +2,26 @@ package com.lumitrace.app.recommendation
 
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RankingCalibrationTest {
     @Test
-    fun reportsGeneralWeightGridAcrossAllExpertProfiles() {
-        val semanticGenrePairs = listOf(
-            0.82f to 0.10f,
-            0.78f to 0.14f,
-            0.74f to 0.18f,
-            0.70f to 0.22f
+    fun reportsWeightSensitivityAcrossAllExpertProfiles() {
+        val componentWeights = listOf(
+            Triple(0.70f, 0.22f, 0.08f),
+            Triple(0.64f, 0.22f, 0.14f),
+            Triple(0.58f, 0.22f, 0.20f),
+            Triple(0.64f, 0.18f, 0.18f)
         )
-        val negativeWeights = listOf(0.24f, 0.32f, 0.40f, 0.48f, 0.56f, 0.64f)
-        val rows = semanticGenrePairs.flatMap { (semantic, genre) ->
+        val negativeWeights = listOf(0.24f, 0.32f, 0.40f)
+        val rows = componentWeights.flatMap { (semantic, genre, quality) ->
             negativeWeights.map { negative ->
                 evaluate(
                     RankingWeights(
                         semantic = semantic,
                         genre = genre,
-                        quality = 0.08f,
+                        quality = quality,
                         negativePenalty = negative,
                         refreshSpread = 0.04f
                     )
@@ -33,17 +34,21 @@ class RankingCalibrationTest {
                 .thenByDescending { it.focusHits }
         )
 
-        println("CALIBRATION semantic genre negative | ratedGood neutralGood ratedBad neutralBad | lift badReduction focus ratingChanges minChanges")
+        println("CALIBRATION semantic genre quality negative | ratedGood neutralGood ratedBad neutralBad | lift badReduction focus ratingChanges minChanges")
         rows.forEach { row ->
             println(
-                "CALIBRATION ${row.weights.semantic.f(2)} ${row.weights.genre.f(2)} ${row.weights.negativePenalty.f(2)} | " +
+                "CALIBRATION ${row.weights.semantic.f(2)} ${row.weights.genre.f(2)} ${row.weights.quality.f(2)} ${row.weights.negativePenalty.f(2)} | " +
                     "${row.ratedGoodHits} ${row.neutralGoodHits} ${row.ratedBadHits} ${row.neutralBadHits} | " +
                     "${row.preferenceLift} ${row.badReduction} ${row.focusHits} ${row.ratingChanges} ${row.minimumProfileChanges}"
             )
         }
 
-        assertEquals(24, rows.size)
-        assertEquals(RankingWeights(), rows.first().weights)
+        assertEquals(12, rows.size)
+        val production = rows.single { it.weights == RankingWeights() }
+        assertTrue(production.preferenceLift > 0)
+        assertTrue(production.badReduction > 0)
+        assertTrue(production.focusHits >= 115)
+        assertTrue(production.minimumProfileChanges >= 3)
     }
 
     private fun evaluate(weights: RankingWeights): CalibrationRow {

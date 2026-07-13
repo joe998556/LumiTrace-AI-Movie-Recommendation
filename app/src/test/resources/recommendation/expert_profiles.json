@@ -27,8 +27,8 @@
       "goodUnseen": [
         {"id": 782, "title": "Gattaca"},
         {"id": 68, "title": "Brazil"},
-        {"id": 9323, "title": "Ghost in the Shell (Kôkaku kidôtai)"},
-        {"id": 63, "title": "Twelve Monkeys (a.k.a. 12 Monkeys)"},
+        {"id": 9323, "title": "Ghost in the Shell"},
+        {"id": 63, "title": "Twelve Monkeys"},
         {"id": 2666, "title": "Dark City"},
         {"id": 686, "title": "Contact"},
         {"id": 473, "title": "Pi"},
@@ -38,7 +38,7 @@
       ],
       "badUnseen": [
         {"id": 605, "title": "The Matrix Revolutions"},
-        {"id": 8078, "title": "Alien: Resurrection"},
+        {"id": 8078, "title": "Alien Resurrection"},
         {"id": 2048, "title": "I, Robot"},
         {"id": 1635, "title": "The Island"},
         {"id": 1858, "title": "Transformers"}
@@ -52,7 +52,7 @@
       "minimumFocusHits": 12,
       "watchedRatings": [
         {"id": 1949, "title": "Zodiac", "rating": 10.0},
-        {"id": 240, "title": "The Godfather: Part II", "rating": 10.0},
+        {"id": 240, "title": "The Godfather Part II", "rating": 10.0},
         {"id": 829, "title": "Chinatown", "rating": 9.5},
         {"id": 238, "title": "The Godfather", "rating": 9.5},
         {"id": 6977, "title": "No Country for Old Men", "rating": 9.5},
@@ -69,21 +69,21 @@
         {"id": 8374, "title": "The Boondock Saints", "rating": 2.0}
       ],
       "goodUnseen": [
-        {"id": 769, "title": "Goodfellas"},
+        {"id": 769, "title": "GoodFellas"},
         {"id": 963, "title": "The Maltese Falcon"},
-        {"id": 599, "title": "Sunset Blvd. (a.k.a. Sunset Boulevard)"},
+        {"id": 599, "title": "Sunset Boulevard"},
         {"id": 793, "title": "Blue Velvet"},
         {"id": 1051, "title": "The French Connection"},
         {"id": 9008, "title": "The Insider"},
         {"id": 59, "title": "A History of Violence"},
         {"id": 322, "title": "Mystic River"},
-        {"id": 582, "title": "Lives of Others, The (Das leben der Anderen)"},
-        {"id": 598, "title": "City of God (Cidade de Deus)"},
+        {"id": 582, "title": "The Lives of Others"},
+        {"id": 598, "title": "City of God"},
         {"id": 968, "title": "Dog Day Afternoon"},
         {"id": 103, "title": "Taxi Driver"}
       ],
       "badUnseen": [
-        {"id": 242, "title": "The Godfather: Part III"},
+        {"id": 242, "title": "The Godfather Part III"},
         {"id": 8681, "title": "Taken"},
         {"id": 4108, "title": "The Transporter"},
         {"id": 9705, "title": "Swordfish"},
@@ -104,12 +104,12 @@
         {"id": 2291, "title": "Jacob's Ladder", "rating": 9.0},
         {"id": 9426, "title": "The Fly", "rating": 8.8},
         {"id": 4232, "title": "Scream", "rating": 8.3},
-        {"id": 765, "title": "Evil Dead II (Dead by Dawn)", "rating": 8.1},
+        {"id": 765, "title": "Evil Dead II", "rating": 8.1},
         {"id": 948, "title": "Halloween", "rating": 7.7},
         {"id": 1933, "title": "The Others", "rating": 7.6},
         {"id": 2667, "title": "The Blair Witch Project", "rating": 5.7},
         {"id": 70981, "title": "Prometheus", "rating": 3.6},
-        {"id": 8078, "title": "Alien: Resurrection", "rating": 2.4},
+        {"id": 8078, "title": "Alien Resurrection", "rating": 2.4},
         {"id": 4234, "title": "Scream 3", "rating": 2.8},
         {"id": 176, "title": "Saw", "rating": 3.4}
       ],
@@ -125,7 +125,7 @@
         {"id": 745, "title": "The Sixth Sense"},
         {"id": 377, "title": "A Nightmare on Elm Street"},
         {"id": 1018, "title": "Mulholland Drive"},
-        {"id": 807, "title": "Seven (a.k.a. Se7en)"}
+        {"id": 807, "title": "Se7en"}
       ],
       "badUnseen": [
         {"id": 1576, "title": "Resident Evil"},
@@ -142,7 +142,7 @@
       "focusGenreIds": [16, 10751],
       "minimumFocusHits": 12,
       "watchedRatings": [
-        {"id": 129, "title": "Spirited Away (Sen to Chihiro no kamikakushi)", "rating": 10.0},
+        {"id": 129, "title": "Spirited Away", "rating": 10.0},
         {"id": 10681, "title": "WALL·E", "rating": 9.6},
         {"id": 10386, "title": "The Iron Giant", "rating": 9.5},
         {"id": 10191, "title": "How to Train Your Dragon", "rating": 9.2},
@@ -159,14 +159,14 @@
         {"id": 2300, "title": "Space Jam", "rating": 1.5}
       ],
       "goodUnseen": [
-        {"id": 8392, "title": "My Neighbor Totoro (Tonari no Totoro)"},
-        {"id": 4935, "title": "Howl's Moving Castle (Hauru no ugoku shiro)"},
-        {"id": 128, "title": "Princess Mononoke (Mononoke-hime)"},
+        {"id": 8392, "title": "My Neighbor Totoro"},
+        {"id": 4935, "title": "Howl's Moving Castle"},
+        {"id": 128, "title": "Princess Mononoke"},
         {"id": 14836, "title": "Coraline"},
         {"id": 11544, "title": "Lilo & Stitch"},
         {"id": 14160, "title": "Up"},
         {"id": 10193, "title": "Toy Story 3"},
-        {"id": 531, "title": "Wallace & Gromit: The Wrong Trousers"},
+        {"id": 531, "title": "The Wrong Trousers"},
         {"id": 7443, "title": "Chicken Run"},
         {"id": 150540, "title": "Inside Out"},
         {"id": 177572, "title": "Big Hero 6"}
@@ -189,21 +189,21 @@
         {"id": 1018, "title": "Mulholland Drive", "rating": 9.8},
         {"id": 7345, "title": "There Will Be Blood", "rating": 9.6},
         {"id": 153, "title": "Lost in Translation", "rating": 9.2},
-        {"id": 582, "title": "Lives of Others, The (Das leben der Anderen)", "rating": 9.1},
+        {"id": 582, "title": "The Lives of Others", "rating": 9.1},
         {"id": 793, "title": "Blue Velvet", "rating": 9.0},
         {"id": 6977, "title": "No Country for Old Men", "rating": 8.9},
         {"id": 334, "title": "Magnolia", "rating": 8.8},
         {"id": 8741, "title": "The Thin Red Line", "rating": 8.6},
         {"id": 38, "title": "Eternal Sunshine of the Spotless Mind", "rating": 7.5},
         {"id": 120467, "title": "The Grand Budapest Hotel", "rating": 6.8},
-        {"id": 11216, "title": "Cinema Paradiso (Nuovo cinema Paradiso)", "rating": 6.4},
+        {"id": 11216, "title": "Cinema Paradiso", "rating": 6.4},
         {"id": 641, "title": "Requiem for a Dream", "rating": 3.8},
         {"id": 1164, "title": "Babel", "rating": 3.4},
         {"id": 4922, "title": "The Curious Case of Benjamin Button", "rating": 3.2},
         {"id": 401, "title": "Garden State", "rating": 2.8}
       ],
       "goodUnseen": [
-        {"id": 346, "title": "Seven Samurai (Shichinin no samurai)"},
+        {"id": 346, "title": "Seven Samurai"},
         {"id": 62, "title": "2001: A Space Odyssey"},
         {"id": 103, "title": "Taxi Driver"},
         {"id": 1578, "title": "Raging Bull"},
@@ -214,14 +214,14 @@
         {"id": 17431, "title": "Moon"},
         {"id": 64690, "title": "Drive"},
         {"id": 264660, "title": "Ex Machina"},
-        {"id": 1417, "title": "Pan's Labyrinth (Laberinto del fauno, El)"}
+        {"id": 1417, "title": "Pan's Labyrinth"}
       ],
       "badUnseen": [
-        {"id": 637, "title": "Life Is Beautiful (La Vita è bella)"},
-        {"id": 194, "title": "Amelie (Fabuleux destin d'Amélie Poulain, Le)"},
+        {"id": 637, "title": "Life Is Beautiful"},
+        {"id": 194, "title": "Amélie"},
         {"id": 453, "title": "A Beautiful Mind"},
         {"id": 409, "title": "The English Patient"},
-        {"id": 194662, "title": "Birdman: Or (The Unexpected Virtue of Ignorance)"}
+        {"id": 194662, "title": "Birdman or (The Unexpected Virtue of Ignorance)"}
       ],
       "ratingInfluenceClaim": "Subdued adult character studies should outrank sentimental or curated-quirk neighbors even when genre and release era are nearly identical."
     },
@@ -252,7 +252,7 @@
         {"id": 9326, "title": "Romancing the Stone"},
         {"id": 64688, "title": "21 Jump Street"},
         {"id": 207703, "title": "Kingsman: The Secret Service"},
-        {"id": 607, "title": "Men in Black (a.k.a. MIB)"},
+        {"id": 607, "title": "Men in Black"},
         {"id": 9654, "title": "The Italian Job"},
         {"id": 954, "title": "Mission: Impossible"},
         {"id": 2501, "title": "The Bourne Identity"},

@@ -4,15 +4,15 @@ LumiTrace is a content-based Android recommender. Ranking runs locally from expl
 
 ## 1. Bundled Catalog
 
-The APK contains a compact index generated from MovieLens Latest Small:
+The current development APK contains a precomputed rich-text semantic index:
 
 ```text
-1,000 movies x 384 dimensions x float16
+30,000 movies x 768 dimensions x float16
 ```
 
-Each movie vector was generated ahead of time with `sentence-transformers/all-MiniLM-L6-v2` from MovieLens title, genre, and community-tag text. Rows are L2-normalized. At app startup, the loader validates the manifest, movie count, dimensions, data type, and vector file size before accepting the index.
+Each movie vector was generated ahead of time with `AventIQ-AI/bert-movie-recommendation-system` from rich movie text. Rows are L2-normalized. At app startup, the loader validates the manifest, movie count, dimensions, data type, and vector file size before accepting the index.
 
-No Transformer model runs on the phone. The app decodes the float16 rows into memory and performs dot products against this precomputed catalog.
+No Transformer model runs on the phone. Movie metadata and float16 vectors are parsed as streams, avoiding temporary copies of the 16 MB JSON and 46 MB NPY assets. The vectors are decoded once into memory and the app performs dot products against the precomputed catalog.
 
 ## 2. Taste Signals
 
@@ -37,16 +37,27 @@ An unrated watched movie therefore contributes a modest positive signal. A high 
 When a semantic profile is available, each candidate receives:
 
 ```text
-base_score = 0.78 * semantic_similarity
-           + 0.14 * genre_affinity
-           + 0.08 * quality_prior
+base_score = 0.64 * semantic_similarity
+           + 0.22 * genre_affinity
+           + 0.14 * quality_prior
 ```
 
 - `semantic_similarity` is the dot product between normalized movie and taste vectors.
 - `genre_affinity` summarizes the user's explicit rating-weighted genre history.
-- `quality_prior` combines normalized TMDB vote average and vote-count confidence.
+- `quality_prior` combines a Bayesian-adjusted TMDB vote average with logarithmic vote-count confidence.
 
-If none of the watched films can be mapped into the starter index, ranking falls back to:
+The Bayesian quality prior uses a 1,000-vote prior centered at `6.2/10`:
+
+```text
+adjusted_rating = (vote_count * vote_average + 1000 * 6.2)
+                  / (vote_count + 1000)
+confidence = clamp(log(1 + vote_count) / log(20001), 0, 1)
+quality_prior = 0.80 * adjusted_rating / 10 + 0.20 * confidence
+```
+
+Candidates with at least 50 votes and a vote average below `5.0` are excluded. Movies with fewer than 50 votes remain eligible because their public rating is not yet stable.
+
+If none of the watched films can be mapped into the bundled index, ranking falls back to:
 
 ```text
 base_score = 0.72 * genre_affinity + 0.28 * quality_prior
@@ -65,10 +76,10 @@ negative_strength = clamp((5 - rating) / 4, 0, 1)
 LumiTrace does not subtract disliked vectors from the taste vector. Instead, it first retrieves a bounded candidate pool, compares only those candidates with negative seeds, and subtracts at most:
 
 ```text
-negative_penalty = max(candidate_similarity_to_negative * strength) * 0.64
+negative_penalty = max(candidate_similarity_to_negative * strength) * 0.32
 ```
 
-This keeps positive semantic geometry intact while strongly suppressing candidates that closely resemble a clearly disliked movie. The coefficient was selected from a 24-point weight grid evaluated across six independently authored film-taste profiles; see [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md).
+This keeps positive semantic geometry intact while suppressing candidates that resemble a clearly disliked movie. The coefficient was reduced for the denser 30k BERT space after sensitivity testing showed that the old `0.64` coefficient over-penalized broad categories; see [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md).
 
 ## 5. Diversity Re-Ranking
 
@@ -95,6 +106,7 @@ The adjustment is deliberately smaller than the taste score components. It chang
 ## 7. Constraints and Exclusions
 
 - Watched seed movies are excluded from results.
+- Large catalogs retain at least 1,000 candidates before negative-preference and diversity re-ranking.
 - `topK` is bounded to the catalog size and a maximum of 300.
 - Tonight can apply required genre groups and minimum or maximum release year before ranking.
 - A wider bounded pool is retained before diversity and negative-preference re-ranking.
@@ -115,12 +127,12 @@ The app also names the closest positive watched movie when that evidence exists.
 
 ## 9. Evaluation
 
-Six independent film-domain personas supplied 90+ watched ratings, including explicit high and low scores, plus narrow unseen positive and negative sets. Compared with the identical watched collections made rating-neutral, calibrated ratings changed an average of 9.5 movies in each Top 20, increased labeled positive hits from 14 to 19, and reduced labeled negative hits from 5 to 2. Refresh changed an average of 4.8 movies while preserving focus-genre and score-loss gates.
+Six independent film-domain personas supplied 90+ watched ratings, including explicit high and low scores. On the 30k index, compared with identical watched collections made rating-neutral, ratings changed an average of 10.8 movies in each Top 20. Narrow labeled positive hits changed from 2 to 3 and negative hits from 1 to 0; these exact-title sets were authored for the earlier 1k catalog and are now treated only as sparse anchors. Refresh changed an average of 6.8 movies while preserving focus-genre and score-loss gates.
 
 The fixtures and assertions live under `app/src/test/resources/recommendation/` and `app/src/test/java/com/lumitrace/app/recommendation/`. These are controlled expert scenarios, not population-level accuracy or an online A/B test. The full protocol and limitations are in [RECOMMENDATION_EVALUATION.md](RECOMMENDATION_EVALUATION.md).
 
 ## 10. Limits
 
-The starter index is a demo-scale catalog, not a complete movie universe. A live TMDB result that is absent from the index may still be saved and rated, but it cannot add semantic dimensions to the local profile. Enlarging the index requires a redistributable data source, measured APK-size and memory budgets, and regenerated vectors with exactly the model declared by the manifest.
+The 30k index still does not cover the complete TMDB universe. A live TMDB result that is absent from the index may still be saved and rated, but it cannot add semantic dimensions to the local profile. The current unsigned release APK is approximately 54 MiB, but the decoded float32 matrix occupies about 92 MiB before metadata and UI caches.
 
-MovieLens provenance and terms are documented in [DATA_LICENSE.md](DATA_LICENSE.md).
+The current 30k snapshot is for local evaluation. Its redistribution rights and upstream model terms must be verified before publishing it in a public APK or repository release; see [DATA_LICENSE.md](DATA_LICENSE.md).

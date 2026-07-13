@@ -1,17 +1,21 @@
 # Changelog
 
-## Unreleased
+## 1.3.0 - 2026-07-13
 
 ### Added
 
 - Six independent film-domain taste fixtures with high ratings, low ratings, unseen positive examples, and unseen negative examples.
 - Reproducible rating-neutral, calibrated-rating, and unchanged-collection refresh evaluation reports.
 - A tested refresh-seed sequence that keeps load-more stable and changes only explicit refresh runs.
+- A 30,000-movie, 768-dimensional float16 BERT index for local device evaluation.
 
 ### Changed
 
-- Calibrated semantic, genre, and quality weights to `0.78 / 0.14 / 0.08` across a 24-point grid.
-- Increased post-ranking low-score suppression to `0.64`; low-rated vectors remain outside the positive taste centroid.
+- Recalibrated semantic, genre, and quality weights to `0.64 / 0.22 / 0.14` for the 30k index.
+- Reduced broad negative suppression to `0.32`; low-rated vectors remain outside the positive taste centroid.
+- Expanded large-catalog re-ranking from roughly 120 candidates to at least 1,000.
+- Added Bayesian vote smoothing and an established-low-quality candidate gate.
+- Streamed metadata and NPY decoding to avoid temporary 16 MB and 46 MB asset copies during index loading.
 - Recommendation controls now say **Refresh recommendations** after the first result set.
 
 ## 1.2.1 - 2026-07-12

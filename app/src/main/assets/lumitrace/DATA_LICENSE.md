@@ -1,21 +1,9 @@
 # Bundled Index Data Notice
 
-The bundled LumiTrace Android starter index is a transformation of **MovieLens Latest Small**, downloaded from GroupLens Research at the University of Minnesota.
+This public v1.3.0 30k release (APK and repository) bundles 30,000 TMDB-linked movie metadata and precomputed 768d float16 vectors.
 
-Source: <https://grouplens.org/datasets/movielens/latest/>
+The snapshot includes TMDB identifiers, titles, overviews, genre identifiers, release dates, vote aggregates, and poster paths. TMDB data remains subject to TMDB's terms and attribution requirements. LumiTrace is not endorsed or certified by TMDB.
 
-The complete upstream README and usage license are packaged unchanged beside this notice as `MOVIELENS_README.txt`. The MovieLens usage conditions apply to the bundled index, including:
+The vectors were generated with `AventIQ-AI/bert-movie-recommendation-system` from rich movie text and stored as normalized 768-dimensional float16 rows. At release preparation time, its Hugging Face model card/API did not expose an explicit license declaration. The model and generated vectors retain any terms that apply to their upstream model and input data.
 
-- Do not state or imply endorsement by the University of Minnesota or GroupLens Research.
-- Acknowledge MovieLens in publications resulting from use of the data.
-- Redistribution, including transformations, must retain the same license conditions.
-- Commercial or revenue-bearing use requires prior permission from GroupLens Research.
-- The data and scripts are provided without warranty.
-
-Recommended citation:
-
-> F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems 5, 4, Article 19. <https://doi.org/10.1145/2827872>
-
-The vectors were generated with `sentence-transformers/all-MiniLM-L6-v2`, whose model card declares the Apache License 2.0. The main LumiTrace source code remains under the MIT License; the MovieLens-derived index does not become MIT-licensed.
-
-LumiTrace does not distribute indexes generated from TMDB API content. TMDB metadata and poster requests made by an end user remain subject to TMDB's current API terms.
+The LumiTrace source code remains under the MIT License. The bundled metadata snapshot and vector index are not relicensed under MIT. Downstream redistribution and commercial users must independently verify all applicable upstream terms.

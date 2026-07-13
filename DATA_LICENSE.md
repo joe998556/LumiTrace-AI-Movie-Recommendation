@@ -1,21 +1,9 @@
 # Bundled Index Data Notice
 
-The Android asset directory [`app/src/main/assets/lumitrace/`](app/src/main/assets/lumitrace/) contains a compact transformation of **MovieLens Latest Small**, downloaded from GroupLens Research at the University of Minnesota.
+The Android asset directory [`app/src/main/assets/lumitrace/`](app/src/main/assets/lumitrace/) bundles 30,000 TMDB-linked movie metadata and precomputed 768d float16 vectors in the public v1.3.0 30k release (APK and repository).
 
-Source: <https://grouplens.org/datasets/movielens/latest/>
+The snapshot includes TMDB identifiers, titles, overviews, genre identifiers, release dates, vote aggregates, and poster paths. TMDB data remains subject to [TMDB's terms](https://www.themoviedb.org/terms-of-use) and attribution requirements. LumiTrace is not endorsed or certified by TMDB.
 
-The complete upstream README and usage conditions are included unchanged at [`app/src/main/assets/lumitrace/MOVIELENS_README.txt`](app/src/main/assets/lumitrace/MOVIELENS_README.txt). Those conditions apply to the MovieLens-derived metadata and vector index, including:
+The vectors were generated with `AventIQ-AI/bert-movie-recommendation-system` from rich movie text and stored as normalized 768-dimensional float16 rows. At release preparation time, its Hugging Face model card/API did not expose an explicit license declaration. The model and generated vectors retain any terms that apply to their upstream model and input data.
 
-- Do not state or imply endorsement by the University of Minnesota or GroupLens Research.
-- Acknowledge MovieLens in publications resulting from use of the data.
-- Retain the applicable conditions when redistributing the data or a transformation.
-- Obtain prior permission from GroupLens Research for commercial or revenue-bearing use when required by those conditions.
-- The data and scripts are provided without warranty.
-
-Recommended citation:
-
-> F. Maxwell Harper and Joseph A. Konstan. 2015. The MovieLens Datasets: History and Context. ACM Transactions on Interactive Intelligent Systems 5, 4, Article 19. <https://doi.org/10.1145/2827872>
-
-The bundled vectors were generated with `sentence-transformers/all-MiniLM-L6-v2`, whose model card declares the Apache License 2.0. The LumiTrace source code remains under the MIT License; the MovieLens-derived assets do not become MIT-licensed.
-
-TMDB metadata and poster requests are made at runtime with an end user's own key and remain subject to TMDB's current terms. No TMDB-derived vector index is distributed by this repository.
+The LumiTrace source code remains under the MIT License. The bundled metadata snapshot and vector index are not relicensed under MIT. Downstream redistribution and commercial users must independently verify all applicable upstream terms.
