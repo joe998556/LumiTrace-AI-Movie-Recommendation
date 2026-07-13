@@ -13,6 +13,7 @@ import com.lumitrace.app.data.Movie
 import com.lumitrace.app.data.LibraryEntry
 import com.lumitrace.app.data.LibraryState
 import com.lumitrace.app.data.LocalTasteLibrary
+import com.lumitrace.app.data.normalizeUserRating
 import com.lumitrace.app.data.LocalTasteState
 import com.lumitrace.app.data.LocalTasteStore
 import com.lumitrace.app.data.ViewingContext
@@ -593,7 +594,8 @@ class MovieViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateJournalRating(movieId: Int, rating: Float) {
         val current = _journalEntries.value[movieId] ?: MovieJournalEntry()
-        tasteLibrary.setRating(movieId, rating.coerceIn(0f, MAX_USER_RATING), current.note)
+        val normalizedRating = normalizeUserRating(rating)
+        tasteLibrary.setRating(movieId, normalizedRating, current.note)
         publishTasteLibrary()
     }
 

@@ -5,6 +5,8 @@
 local.properties
 captures/
 *.iml
+/.kotlin/
+
 
 # Signing material
 *.jks

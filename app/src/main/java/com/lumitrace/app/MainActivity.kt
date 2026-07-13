@@ -60,6 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -2326,13 +2327,13 @@ private fun PersonalRatingSlider(
     rating: Float,
     onRatingChange: (Float) -> Unit
 ) {
-    val sliderValue = if (rating > 0f) rating else 5f
+    var transientRating by remember(rating) { mutableStateOf(if (rating > 0f) rating else 5f) }
+    val sliderValue = transientRating
     val animatedRating by animateFloatAsState(
         targetValue = sliderValue,
         animationSpec = tween(durationMillis = 420, easing = HeavyEase),
         label = "journalRatingGlow"
     )
-    val progress = (animatedRating / 10f).coerceIn(0f, 1f)
     val signalLabel = when {
         rating <= 0f -> "Not scored"
         rating < 5f -> "Reduce similar"
@@ -2374,14 +2375,22 @@ private fun PersonalRatingSlider(
             }
             DotRatingSlider(
                 value = sliderValue,
-                onValueChange = onRatingChange
+                onValueChange = { transientRating = it },
+                onValueChangeFinished = onRatingChange
             )
         }
     }
 }
 
 @Composable
-private fun DotRatingSlider(value: Float, onValueChange: (Float) -> Unit) {
+private fun DotRatingSlider(
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    onValueChangeFinished: (Float) -> Unit
+) {
+    val currentOnValueChange by rememberUpdatedState(onValueChange)
+    val currentOnValueChangeFinished by rememberUpdatedState(onValueChangeFinished)
+
     val animatedValue by animateFloatAsState(
         targetValue = value,
         animationSpec = tween(durationMillis = 260, easing = SpringEase),
@@ -2400,18 +2409,28 @@ private fun DotRatingSlider(value: Float, onValueChange: (Float) -> Unit) {
             .fillMaxWidth()
             .height(28.dp)
             .pointerInput(Unit) {
-                fun update(offsetX: Float) {
-                    onValueChange(normalizedScore(offsetX, size.width, 7.dp.toPx()))
-                }
-                detectTapGestures { tapOffset -> update(tapOffset.x) }
+                detectTapGestures(
+                    onTap = { tapOffset ->
+                        val finalValue = normalizedScore(tapOffset.x, size.width, 7.dp.toPx())
+                        currentOnValueChange(finalValue)
+                        currentOnValueChangeFinished(finalValue)
+                    }
+                )
             }
             .pointerInput(Unit) {
+                var latestValue = value
                 fun update(offsetX: Float) {
-                    onValueChange(normalizedScore(offsetX, size.width, 7.dp.toPx()))
+                    latestValue = normalizedScore(offsetX, size.width, 7.dp.toPx())
+                    currentOnValueChange(latestValue)
                 }
                 detectDragGestures(
                     onDragStart = { dragOffset -> update(dragOffset.x) },
-                    onDrag = { change, _ -> update(change.position.x) }
+                    onDragEnd = { currentOnValueChangeFinished(latestValue) },
+                    onDragCancel = {},
+                    onDrag = { change, _ ->
+                        change.consume()
+                        update(change.position.x)
+                    }
                 )
             }
     ) {

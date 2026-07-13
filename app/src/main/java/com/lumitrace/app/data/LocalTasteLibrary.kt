@@ -138,7 +138,8 @@ class LocalTasteLibrary(
     fun setRating(movieId: Int, rating: Float, note: String = "") = mutateActive { profile ->
         val entry = profile.entries.find { it.movie.id == movieId } ?: error("Rate a movie in your library first.")
         val timestamp = now()
-        val rated = entry.copy(rating = rating.coerceIn(0f, 10f), note = note.take(280))
+        val normalizedRating = normalizeUserRating(rating)
+        val rated = entry.copy(rating = normalizedRating, note = note.take(280))
         profile.copy(
             entries = profile.entries.replaceEntry(rated),
             events = profile.events + ViewingEvent("rated", movieId, timestamp)
@@ -406,4 +407,14 @@ class LocalTasteLibrary(
         require(candidate.profiles.any { it.id == candidate.activeProfileId }) { "The active Viewing Profile is missing." }
         return candidate
     }
+}
+
+internal fun normalizeUserRating(rating: Float): Float {
+    if (rating.isNaN()) return 0f
+    if (rating.isInfinite()) {
+        return if (rating > 0f) 10f else 0f
+    }
+    if (rating <= 0f) return 0f
+    val clamped = rating.coerceIn(1f, 10f)
+    return (kotlin.math.round(clamped * 10f) / 10f).coerceIn(1f, 10f)
 }

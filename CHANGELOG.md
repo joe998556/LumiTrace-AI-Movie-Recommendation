@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.1 - 2026-07-13
+
+### Fixed
+
+- Updated rating slider drags to modify transient Compose state instead of writing to persistent storage on every movement.
+- Ensured completed tap or drag gestures commit only the final Float value.
+- Consumed drag events to avoid gesture conflicts with the parent vertical scroll.
+- Centralized rating normalization to safely handle finite bounds, single-decimal precision, NaN, and infinite values.
+
 ## 1.3.0 - 2026-07-13
 
 ### Added
