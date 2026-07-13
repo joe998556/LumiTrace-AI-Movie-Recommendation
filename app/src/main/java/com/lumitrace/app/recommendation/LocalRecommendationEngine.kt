@@ -241,6 +241,7 @@ internal object LocalRecommendationRanker {
         val topK = requestedTopK.coerceIn(1, minOf(300, catalog.movies.size))
         val excludedIds = signals.mapTo(HashSet()) { it.movie.id }
         val genreWeights = buildGenreWeights(signals)
+        val genreScale = if (genreWeights.isEmpty()) 1f else genreWeights.values.maxOf { abs(it) }.coerceAtLeast(1f)
         val profile = buildTasteProfile(catalog, signals)
         val hasSemanticProfile = profile.any { it != 0f }
         val genreGroups = constraints.requiredGenreGroups.filter { it.isNotEmpty() }
@@ -253,7 +254,7 @@ internal object LocalRecommendationRanker {
             .filter { movie -> matchesYear(movie.releaseDate, constraints.minYear, constraints.maxYear) }
             .map { movie ->
                 val semantic = if (hasSemanticProfile) dot(catalog, movie.position, profile) else 0f
-                val genre = genreAffinity(movie.genreIds, genreWeights)
+                val genre = genreAffinity(movie.genreIds, genreWeights, genreScale)
                 val quality = qualityPrior(movie)
                 val score = if (hasSemanticProfile) {
                     semantic * weights.semantic + genre * weights.genre + quality * weights.quality
@@ -373,11 +374,13 @@ internal object LocalRecommendationRanker {
         return weights
     }
 
-    private fun genreAffinity(genres: IntArray, weights: Map<Int, Float>): Float {
+    private fun genreAffinity(genres: IntArray, weights: Map<Int, Float>, scale: Float): Float {
         if (genres.isEmpty() || weights.isEmpty()) return 0f
-        val scale = weights.values.maxOf { abs(it) }.coerceAtLeast(1f)
-        val sum = genres.sumOf { (weights[it] ?: 0f).toDouble() }.toFloat()
-        return (sum / (scale * genres.size.coerceAtLeast(1))).coerceIn(-1f, 1f)
+        var sum = 0.0
+        for (i in genres.indices) {
+            sum += (weights[genres[i]] ?: 0f).toDouble()
+        }
+        return (sum.toFloat() / (scale * genres.size.coerceAtLeast(1))).coerceIn(-1f, 1f)
     }
 
     private fun qualityPrior(movie: IndexMovie): Float {
